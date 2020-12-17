@@ -1,4 +1,4 @@
-FROM golang:1.15-alpine AS builder
+FROM golang:1.15 AS builder
 WORKDIR /build
 # Copy and download dependencies using go mod
 COPY go.mod .
@@ -8,10 +8,13 @@ RUN go mod download
 # Copy the code into the container
 COPY . .
 
-# Build the application
-RUN go build -o testsuite.bin testsuite/main.go
+# Build Delve
+RUN go get github.com/go-delve/delve/cmd/dlv
 
-CMD ./testsuite.bin \
+# Build the application
+RUN go build -gcflags="all=-N -l" -o testsuite.bin testsuite/main.go
+
+CMD dlv --listen=:${DEBUGGER_PORT} --headless=true --api-version=2 exec ./testsuite.bin -- \
     `# ------------- Custom variable particular to this test suite -----------------` \
     --api-service-image=${API_SERVICE_IMAGE} \
     --datastore-service-image=${DATASTORE_SERVICE_IMAGE} \
