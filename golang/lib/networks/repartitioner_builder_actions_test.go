@@ -6,7 +6,7 @@
 package networks
 
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 	"github.com/palantir/stacktrace"
 	"github.com/stretchr/testify/assert"
@@ -53,7 +53,7 @@ func TestAddPartitionConnectionAction(t *testing.T) {
 	action := addPartitionConnectionAction{
 		partitionA: partition1,
 		partitionB: partition2,
-		connection: &bindings.PartitionConnectionInfo{IsBlocked: !isTestRepartitionerDefaultConnBlocked},
+		connection: &core_api_bindings.PartitionConnectionInfo{IsBlocked: !isTestRepartitionerDefaultConnBlocked},
 	}
 
 	if err := action.mutate(repartitioner); err != nil {
@@ -78,7 +78,7 @@ func getTestRepartitioner() *Repartitioner {
 			partition1: newServiceIdSet(service1),
 			partition2: newServiceIdSet(service2),
 		},
-		partitionConnections: map[PartitionID]map[PartitionID]*bindings.PartitionConnectionInfo{},
-		defaultConnection:    &bindings.PartitionConnectionInfo{IsBlocked: isTestRepartitionerDefaultConnBlocked},
+		partitionConnections: map[PartitionID]map[PartitionID]*core_api_bindings.PartitionConnectionInfo{},
+		defaultConnection:    &core_api_bindings.PartitionConnectionInfo{IsBlocked: isTestRepartitionerDefaultConnBlocked},
 	}
 }

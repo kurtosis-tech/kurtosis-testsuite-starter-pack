@@ -6,7 +6,7 @@
 package networks
 
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 )
 
@@ -39,7 +39,7 @@ func (a addPartitionAction) mutate(repartitioner *Repartitioner) error {
 type addPartitionConnectionAction struct {
 	partitionA PartitionID
 	partitionB PartitionID
-	connection *bindings.PartitionConnectionInfo
+	connection *core_api_bindings.PartitionConnectionInfo
 }
 
 func (a addPartitionConnectionAction) mutate(repartitioner *Repartitioner) error {
@@ -49,7 +49,7 @@ func (a addPartitionConnectionAction) mutate(repartitioner *Repartitioner) error
 
 	partitionAConns, found := repartitioner.partitionConnections[partitionA]
 	if !found {
-		partitionAConns = map[PartitionID]*bindings.PartitionConnectionInfo{}
+		partitionAConns = map[PartitionID]*core_api_bindings.PartitionConnectionInfo{}
 	}
 	partitionAConns[partitionB] = connectionInfo
 	repartitioner.partitionConnections[partitionA] = partitionAConns

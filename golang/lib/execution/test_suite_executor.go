@@ -8,7 +8,7 @@ package execution
 import (
 	"context"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/palantir/stacktrace"
@@ -54,9 +54,9 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 	}
 	defer conn.Close()
 
-	suiteRegistrationClient := bindings.NewSuiteRegistrationServiceClient(conn)
+	suiteRegistrationClient := core_api_bindings.NewSuiteRegistrationServiceClient(conn)
 
-	var suiteRegistrationResp *bindings.SuiteRegistrationResponse
+	var suiteRegistrationResp *core_api_bindings.SuiteRegistrationResponse
 	suiteRegistrationAttempts := 0
 	for {
 		if suiteRegistrationAttempts >= maxSuiteRegistrationRetries {
@@ -79,12 +79,12 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 
 	action := suiteRegistrationResp.SuiteAction
 	switch action {
-	case bindings.SuiteAction_SERIALIZE_SUITE_METADATA:
+	case core_api_bindings.SuiteAction_SERIALIZE_SUITE_METADATA:
 		if err := runSerializeSuiteMetadataFlow(ctx, suite, conn); err != nil {
 			return stacktrace.Propagate(err, "An error occurred running the suite metadata serialization flow")
 		}
 		return nil
-	case bindings.SuiteAction_EXECUTE_TEST:
+	case core_api_bindings.SuiteAction_EXECUTE_TEST:
 		if err := runTestExecutionFlow(ctx, suite, conn); err != nil {
 			return stacktrace.Propagate(err, "An error occurred running the test execution flow")
 		}
@@ -95,7 +95,7 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 }
 
 func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
-	allTestMetadata := map[string]*bindings.TestMetadata{}
+	allTestMetadata := map[string]*core_api_bindings.TestMetadata{}
 	for testName, test := range testsuite.GetTests() {
 		testConfig := test.GetTestConfiguration()
 		usedArtifactUrls := map[string]bool{}
@@ -103,7 +103,7 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 			usedArtifactUrls[artifactUrl] = true
 		}
 
-		testMetadata := &bindings.TestMetadata{
+		testMetadata := &core_api_bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
 		}
@@ -111,12 +111,12 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 	}
 
 	networkWidthBits := testsuite.GetNetworkWidthBits()
-	testSuiteMetadata := &bindings.TestSuiteMetadata{
+	testSuiteMetadata := &core_api_bindings.TestSuiteMetadata{
 		TestMetadata:     allTestMetadata,
 		NetworkWidthBits: networkWidthBits,
 	}
 
-	metadataSerializationClient := bindings.NewSuiteMetadataSerializationServiceClient(conn)
+	metadataSerializationClient := core_api_bindings.NewSuiteMetadataSerializationServiceClient(conn)
 	if _, err := metadataSerializationClient.SerializeSuiteMetadata(ctx, testSuiteMetadata); err != nil {
 		return stacktrace.Propagate(err, "An error occurred sending the suite metadata to the Kurtosis API server")
 	}
@@ -125,7 +125,7 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 }
 
 func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
-	executionClient := bindings.NewTestExecutionServiceClient(conn)
+	executionClient := core_api_bindings.NewTestExecutionServiceClient(conn)
 	testExecutionInfo, err := executionClient.GetTestExecutionInfo(ctx, &emptypb.Empty{})
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test execution info")
@@ -145,7 +145,7 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	// TODO this should just be "register test execution started", since the API container already has the metadata
 	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
 	hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
-	registerTestExecutionMessage := &bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
+	registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
 	if _, err := executionClient.RegisterTestExecution(ctx, registerTestExecutionMessage); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
