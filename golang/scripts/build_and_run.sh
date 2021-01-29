@@ -74,14 +74,6 @@ git_ref="$(git describe --tags --exact-match 2> /dev/null || git symbolic-ref -q
 docker_tag="$(echo "${git_ref}" | sed 's,[/:],_,g')"
 
 if "${do_build}"; then
-    echo "Running unit tests..."
-    # TODO Extract this go-specific logic out into a separate script so we can copy/paste the build_and_run.sh between various languages
-    if ! ( cd "${lang_root_dirpath}" && go test "./..." ); then
-        echo "Tests failed!"
-        exit 1
-    fi
-    echo "Tests succeeded"
-
     if ! [ -f "${lang_root_dirpath}"/.dockerignore ]; then
         echo "Error: No .dockerignore file found in root; this is required so Docker caching works properly" >&2
         exit 1
