@@ -1,5 +1,7 @@
 ## TBD
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
+* Fixing CircleCI to work with new `kurtosis-libs` repo
+* Fix `build_and_run` to work with new repo
 
 ## 1.7.1
 * Do a better job grabbing the name of the current Git ref

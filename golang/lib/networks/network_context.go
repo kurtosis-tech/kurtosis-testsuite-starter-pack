@@ -7,7 +7,7 @@ package networks
 
 import (
 	"context"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/test_suite_docker_consts/test_suite_container_mountpoints"
 	"github.com/palantir/stacktrace"
@@ -24,7 +24,7 @@ const (
 )
 
 type NetworkContext struct {
-	client bindings.TestExecutionServiceClient
+	client core_api_bindings.TestExecutionServiceClient
 
 	filesArtifactUrls map[services.FilesArtifactID]string
 
@@ -43,7 +43,7 @@ Args:
 	filesArtifactUrls: The mapping of filesArtifactId -> URL for the artifacts that the testsuite will use
 */
 func NewNetworkContext(
-		client bindings.TestExecutionServiceClient,
+		client core_api_bindings.TestExecutionServiceClient,
 		filesArtifactUrls map[services.FilesArtifactID]string) *NetworkContext {
 	return &NetworkContext{
 		mutex: &sync.Mutex{},
@@ -105,7 +105,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	ctx := context.Background()
 
 	logrus.Tracef("Registering new service ID with Kurtosis API...")
-	registerServiceArgs := &bindings.RegisterServiceArgs{
+	registerServiceArgs := &core_api_bindings.RegisterServiceArgs{
 		ServiceId:       string(serviceId),
 		PartitionId:     string(partitionId),
 		FilesToGenerate: initializer.GetFilesToMount(),
@@ -171,7 +171,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully created start command for service")
 
 	logrus.Tracef("Starting new service with Kurtosis API...")
-	startServiceArgs := &bindings.StartServiceArgs{
+	startServiceArgs := &core_api_bindings.StartServiceArgs{
 		ServiceId:                   string(serviceId),
 		DockerImage:                 initializer.GetDockerImage(),
 		UsedPorts:                   initializer.GetUsedPorts(),
@@ -219,7 +219,7 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 	defer networkCtx.mutex.Unlock()
 
 	logrus.Debugf("Removing service '%v'...", serviceId)
-	args := &bindings.RemoveServiceArgs{
+	args := &core_api_bindings.RemoveServiceArgs{
 		ServiceId:                   string(serviceId),
 		// NOTE: This is kinda weird - when we remove a service we can never get it back so having a container
 		//  stop timeout doesn't make much sense. It will make more sense when we can stop/start containers
@@ -254,7 +254,7 @@ func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitione
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
-	partitionServices := map[string]*bindings.PartitionServices{}
+	partitionServices := map[string]*core_api_bindings.PartitionServices{}
 	for partitionId, serviceIdSet := range repartitioner.partitionServices {
 		serviceIdStrPseudoSet := map[string]bool{}
 		for _, serviceId := range serviceIdSet.getElems() {
@@ -262,26 +262,26 @@ func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitione
 			serviceIdStrPseudoSet[serviceIdStr] = true
 		}
 		partitionIdStr := string(partitionId)
-		partitionServices[partitionIdStr] = &bindings.PartitionServices{
+		partitionServices[partitionIdStr] = &core_api_bindings.PartitionServices{
 			ServiceIdSet: serviceIdStrPseudoSet,
 		}
 	}
 
-	partitionConns := map[string]*bindings.PartitionConnections{}
+	partitionConns := map[string]*core_api_bindings.PartitionConnections{}
 	for partitionAId, partitionAConnsMap := range repartitioner.partitionConnections {
-		partitionAConnsStrMap := map[string]*bindings.PartitionConnectionInfo{}
+		partitionAConnsStrMap := map[string]*core_api_bindings.PartitionConnectionInfo{}
 		for partitionBId, connInfo := range partitionAConnsMap {
 			partitionBIdStr := string(partitionBId)
 			partitionAConnsStrMap[partitionBIdStr] = connInfo
 		}
-		partitionAConns := &bindings.PartitionConnections{
+		partitionAConns := &core_api_bindings.PartitionConnections{
 			ConnectionInfo: partitionAConnsStrMap,
 		}
 		partitionAIdStr := string(partitionAId)
 		partitionConns[partitionAIdStr] = partitionAConns
 	}
 
-	repartitionArgs := &bindings.RepartitionArgs{
+	repartitionArgs := &core_api_bindings.RepartitionArgs{
 		PartitionServices:    partitionServices,
 		PartitionConnections: partitionConns,
 		DefaultConnection:    repartitioner.defaultConnection,
