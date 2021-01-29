@@ -6,11 +6,11 @@
 package basic_datastore_and_api_test
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl/api"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl/datastore"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/api"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"time"

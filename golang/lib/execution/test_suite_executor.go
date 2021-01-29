@@ -8,9 +8,9 @@ package execution
 import (
 	"context"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
-	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"

@@ -9,8 +9,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/lib/execution"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/execution_impl"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/execution"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/execution_impl"
 	"github.com/sirupsen/logrus"
 	"os"
 )

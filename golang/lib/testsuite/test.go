@@ -6,7 +6,7 @@
 package testsuite
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
 	"time"
 )
 

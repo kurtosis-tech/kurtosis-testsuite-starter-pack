@@ -6,12 +6,12 @@
 package testsuite_impl
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/advanced_network_test"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/basic_datastore_and_api_test"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/basic_datastore_test"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/files_artifact_mounting_test"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/testsuite_impl/network_partition_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/advanced_network_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/files_artifact_mounting_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/network_partition_test"
 )
 
 type ExampleTestsuite struct {

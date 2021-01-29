@@ -8,8 +8,8 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl/datastore"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"

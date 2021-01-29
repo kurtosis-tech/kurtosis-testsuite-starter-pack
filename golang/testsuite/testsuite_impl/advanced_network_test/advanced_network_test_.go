@@ -6,10 +6,10 @@
 package advanced_network_test
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/networks_impl"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"time"

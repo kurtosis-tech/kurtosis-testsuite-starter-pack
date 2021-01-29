@@ -6,10 +6,10 @@
 package files_artifact_mounting_test
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-go/testsuite/services_impl/nginx_static"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/nginx_static"
 	"github.com/palantir/stacktrace"
 	"time"
 )

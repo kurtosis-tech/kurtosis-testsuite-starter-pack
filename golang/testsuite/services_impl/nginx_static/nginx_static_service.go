@@ -7,7 +7,7 @@ package nginx_static
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 	"github.com/palantir/stacktrace"
 	"io/ioutil"
 	"net/http"

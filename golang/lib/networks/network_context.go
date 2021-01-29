@@ -7,9 +7,9 @@ package networks
 
 import (
 	"context"
-	"github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
-	"github.com/kurtosis-tech/kurtosis-go/lib/test_suite_docker_consts/test_suite_container_mountpoints"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/test_suite_docker_consts/test_suite_container_mountpoints"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"

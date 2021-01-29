@@ -5,7 +5,7 @@
 
 package networks
 
-import "github.com/kurtosis-tech/kurtosis-go/lib/core_api/bindings"
+import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api/bindings"
 
 type PartitionID string
 

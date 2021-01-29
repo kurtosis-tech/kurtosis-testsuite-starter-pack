@@ -5,7 +5,7 @@
 
 package execution
 
-import "github.com/kurtosis-tech/kurtosis-go/lib/testsuite"
+import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 
 // Implementations of this interface are responsible for initialzing the testsuite to a state
 //  where it can be run

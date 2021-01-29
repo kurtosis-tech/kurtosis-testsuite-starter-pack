@@ -6,7 +6,7 @@
 package nginx_static
 
 import (
-	"github.com/kurtosis-tech/kurtosis-go/lib/services"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 	"os"
 	"strconv"
 )

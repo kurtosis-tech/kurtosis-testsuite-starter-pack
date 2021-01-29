@@ -5,7 +5,7 @@
 
 package networks
 
-import "github.com/kurtosis-tech/kurtosis-go/lib/services"
+import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 
 type serviceIdSet struct {
 	elems map[services.ServiceID]bool

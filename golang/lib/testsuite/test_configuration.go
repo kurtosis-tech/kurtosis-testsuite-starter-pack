@@ -5,7 +5,7 @@
 
 package testsuite
 
-import "github.com/kurtosis-tech/kurtosis-go/lib/services"
+import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 
 /*
 Holds configuration values that, if set, give the test the ability to do special things

@@ -1,4 +1,4 @@
-module github.com/kurtosis-tech/kurtosis-go
+module github.com/kurtosis-tech/kurtosis-libs/golang
 
 go 1.13
 
