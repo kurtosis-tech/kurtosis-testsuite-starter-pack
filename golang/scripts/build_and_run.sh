@@ -76,7 +76,7 @@ docker_tag="$(echo "${git_ref}" | sed 's,[/:],_,g')"
 if "${do_build}"; then
     echo "Running unit tests..."
     # TODO Extract this go-specific logic out into a separate script so we can copy/paste the build_and_run.sh between various languages
-    if ! go test "${lang_root_dirpath}/..."; then
+    if ! ( cd "${lang_root_dirpath}" && go test "./..." ); then
         echo "Tests failed!"
         exit 1
     fi
