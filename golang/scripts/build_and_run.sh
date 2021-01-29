@@ -1,5 +1,7 @@
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
+lang_root_dirpath="$(dirname "${script_dirpath}")"
+repo_root_dirpath="$(dirname "${lang_root_dirpath}")"
 
 # ====================== CONSTANTS =======================================================
 # TODO Extract these constants out into their own file so the bootstrap can easily replace it
@@ -71,7 +73,6 @@ esac
 git_ref="$(git describe --tags --exact-match 2> /dev/null || git symbolic-ref -q --short HEAD || git rev-parse --short HEAD)"
 docker_tag="$(echo "${git_ref}" | sed 's,[/:],_,g')"
 
-lang_root_dirpath="$(dirname "${script_dirpath}")"
 if "${do_build}"; then
     echo "Running unit tests..."
     # TODO Extract this go-specific logic out into a separate script so we can copy/paste the build_and_run.sh between various languages
@@ -104,5 +105,5 @@ if "${do_run}"; then
     # The funky ${1+"${@}"} incantation is how you you feed arguments exactly as-is to a child script in Bash
     # ${*} loses quoting and ${@} trips set -e if no arguments are passed, so this incantation says, "if and only if 
     #  ${1} exists, evaluate ${@}"
-    bash "${script_dirpath}/kurtosis.sh" --custom-params "${custom_params_json}" ${1+"${@}"} "${SUITE_IMAGE}:${docker_tag}"
+    bash "${repo_root_dirpath}/scripts/kurtosis.sh" --custom-params "${custom_params_json}" ${1+"${@}"} "${SUITE_IMAGE}:${docker_tag}"
 fi
