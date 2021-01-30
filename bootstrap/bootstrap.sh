@@ -1,82 +1,101 @@
-# Deletes all the extraneous files, leaving a repo containing only the example impl and necessary infrastructure needed to write a testsuite
-
-TESTSUITE_IMPL_DIRNAME="testsuite"
-README_FILENAME="README.md"
-DOCKERIGNORE_FILENAME=".dockerignore"
-
-# Constants 
-GO_MOD_FILENAME="go.mod"
-GO_MOD_MODULE_KEYWORD="module "  # The key we'll look for when replacing the module name in go.mod
-BUILDSCRIPT_FILENAME="build_and_run.sh"
-DOCKER_IMAGE_VAR_KEYWORD="SUITE_IMAGE=" # The variable we'll look for in the Docker file for replacing the Docker image name
-IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD="IS_KURTOSIS_CORE_DEV_MODE=" # The variable we'll look for when setting whether Kurtosis core dev mode is enabled
-
-# Response required from the user to do the bootstrapping
-BOOTSTRAP_VERIFICATION_RESPONSE="create new repo"
-
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${0}")" && pwd)"
-root_dirpath="$(dirname "${script_dirpath}")"
-buildscript_filepath="${root_dirpath}/scripts/${BUILDSCRIPT_FILENAME}"
-go_mod_filepath="${root_dirpath}/${GO_MOD_FILENAME}"
+repo_root_dirpath="$(dirname "${script_dirpath}")"
 
-# ============== Validation =================================================================
-# Validation, to save us in case someone changes stuff in the future
-if [ "$(grep "${GO_MOD_MODULE_KEYWORD}" "${go_mod_filepath}" | wc -l)" -ne 1 ]; then
-    echo "Validation failed: Could not find exactly one line in ${GO_MOD_FILENAME} with keyword '${GO_MOD_MODULE_KEYWORD}' for use when replacing with the user's module name" >&2
+# =============================================================================
+#                                 Constants
+# =============================================================================
+SUPPORTED_LANGS_FILENAME="supported-languages.txt"
+
+ROOT_SCRIPTS_DIRNAME="scripts"
+WRAPPER_SCRIPT_FILENAME="kurtosis.sh"
+BUILD_AND_RUN_CORE_FILENAME="build-and-run-core.sh"
+
+# Script for prepping a new testsuite repo
+PREP_NEW_REPO_FILENAME="prep-new-repo.sh"
+
+OUTPUT_SCRIPTS_DIRNAME="scripts"
+
+# =============================================================================
+#                             Pre-Arg Parsing
+# =============================================================================
+supported_langs_filepath="${repo_root_dirpath}/${SUPPORTED_LANGS_FILENAME}"
+if ! [ -f "${supported_langs_filepath}" ]; then
+    echo "Error: Couldn't find supported languages file '${supported_langs_filepath}'; this is a bug in this script" >&2
     exit 1
 fi
-if [ "$(grep "^${DOCKER_IMAGE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" -ne 1 ]; then
-    echo "Validation failed: Could not find exactly one line in ${buildscript_filepath} starting with keyword '${DOCKER_IMAGE_VAR_KEYWORD}' for use when replacing with the user's Docker image name" >&2
+
+# Validate that the supported langs correspond to directories
+while read lang; do
+    if ! [ -d "${repo_root_dirpath}/${lang}" ]; then
+        echo "Error: Supported languages file lists langauge '${lang}', but no directory was found corresponding to it; this is a bug in the supported languages file" >&2
+        exit 1
+    fi
+done < "${supported_langs_filepath}"
+
+show_help_and_exit() {
+    echo ""
+    echo "$(basename "${0}") lang new_repo_dirpath"
+    echo ""
+    echo "  lang                Language that the new testsuite repo should be in ($(paste -d '|' "${supported_langs_filepath}"))"
+    echo "  new_repo_dirpath    Path to the new directory to create to contain the testsuite repo"
+    echo ""
+    exit 1  # Exit with an error so CI fails if this was accidentally called
+}
+
+# =============================================================================
+#                               Arg Validation
+# =============================================================================
+lang="${1:-}"
+output_dirpath="${2:-}"
+
+if [ -z "${lang}" ]; then
+    echo "Error: Lang cannot be empty" >&2
+    show_help_and_exit
+fi
+if ! [ -d "${repo_root_dirpath}/${lang}" ]; then
+    echo "Error: Unrecognized lang '${lang}'" >&2
+    show_help_and_exit
+fi
+if [ -z "${output_dirpath}" ]; then
+    echo "Error: Output dirpath must not be empty" >&2
+    show_help_and_exit
+fi
+
+# =============================================================================
+#                                 Main Code
+# =============================================================================
+if ! mkdir -p "${output_dirpath}"; then
+    echo "Error: Could not create output directory '${output_dirpath}'" >&2
     exit 1
 fi
-if [ "$(grep "^${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}" "${buildscript_filepath}" | wc -l)" -ne 1 ]; then
-    echo "Validation failed: Could not find exactly one line in ${buildscript_filepath} starting with keyword '${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}' for use when setting the Kurtosis Core dev mode to false" >&2
+
+lang_dirpath="${repo_root_dirpath}/${lang}"
+if ! cp -r "${lang_dirpath}/" "${output_dirpath}/"; then
+    echo "Error: Could not copy files from ${lang_dirpath} to ${output_dirpath}" >&2
     exit 1
 fi
 
-# ============== Inputs & Verification =================================================================
-prompt_response=""
-while [ "${prompt_response}" != "${BOOTSTRAP_VERIFICATION_RESPONSE}" ]; do
-    read -p "This script should only be run if you're trying to create a new testsuite repo! To verify this is what you want, enter '${BOOTSTRAP_VERIFICATION_RESPONSE}': " prompt_response
-done
-new_module_name=""
-while [ -z "${new_module_name}" ]; do
-    read -p "Name for the Go module that will contain your testsuite project (e.g. github.com/my-org/my-repo): " new_module_name
-done
-docker_image_name=""
-while [ -z "${docker_image_name}" ]; do
-    echo "Name for the Docker image that this repo will build, which must conform to the Docker image naming rules:"
-    echo "  https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
-    read -p "Image name (e.g. my-dockerhub-org/my-image-name): " docker_image_name
-done
+# TODO call the bootstrap.sh inside the new repo to remove unnecessary files and sed the appropriate files
+# TODO Or maybe whitelist the files that get copied over??
+
+output_scripts_dirpath="${output_dirpath}/${OUTPUT_SCRIPTS_DIRNAME}"
+if ! mkdir -p "${output_scripts_dirpath}"; then
+    echo "Error: Could not create the output scripts directory at '${output_scripts_dirpath}'" >&2
+    exit 1
+fi
+
+input_scripts_dirpath="${repo_root_dirpath}/${ROOT_SCRIPTS_DIRNAME}"
+if ! cp "${input_scripts_dirpath}/${WRAPPER_SCRIPT_FILENAME}" "${output_scripts_dirpath}/"; then
+    echo "Error: Could not copy ${WRAPPER_SCRIPT_FILENAME} to ${output_scripts_dirpath}" >&2
+    exit 1
+fi
+if ! cp "${input_scripts_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" "${output_scripts_dirpath}/"; then
+    echo "Error: Could not copy ${BUILD_AND_RUN_CORE_FILENAME} to ${output_scripts_dirpath}" >&2 
+    exit 1
+fi
 
 
-# ============== Main Code =================================================================
-find "${root_dirpath}" \
-    ! -name bootstrap \
-    ! -name "${TESTSUITE_IMPL_DIRNAME}" \
-    ! -name "${GO_MOD_FILENAME}" \
-    ! -name go.sum \
-    ! -name scripts \
-    -mindepth 1 \
-    -maxdepth 1 \
-    -exec rm -rf {} \;
+# TODO DEBUGGING
+exit 99
 
-cp "${script_dirpath}/${README_FILENAME}" "${root_dirpath}/"
-cp "${script_dirpath}/${DOCKERIGNORE_FILENAME}" "${root_dirpath}/"   # build_and_run requires a .dockerignore file, for best practice
-
-# Replace module names in code (we need the "-i '' " argument because Mac sed requires it)
-existing_module_name="$(grep "module" "${go_mod_filepath}" | awk '{print $2}')"
-sed -i '' "s,${existing_module_name},${new_module_name},g" ${go_mod_filepath}
-# We search for old_module_name/testsuite because we don't want the old_module_name/lib entries to get renamed
-sed -i '' "s,${existing_module_name}/${TESTSUITE_IMPL_DIRNAME},${new_module_name}/${TESTSUITE_IMPL_DIRNAME},g" $(find "${root_dirpath}" -type f)
-
-# Replace Docker image name in buildscript
-sed -i '' "s,^${DOCKER_IMAGE_VAR_KEYWORD}.*,${DOCKER_IMAGE_VAR_KEYWORD}\"${docker_image_name}\"," "${buildscript_filepath}"
-
-# Set Kurtosis Core dev mode to false in buildscript
-sed -i '' "s,^${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}.*,${IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD}\"false\"," "${buildscript_filepath}"
-
-rm -rf "${script_dirpath}"
-echo "Bootstrap complete; view the README.md in ${root_dirpath} for next steps"
