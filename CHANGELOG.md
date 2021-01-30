@@ -3,6 +3,9 @@
 * Fixing CircleCI to work with new `kurtosis-libs` repo
 * Fix `build_and_run` to work with new repo
 * Push `go test` into the golang Dockerfile
+* Refactor `build_and_run.sh` so that it can be completely Kurtosis-controlled:
+    * Rename `build_and_run.sh` to `build-and-run-core.sh` and put it in `scripts` directory at the root of this repo
+    * Place `build-and-run.sh` inside the `scripts` directory of the Golang subdirectory, that calls down to `build-and-run-core.sh`
 
 ## 1.7.1
 * Do a better job grabbing the name of the current Git ref
