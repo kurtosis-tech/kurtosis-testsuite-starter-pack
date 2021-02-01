@@ -1,3 +1,11 @@
+set -euo pipefail
+
+# TODO DEBUGGING
+exit 0
+
+# =============================================================================
+#                                    Constants
+# =============================================================================
 TESTSUITE_IMPL_DIRNAME="testsuite"
 README_FILENAME="README.md"
 DOCKERIGNORE_FILENAME=".dockerignore"
@@ -12,13 +20,23 @@ IS_KURTOSIS_CORE_DEV_MODE_VAR_KEYWORD="IS_KURTOSIS_CORE_DEV_MODE=" # The variabl
 # Response required from the user to do the bootstrapping
 BOOTSTRAP_VERIFICATION_RESPONSE="create new repo"
 
-set -euo pipefail
-script_dirpath="$(cd "$(dirname "${0}")" && pwd)"
-root_dirpath="$(dirname "${script_dirpath}")"
+
+# =============================================================================
+#                             Arg-Parsing & Validation
+# =============================================================================
+repo_dirpath="${1:-}"
+if [ -z "${repo_dirpath}" ]; then
+    echo "Error: First argument must be the directory of the repo being bootstrapped" >&2
+    exit 1
+fi
+
+
+# =============================================================================
+#                               Repo Validation
+# =============================================================================
 buildscript_filepath="${root_dirpath}/scripts/${BUILDSCRIPT_FILENAME}"
 go_mod_filepath="${root_dirpath}/${GO_MOD_FILENAME}"
 
-# ============== Validation =================================================================
 # Validation, to save us in case someone changes stuff in the future
 if [ "$(grep "${GO_MOD_MODULE_KEYWORD}" "${go_mod_filepath}" | wc -l)" -ne 1 ]; then
     echo "Validation failed: Could not find exactly one line in ${GO_MOD_FILENAME} with keyword '${GO_MOD_MODULE_KEYWORD}' for use when replacing with the user's module name" >&2
