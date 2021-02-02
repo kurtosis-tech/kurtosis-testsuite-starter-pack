@@ -4,6 +4,7 @@
 
 ### Added
 * Additional quickstarting instructions in README
+* Added a helptext to the generated `build-and-run.sh` after bootstrapping
 
 # 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
