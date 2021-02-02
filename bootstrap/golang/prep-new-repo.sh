@@ -39,7 +39,6 @@ fi
 #                               Copying Files
 # =============================================================================
 cp "${input_dirpath}/.dockerignore" "${output_dirpath}/"
-cp "${input_dirpath}/Dockerfile" "${output_dirpath}/"
 cp "${input_dirpath}/${GO_MOD_FILENAME}" "${output_dirpath}/"
 cp "${input_dirpath}/go.sum" "${output_dirpath}/"
 cp -r "${input_dirpath}/${TESTSUITE_IMPL_DIRNAME}" "${output_dirpath}/"

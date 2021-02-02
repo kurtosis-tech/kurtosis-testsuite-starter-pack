@@ -6,6 +6,9 @@
 * Additional quickstarting instructions in README
 * Added a helptext to the generated `build-and-run.sh` after bootstrapping
 
+### Changed
+* Moved `Dockefile` inside the `testsuite` repo of each language once again
+
 # 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
 * Fixing CircleCI to work with new `kurtosis-libs` repo
