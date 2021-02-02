@@ -2,6 +2,9 @@
 ### Fixed
 * `kurtosis.sh` issue where passing in `--help` would result in an error
 
+### Added
+* Additional quickstarting instructions in README
+
 # 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
 * Fixing CircleCI to work with new `kurtosis-libs` repo
