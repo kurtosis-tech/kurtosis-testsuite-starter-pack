@@ -74,7 +74,7 @@ if [ -z "${output_dirpath}" ]; then
     echo "Error: Output dirpath must not be empty" >&2
     show_help_and_exit
 fi
-if [ "$(ls -A "${output_dirpath}")" ]; then
+if [ -d "${output_dirpath}" ] && [ "$(ls -A "${output_dirpath}")" ]; then
     echo "Error: Output directory '${output_dirpath}' exists, but is not empty"
     exit 1
 fi
