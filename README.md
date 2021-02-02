@@ -1,15 +1,20 @@
-Kurtosis Go Client
+Kurtosis Libs
 ==================
 This repo contains:
 
-1. The Kurtosis Go client for using the Kurtosis platform with Golang
-2. [An example implementation of the Go client](./testsuite), to demonstrate how to use the client
-3. A generator for building new Kurtosis Go testsuites
+1. Libraries in various languages for interacting with Kurtosis Core, which are used to write testsuites
+1. Example implementations of testsuites in each langauge
+1. Infrastructure for bootstrapping a new testsuite, that you can use to create your own customized testsuite
 
 ### Quickstart
-To get started building your own Kurtosis testsuite in Go, see [the Quickstart docs](https://docs.kurtosistech.com/quickstart.html).
+To get started building your own Kurtosis testsuite:
 
-### Library Development
+<!-- TODO embed the supported-languages file in this Markdown -->
+1. Clone this repo's `master` branch: `git clone --single-branch --branch master THIS_REPO_URL`
+1. View the `supported-languages.txt` file and choose the language you'd like your testsuite in
+1. Run `bootstrap/bootstrap.sh YOUR_LANG /path/to/output/testsuite/dir`
+
+### Developing Libraries
 Each library needs to talk with Kurtosis Core, and the Kurtosis Core API is defined via Protobuf. Rather than storing the Protobufs in Git submodules (which add significant complexity), the `.proto` files are simply copied from the relevant version of Kurtosis Core. In the future, we can move to a more productized solution.
 
 To regenerate the bindings corresponding to the Protobuf files, use the `scripts/regenerate-protobuf-output.sh` script.
