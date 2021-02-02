@@ -74,7 +74,7 @@ if [ -z "${output_dirpath}" ]; then
 fi
 if [ "$(ls -A "${output_dirpath}")" ]; then
     echo "Error: Output directory '${output_dirpath}' exists, but is not empty"
-    show_help_and_exit
+    exit 1
 fi
 
 # =============================================================================
@@ -133,6 +133,10 @@ root_dirpath="\$(dirname "\${script_dirpath}")"
 kurtosis_core_dirpath="\${root_dirpath}/${KURTOSIS_CORE_DIRNAME}"
 
 # Arg-parsing
+if [ "\${#}" -eq 0 ]; then
+    echo "Error: Must provide at least one argument (pass 'help' to see options)" >&2
+    exit 1
+fi
 action="\${1:-}"
 shift 1
 
@@ -145,7 +149,7 @@ bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \\
     "\${action}" \\
     "${testsuite_image}" \\
     "${output_dirpath}" \\
-    "\${root_dirpath}/testsuite/Dockerfile" \\
+    "\${root_dirpath}/Dockerfile" \\
     "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \\
     --custom-params "\${custom_params_json}" \\
     \${1+"\${@}"}

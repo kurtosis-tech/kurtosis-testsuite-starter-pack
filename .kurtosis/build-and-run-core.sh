@@ -12,17 +12,17 @@ HELP_ACTION="help"
 
 # ====================== ARG PARSING =======================================================
 show_help_and_exit() {
-    echo "$(basename ${0}) suite_image_name repo_dirpath dockerfile_filepath action [run_arg1] [run_arg2]..."
+    echo "$(basename ${0}) action suite_image_name repo_dirpath dockerfile_filepath [run_arg1] [run_arg2]..."
     echo ""
     echo "  This script will optionally a) build your Kurtosis testsuite into a Docker image and/or b) run it via a call to the kurtosis.sh script"
     echo ""
+    echo "    action                Determines the action this script will execute ('${HELP_ACTION}' to print this message, '${BUILD_ACTION}' to only build the testsuite"
+    echo "                              image, '${RUN_ACTION}' to just run the testsuite image, and '${BOTH_ACTION}' to both build and run the testsuite)"
     echo "    suite_image           The name to give the built Docker image containing the testsuite"
     echo "    repo_dirpath          Path to the root of the repo containing the testsuite to build"
     echo "    dockerfile_filepath   Filepath to the Dockerfile for building the testsuite Docker image"
     echo "    wrapper_filepath      Filepath to the kurtosis.sh wrapper script"
     echo "    run_arg               Argument to pass to kurtosis.sh when running the testsuite (use '--help' here to see all options)"
-    echo "    action                Determines the action this script will execute ('${HELP_ACTION}' to print this message, '${BUILD_ACTION}' to only build the testsuite"
-    echo "                              image, '${RUN_ACTION}' to just run the testsuite image, and '${BOTH_ACTION}' to both build and run the testsuite)"
     echo ""
     echo "  To see the args the kurtosis.sh script accepts for the 'run' phase, call '$(basename ${0}) all --help'"
     echo ""
@@ -32,6 +32,9 @@ show_help_and_exit() {
 if [ "${#}" -lt 5 ]; then
     show_help_and_exit
 fi
+
+action="${1:-}"
+shift 1
 
 suite_image="${1:-}"
 shift 1
@@ -43,11 +46,6 @@ dockerfile_filepath="${1:-}"
 shift 1
 
 wrapper_filepath="${1:-}"
-shift 1
-
-# We intentionally put the 'action' arg last, so that the wrapping build-and-run.sh script that calls this script can use "${@}" to pass in both the action and the
-#  extra kurtosis.sh args in a single command
-action="${1:-}"
 shift 1
 
 do_build=true
@@ -125,7 +123,7 @@ if "${do_build}"; then
     fi
 
     echo "Building '${suite_image}' Docker image..."
-    if ! docker build -t "${suite_image}:${docker_tag}" -f "${repo_dirpath}/testsuite/Dockerfile" "${repo_dirpath}"; then
+    if ! docker build -t "${suite_image}:${docker_tag}" -f "${dockerfile_filepath}" "${repo_dirpath}"; then
         echo "Error: Docker build of the testsuite failed" >&2
         exit 1
     fi
