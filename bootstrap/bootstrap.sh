@@ -172,7 +172,7 @@ bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \\
     "\${action}" \\
     "${testsuite_image}" \\
     "\${root_dirpath}" \\
-    "\${root_dirpath}/Dockerfile" \\
+    "\${root_dirpath}/testsuite/Dockerfile" \\
     "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \\
     --custom-params "\${custom_params_json}" \\
     \${1+"\${@}"}
