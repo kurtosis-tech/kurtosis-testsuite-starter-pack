@@ -1,14 +1,9 @@
 [package]
-name = "kurtosis_rust_example"
+name = "kurtosis_rust_lib"
 version = "0.1.0"
 authors = ["mieubrisse <mieubrisse@gmail.com>"]
 edition = "2018"
 
-[[bin]]
-name = "kurtosis_rust_example"
-path = "src/main.rs"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-kurtosis_rust_lib = { path = "../lib" }

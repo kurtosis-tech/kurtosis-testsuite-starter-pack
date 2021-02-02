@@ -1,3 +1,5 @@
+use kurtosis_rust_lib;
+
 fn main() {
-    println!("Hello, world!");
+    kurtosis_rust_lib::say_hello();
 }
