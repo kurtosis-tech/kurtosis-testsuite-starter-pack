@@ -5,8 +5,10 @@ repo_root_dirpath="$(dirname "${script_dirpath}")"
 # =============================================================================
 #                                 Constants
 # =============================================================================
-SUPPORTED_LANGS_FILENAME="supported-languages.txt"
+# A sed regex that will be used to determine if the user-supplied image name matches the regex
+ALLOWD_IMAGE_NAME_REGEX='a-z0-9._/-'
 
+SUPPORTED_LANGS_FILENAME="supported-languages.txt"
 INPUT_KURTOSIS_CORE_DIRNAME=".kurtosis"
 WRAPPER_SCRIPT_FILENAME="kurtosis.sh"
 BUILD_AND_RUN_CORE_FILENAME="build-and-run-core.sh"
@@ -17,7 +19,7 @@ BOOTSTRAP_PARAMS_JSON_FILENAME="bootstrap-suite-params.json"
 
 # Output repo constants
 OUTPUT_README_FILENAME="README.md"
-KURTOSIS_CORE_DIRNAME=".kurtosis"
+OUTPUT_KURTOSIS_CORE_DIRNAME=".kurtosis"
 OUTPUT_SCRIPTS_DIRNAME="scripts"
 BUILD_AND_RUN_FILENAME="build-and-run.sh"
 
@@ -82,9 +84,14 @@ fi
 # =============================================================================
 testsuite_image=""
 while [ -z "${testsuite_image}" ]; do
-    echo "Name for the testsuite Docker image that the repo will build, which must conform to the Docker image naming rules:"
-    echo "  https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
-    read -p "Image name (e.g. your-dockerhub-org/your-image-name): " testsuite_image
+    read -p "Name for Docker image that will be built to contain testsuite (must match regex [${ALLOWD_IMAGE_NAME_REGEX}]+): " candidate_testsuite_image
+
+    sanitized_image="$(echo "${candidate_testsuite_image}" | sed "s|[^${ALLOWD_IMAGE_NAME_REGEX}]||g")"
+    if [ "${sanitized_image}" != "${candidate_testsuite_image}" ]; then
+        echo "Error: Image name '${candidate_testsuite_image}' doesn't match regex [${ALLOWD_IMAGE_NAME_REGEX}]+" >&2
+    else
+        testsuite_image="${candidate_testsuite_image}"
+    fi
 done
 
 
@@ -103,7 +110,7 @@ fi
 
 # Copy over Kurtosis Core scripts
 input_kurtosis_core_dirpath="${repo_root_dirpath}/${INPUT_KURTOSIS_CORE_DIRNAME}"
-output_kurtosis_core_dirpath="${output_dirpath}/${KURTOSIS_CORE_DIRNAME}"
+output_kurtosis_core_dirpath="${output_dirpath}/${OUTPUT_KURTOSIS_CORE_DIRNAME}"
 if ! mkdir -p "${output_kurtosis_core_dirpath}"; then
     echo "Error: Could not create Kurtosis Core directory '${output_kurtosis_core_dirpath}'" >&2
     exit 1
@@ -124,13 +131,17 @@ if ! mkdir -p "${output_scripts_dirpath}"; then
     exit 1
 fi
 bootstrap_params_json_filepath="${lang_bootstrap_dirpath}/${BOOTSTRAP_PARAMS_JSON_FILENAME}"
+if ! [ -f "${bootstrap_params_json_filepath}" ]; then
+    echo "Error: Could not find bootstrap testsuite params at '${bootstrap_params_json_filepath}'; this is a bug with the bootstrapping process" >&2
+    exit 1
+fi
 bootstrap_params_json="$(cat "${bootstrap_params_json_filepath}")"
 output_build_and_run_wrapper_filepath="${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME}"
 cat << EOF > "${output_build_and_run_wrapper_filepath}"
 set -euo pipefail
 script_dirpath="\$(cd "\$(dirname "\${0}")" && pwd)"
 root_dirpath="\$(dirname "\${script_dirpath}")"
-kurtosis_core_dirpath="\${root_dirpath}/${KURTOSIS_CORE_DIRNAME}"
+kurtosis_core_dirpath="\${root_dirpath}/${OUTPUT_KURTOSIS_CORE_DIRNAME}"
 
 # Arg-parsing
 if [ "\${#}" -eq 0 ]; then
@@ -148,7 +159,7 @@ custom_params_json='${bootstrap_params_json}'
 bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \\
     "\${action}" \\
     "${testsuite_image}" \\
-    "${output_dirpath}" \\
+    "\${root_dirpath}" \\
     "\${root_dirpath}/Dockerfile" \\
     "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \\
     --custom-params "\${custom_params_json}" \\
@@ -172,6 +183,10 @@ Welcome to your new Kurtosis testsuite! Now that you've bootstrapped, you can co
 
 To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'
 EOF
+if [ "${?}" -ne 0 ]; then
+    echo "Error: Could not write README file to '${output_readme_filepath}'" >&2
+    exit 1
+fi
 
 #Initialize the new repo as a Git directory, because running the testsuite depends on it
 if ! command -v git &> /dev/null; then
@@ -195,4 +210,4 @@ if ! git commit -m "Initial commit" > /dev/null; then
     exit 1
 fi
 
-echo "Bootstrap complete! Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
+echo "Bootstrap successful! Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"

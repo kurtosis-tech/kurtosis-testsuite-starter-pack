@@ -4,7 +4,6 @@ set -euo pipefail
 #                                    Constants
 # =============================================================================
 TESTSUITE_IMPL_DIRNAME="testsuite"
-README_FILENAME="README.md"
 
 # Constants 
 GO_MOD_FILENAME="go.mod"
