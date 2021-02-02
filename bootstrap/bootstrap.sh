@@ -7,7 +7,7 @@ repo_root_dirpath="$(dirname "${script_dirpath}")"
 # =============================================================================
 SUPPORTED_LANGS_FILENAME="supported-languages.txt"
 
-ROOT_SCRIPTS_DIRNAME="scripts"
+INPUT_KURTOSIS_CORE_DIRNAME=".kurtosis"
 WRAPPER_SCRIPT_FILENAME="kurtosis.sh"
 BUILD_AND_RUN_CORE_FILENAME="build-and-run-core.sh"
 
@@ -72,6 +72,10 @@ if [ -z "${output_dirpath}" ]; then
     echo "Error: Output dirpath must not be empty" >&2
     show_help_and_exit
 fi
+if [ "$(ls -A "${output_dirpath}")" ]; then
+    echo "Error: Output directory '${output_dirpath}' exists, but is not empty"
+    show_help_and_exit
+fi
 
 # =============================================================================
 #                                 Main Code
@@ -83,17 +87,13 @@ while [ -z "${testsuite_image}" ]; do
     read -p "Image name (e.g. your-dockerhub-org/your-image-name): " testsuite_image
 done
 
+
+# Use language-specific prep script to populate contents of output directory
 if ! mkdir -p "${output_dirpath}"; then
     echo "Error: Could not create output directory '${output_dirpath}'" >&2
     exit 1
 fi
-
 lang_dirpath="${repo_root_dirpath}/${lang}"
-if ! cp -r "${lang_dirpath}/" "${output_dirpath}/"; then
-    echo "Error: Could not copy files from ${lang_dirpath} to ${output_dirpath}" >&2
-    exit 1
-fi
-
 lang_bootstrap_dirpath="${script_dirpath}/${lang}"
 prep_new_repo_script_filepath="${lang_bootstrap_dirpath}/${PREP_NEW_REPO_FILENAME}"
 if ! bash "${prep_new_repo_script_filepath}" "${lang_dirpath}" "${output_dirpath}"; then
@@ -101,61 +101,79 @@ if ! bash "${prep_new_repo_script_filepath}" "${lang_dirpath}" "${output_dirpath
     exit 1
 fi
 
+# Copy over Kurtosis Core scripts
+input_kurtosis_core_dirpath="${repo_root_dirpath}/${INPUT_KURTOSIS_CORE_DIRNAME}"
+output_kurtosis_core_dirpath="${output_dirpath}/${KURTOSIS_CORE_DIRNAME}"
+if ! mkdir -p "${output_kurtosis_core_dirpath}"; then
+    echo "Error: Could not create Kurtosis Core directory '${output_kurtosis_core_dirpath}'" >&2
+    exit 1
+fi
+if ! cp "${input_kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" "${output_kurtosis_core_dirpath}/"; then
+    echo "Error: Could not copy ${WRAPPER_SCRIPT_FILENAME} to ${output_kurtosis_core_dirpath}" >&2
+    exit 1
+fi
+if ! cp "${input_kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" "${output_kurtosis_core_dirpath}/"; then
+    echo "Error: Could not copy ${BUILD_AND_RUN_CORE_FILENAME} to ${output_kurtosis_core_dirpath}" >&2 
+    exit 1
+fi
+
+# Create build-and-run wrapper over build-and-run-core
 output_scripts_dirpath="${output_dirpath}/${OUTPUT_SCRIPTS_DIRNAME}"
 if ! mkdir -p "${output_scripts_dirpath}"; then
     echo "Error: Could not create the output scripts directory at '${output_scripts_dirpath}'" >&2
     exit 1
 fi
-
-# TODO PUT KURTOSIS STUFF IN ITS OWN DIRECTORY
-input_scripts_dirpath="${repo_root_dirpath}/${ROOT_SCRIPTS_DIRNAME}"
-if ! cp "${input_scripts_dirpath}/${WRAPPER_SCRIPT_FILENAME}" "${output_scripts_dirpath}/"; then
-    echo "Error: Could not copy ${WRAPPER_SCRIPT_FILENAME} to ${output_scripts_dirpath}" >&2
-    exit 1
-fi
-if ! cp "${input_scripts_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" "${output_scripts_dirpath}/"; then
-    echo "Error: Could not copy ${BUILD_AND_RUN_CORE_FILENAME} to ${output_scripts_dirpath}" >&2 
-    exit 1
-fi
-
 bootstrap_params_json_filepath="${lang_bootstrap_dirpath}/${BOOTSTRAP_PARAMS_JSON_FILENAME}"
 bootstrap_params_json="$(cat "${bootstrap_params_json_filepath}")"
 output_build_and_run_wrapper_filepath="${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME}"
-cat <<- EOF > "${output_build_and_run_wrapper_filepath}"
-    set -euo pipefail
-    script_dirpath="\$(cd "\$(dirname "\${0}")" && pwd)"
-    root_dirpath="\$(dirname "\${script_dirpath}")"
-    kurtosis_core_dirpath="\${root_dirpath}/${KURTOSIS_CORE_DIRNAME}"
+cat << EOF > "${output_build_and_run_wrapper_filepath}"
+set -euo pipefail
+script_dirpath="\$(cd "\$(dirname "\${0}")" && pwd)"
+root_dirpath="\$(dirname "\${script_dirpath}")"
+kurtosis_core_dirpath="\${root_dirpath}/${KURTOSIS_CORE_DIRNAME}"
 
-    # Arg-parsing
-    if [ "\${#}" -eq 0 ]; then
-        echo "Error: Must specify an action (help, build, run, all)" >&2
-        exit 1
-    fi
-    action="\${1:-}"
-    shift 1
+# Arg-parsing
+if [ "\${#}" -eq 0 ]; then
+    echo "Error: Must specify an action (help, build, run, all)" >&2
+    exit 1
+fi
+action="\${1:-}"
+shift 1
 
-    # Main code
-    # >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
-    custom_params_json='${bootstrap_params_json}'
-    # >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
+# Main code
+# >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
+custom_params_json='${bootstrap_params_json}'
+# >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
 
-    bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \
-        "\${action}" \
-        "${testsuite_image}" \
-        "${output_dirpath}" \
-        "\${root_dirpath}/testsuite/Dockerfile" \
-        "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \
-        --custom-params "\${custom_params_json}" \
-        \${1+"\${@}"}
+bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \\
+    "\${action}" \\
+    "${testsuite_image}" \\
+    "${output_dirpath}" \\
+    "\${root_dirpath}/testsuite/Dockerfile" \\
+    "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \\
+    --custom-params "\${custom_params_json}" \\
+    \${1+"\${@}"}
 EOF
 if [ "${?}" -ne 0 ]; then
     echo "Error: Could not write build-and-run wrapper to '${output_build_and_run_wrapper_filepath}'" >&2
     exit 1
 fi
+if ! chmod u+x "${output_build_and_run_wrapper_filepath}"; then
+    echo "Error: Could not make build-and-run wrapper '${output_build_and_run_wrapper_filepath}' executable" >&2
+    exit 1
+fi
 
+# README file
+output_readme_filepath="${output_dirpath}/${OUTPUT_README_FILENAME}"
+cat << EOF > "${output_readme_filepath}"
+My Kurtosis Testsuite
+=====================
+Welcome to your new Kurtosis testsuite! Now that you've bootstrapped, you can continue with the quickstart section from the "Run your testsuite" section.
 
-# We have to initialize the new repo as a Git directory because bootstrapping depends on it
+To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'
+EOF
+
+#Initialize the new repo as a Git directory, because running the testsuite depends on it
 if ! command -v git &> /dev/null; then
     echo "Error: Git is required to create a new testsuite repo, but it is not installed" >&2
     exit 1
@@ -172,18 +190,9 @@ if ! git add . "${output_dirpath}"; then
     echo "Error: Could not stage files in new repo for committing" >&2
     exit 1
 fi
-if ! git commit -m "Initial commit"; then
+if ! git commit -m "Initial commit" > /dev/null; then
     echo "Error: Could not create initial commit in new repo" >&2
     exit 1
 fi
-
-output_readme_filepath="${output_dirpath}/${OUTPUT_README_FILENAME}"
-cat <<- EOF "${OUTPUT_README_FILENAME}" > "${output_readme_filepath}"
-    My Kurtosis Testsuite
-    =====================
-    Welcome to your new Kurtosis testsuite! Now that you've bootstrapped, you can continue with the quickstart section from the "Run your testsuite" section.
-
-    To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'
-EOF
 
 echo "Bootstrap complete! Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
