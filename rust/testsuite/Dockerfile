@@ -2,18 +2,15 @@ FROM rust:1.49-alpine3.12 AS builder
 
 WORKDIR /build
 
-# Copy and download dependencies using go mod
-COPY go.mod .
-COPY go.sum .
-RUN go mod download
+# TODO Copy dependencies in the same way we copy go.mod and do mod download???
 
 # Copy the code into the container
 COPY . .
 
-RUN go test ./...
+# TODO Rust tests
 
 # Build the application
-RUN GOOS=linux rustc -o testsuite.bin testsuite/main.go
+RUN rustc -o testsuite.bin testsuite/main.rs
 
 # ============= Execution Stage ================
 FROM alpine:3.12 AS execution
