@@ -123,7 +123,7 @@ if "${do_build}"; then
     fi
 
     echo "Building '${suite_image}' Docker image..."
-    if ! docker build -t "${suite_image}:${docker_tag}" -f "${repo_dirpath}/testsuite/Dockerfile" "${repo_dirpath}"; then
+    if ! docker build -t "${suite_image}:${docker_tag}" -f "${dockerfile_filepath}" "${repo_dirpath}"; then
         echo "Error: Docker build of the testsuite failed" >&2
         exit 1
     fi
