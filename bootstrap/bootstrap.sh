@@ -1,4 +1,3 @@
-set -x
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${0}")" && pwd)"
 repo_root_dirpath="$(dirname "${script_dirpath}")"
@@ -14,8 +13,10 @@ BUILD_AND_RUN_CORE_FILENAME="build-and-run-core.sh"
 
 # Script for prepping a new testsuite repo
 PREP_NEW_REPO_FILENAME="prep-new-repo.sh"
+BOOTSTRAP_PARAMS_JSON_FILENAME="bootstrap-suite-params.json"
 
 # Output repo constants
+OUTPUT_README_FILENAME="README.md"
 KURTOSIS_CORE_DIRNAME=".kurtosis"
 OUTPUT_SCRIPTS_DIRNAME="scripts"
 BUILD_AND_RUN_FILENAME="build-and-run.sh"
@@ -76,7 +77,7 @@ fi
 #                                 Main Code
 # =============================================================================
 testsuite_image=""
-while [ -z "${tetsuite_image}" ]; do
+while [ -z "${testsuite_image}" ]; do
     echo "Name for the testsuite Docker image that the repo will build, which must conform to the Docker image naming rules:"
     echo "  https://docs.docker.com/engine/reference/commandline/tag/#extended-description"
     read -p "Image name (e.g. your-dockerhub-org/your-image-name): " testsuite_image
@@ -95,7 +96,7 @@ fi
 
 lang_bootstrap_dirpath="${script_dirpath}/${lang}"
 prep_new_repo_script_filepath="${lang_bootstrap_dirpath}/${PREP_NEW_REPO_FILENAME}"
-if ! bash "${prep_new_repo_script_filepath}" "${output_dirpath}"; then
+if ! bash "${prep_new_repo_script_filepath}" "${lang_dirpath}" "${output_dirpath}"; then
     echo "Error: Failed to prep new repo using script '${prep_new_repo_script_filepath}'" >&2
     exit 1
 fi
@@ -117,6 +118,8 @@ if ! cp "${input_scripts_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" "${output_scri
     exit 1
 fi
 
+bootstrap_params_json_filepath="${lang_bootstrap_dirpath}/${BOOTSTRAP_PARAMS_JSON_FILENAME}"
+bootstrap_params_json="$(cat "${bootstrap_params_json_filepath}")"
 output_build_and_run_wrapper_filepath="${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME}"
 cat <<- EOF > "${output_build_and_run_wrapper_filepath}"
     set -euo pipefail
@@ -134,14 +137,13 @@ cat <<- EOF > "${output_build_and_run_wrapper_filepath}"
 
     # Main code
     # >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
-    custom_params_json='{
-    }'
+    custom_params_json='${bootstrap_params_json}'
     # >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
 
     bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \
         "\${action}" \
         "${testsuite_image}" \
-        "${lang_root_dirpath}" \
+        "${output_dirpath}" \
         "\${root_dirpath}/testsuite/Dockerfile" \
         "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \
         --custom-params "\${custom_params_json}" \
@@ -174,5 +176,14 @@ if ! git commit -m "Initial commit"; then
     echo "Error: Could not create initial commit in new repo" >&2
     exit 1
 fi
+
+output_readme_filepath="${output_dirpath}/${OUTPUT_README_FILENAME}"
+cat <<- EOF "${OUTPUT_README_FILENAME}" > "${output_readme_filepath}"
+    My Kurtosis Testsuite
+    =====================
+    Welcome to your new Kurtosis testsuite! Now that you've bootstrapped, you can continue with the quickstart section from the "Run your testsuite" section.
+
+    To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'
+EOF
 
 echo "Bootstrap complete! Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
