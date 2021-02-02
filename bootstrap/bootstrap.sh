@@ -179,9 +179,7 @@ output_readme_filepath="${output_dirpath}/${OUTPUT_README_FILENAME}"
 cat << EOF > "${output_readme_filepath}"
 My Kurtosis Testsuite
 =====================
-Welcome to your new Kurtosis testsuite! Now that you've bootstrapped, you can continue with the quickstart section from the "Run your testsuite" section.
-
-To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'
+Welcome to your new Kurtosis testsuite! To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'. To see help information, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} help'.
 EOF
 if [ "${?}" -ne 0 ]; then
     echo "Error: Could not write README file to '${output_readme_filepath}'" >&2
