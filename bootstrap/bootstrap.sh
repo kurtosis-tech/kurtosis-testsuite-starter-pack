@@ -46,7 +46,7 @@ done < "${supported_langs_filepath}"
 
 show_help_and_exit() {
     echo ""
-    echo "$(basename "${0}") lang new_repo_dirpath"
+    echo "Usage: $(basename "${0}") lang new_repo_dirpath"
     echo ""
     echo "  lang                Language that the new testsuite repo should be in ($(paste -d '|' "${supported_langs_filepath}"))"
     echo "  new_repo_dirpath    Path to the new directory to create to contain the testsuite repo"
