@@ -1,0 +1,5 @@
+{
+    "apiServiceImage" :"kurtosistech/example-microservices_api",
+    "datastoreServiceImage": "kurtosistech/example-microservices_datastore",
+    "isKurtosisCoreDevMode": false
+}
