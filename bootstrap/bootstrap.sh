@@ -133,10 +133,6 @@ root_dirpath="\$(dirname "\${script_dirpath}")"
 kurtosis_core_dirpath="\${root_dirpath}/${KURTOSIS_CORE_DIRNAME}"
 
 # Arg-parsing
-if [ "\${#}" -eq 0 ]; then
-    echo "Error: Must specify an action (help, build, run, all)" >&2
-    exit 1
-fi
 action="\${1:-}"
 shift 1
 
