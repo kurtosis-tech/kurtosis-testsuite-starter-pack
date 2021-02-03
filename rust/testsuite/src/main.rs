@@ -1,5 +1,8 @@
-use kurtosis_rust_lib;
+extern crate pretty_env_logger;
+#[macro_use] extern crate log;
+
+mod services_impl;
 
 fn main() {
-    kurtosis_rust_lib::say_hello();
+    services_impl
 }

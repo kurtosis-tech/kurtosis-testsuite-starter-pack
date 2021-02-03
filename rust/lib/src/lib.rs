@@ -6,6 +6,10 @@
 //     }
 // }
 
+use services::service;
+
+pub mod services;
+
 
 pub fn say_hello() {
     println!("Hello, world!");
