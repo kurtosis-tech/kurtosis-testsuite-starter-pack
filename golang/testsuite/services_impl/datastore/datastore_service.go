@@ -99,7 +99,7 @@ func (service DatastoreService) Get(key string) (string, error) {
 		return "", stacktrace.Propagate(err, "An error occurred requesting data for key '%v'", key)
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", stacktrace.NewError("A non-%v status code was returned", resp.StatusCode)
+		return "", stacktrace.NewError("A non-OK status code was returned: %v", resp.StatusCode)
 	}
 	body := resp.Body
 	defer body.Close()

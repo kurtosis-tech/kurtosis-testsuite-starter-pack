@@ -2,16 +2,88 @@ use reqwest;
 
 use kurtosis_rust_lib::services::service;
 use reqwest::Request;
+use kurtosis_rust_lib::services::service::Service;
+use std::error::Error;
+use std::fs::File;
+use reqwest::header::CONTENT_TYPE;
 
 const HEALTHCHECK_URL_SLUG: &str = "health";
 const HEALTHY_VALUE: &str = "healthy";
 const TEXT_CONTENT_TYPE: &str = "text/plain";
 const KEY_ENDPOINT: &str = "key";
+const NOT_FOUND_ERR_CODE: u16 = 404;
 
-struct DatastoreService {
+pub struct DatastoreService {
     service_id: service::ServiceId,
     ip_addr: &'static str,
-    port: i32,
+    port: u32,
+}
+
+impl DatastoreService {
+    pub fn new(service_id: &str, ip_addr: &str, port: u32) -> DatastoreService {
+        return DatastoreService{
+            service_id,
+            ip_addr,
+            port,
+        };
+    }
+
+    fn get_port(&self) -> u32 {
+        return self.port;
+    }
+
+    fn exists(&self, key: &str) -> Result<bool, dyn Error> {
+        self.get_url_for_key(key);
+
+        let url = self.get_url_for_key(key);
+        let resp = reqwest::get(url)
+            .await?;
+        let resp_status = resp.status();
+        if resp_status.is_success() {
+            return Ok(true);
+        } else if resp_status.as_u16() == NOT_FOUND_ERR_CODE {
+            return Ok(false);
+        } else {
+            return Err(format!("Got an unexpected HTTP status code: {}", resp_status));
+        }
+    }
+
+    fn get(&self, key: &str) -> Result<String, dyn Error> {
+        url = self.get_url_for_key(key);
+        let resp = reqwest::get(url)
+            .await?;
+        let resp_status = resp.status();
+        if !resp_status.is_success() {
+            return Err(format!("A non-successful error code was returned: {}", resp_status.as_u16()))
+        }
+        let resp_body = resp.text().await?;
+        return Ok(resp_body)
+    }
+
+    fn upsert(&self, key: &str, value: &str) -> Result<(), dyn Error> {
+        let url = self.get_url_for_key(key);
+        let client = reqwest::Client::new();
+        let resp = client.post(url)
+            .header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
+            .body(value)
+            .send()
+            .await?;
+        let resp_status = resp.status();
+        if !resp_status.is_success() {
+            return Err(format!("Got non-OK status code: {}", resp_status.as_u16()))
+        }
+        return Ok(());
+    }
+
+    fn get_url_for_key(&self, key: &str) -> String {
+        return format!(
+            "http://{}:{}/{}/{}",
+            self.get_ip_address(),
+            self.get_port(),
+            KEY_ENDPOINT,
+            key
+        );
+    }
 }
 
 impl service::Service for DatastoreService {
@@ -60,104 +132,3 @@ impl service::Service for DatastoreService {
     }
 }
 
-/*
-
-func NewDatastoreService(serviceId services.ServiceID, ipAddr string, port int) *DatastoreService {
-	return &DatastoreService{serviceId: serviceId, ipAddr: ipAddr, port: port}
-}
-
-// ===========================================================================================
-//                              Service interface methods
-// ===========================================================================================
-func (service DatastoreService) GetServiceID() services.ServiceID {
-	return service.serviceId
-}
-
-func (service DatastoreService) GetIPAddress() string {
-	return service.ipAddr
-}
-
-
-func (service DatastoreService) IsAvailable() bool {
-	url := fmt.Sprintf("http://%v:%v/%v", service.GetIPAddress(), service.port, healthcheckUrlSlug)
-	resp, err := http.Get(url)
-	if err != nil {
-		logrus.Debugf("An HTTP error occurred when polliong the health endpoint: %v", err)
-		return false
-	}
-	if resp.StatusCode != http.StatusOK {
-		logrus.Debugf("Received non-OK status code: %v", resp.StatusCode)
-		return false
-	}
-
-	body := resp.Body
-	defer body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(body)
-	if err != nil {
-		logrus.Debugf("An error occurred reading the response body: %v", err)
-		return false
-	}
-	bodyStr := string(bodyBytes)
-
-	return bodyStr == healthyValue
-}
-
-// ===========================================================================================
-//                         Datastore service-specific methods
-// ===========================================================================================
-func (service DatastoreService) GetPort() int {
-	return service.port
-}
-
-func (service DatastoreService) Exists(key string) (bool, error) {
-	url := service.getUrlForKey(key)
-	resp, err := http.Get(url)
-	if err != nil {
-		return false, stacktrace.Propagate(err, "An error occurred requesting data for key '%v'", key)
-	}
-	if resp.StatusCode == http.StatusOK {
-		return true, nil
-	} else if resp.StatusCode == http.StatusNotFound {
-		return false, nil
-	} else {
-		return false, stacktrace.NewError("Got an unexpected HTTP status code: %v", resp.StatusCode)
-	}
-}
-
-func (service DatastoreService) Get(key string) (string, error) {
-	url := service.getUrlForKey(key)
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred requesting data for key '%v'", key)
-	}
-	if resp.StatusCode != http.StatusOK {
-		return "", stacktrace.NewError("A non-%v status code was returned", resp.StatusCode)
-	}
-	body := resp.Body
-	defer body.Close()
-
-	bodyBytes, err := ioutil.ReadAll(body)
-	if err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred reading the response body")
-	}
-	return string(bodyBytes), nil
-}
-
-func (service DatastoreService) Upsert(key string, value string) error {
-	url := service.getUrlForKey(key)
-	resp, err := http.Post(url, textContentType, strings.NewReader(value))
-	if err != nil {
-		return stacktrace.Propagate(err, "An error requesting to upsert data '%v' to key '%v'", value, key)
-	}
-	if resp.StatusCode != http.StatusOK {
-		return stacktrace.NewError("A non-%v status code was returned", resp.StatusCode)
-	}
-	return nil
-}
-
-func (service DatastoreService) getUrlForKey(key string) string {
-	return fmt.Sprintf("http://%v:%v/%v/%v", service.GetIPAddress(), service.port, keyEndpoint, key)
-}
-
- */
