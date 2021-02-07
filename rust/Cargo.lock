@@ -350,6 +350,9 @@ dependencies = [
 [[package]]
 name = "kurtosis_rust_lib"
 version = "0.1.0"
+dependencies = [
+ "simple-error",
+]
 
 [[package]]
 name = "lazy_static"
@@ -760,6 +763,12 @@ dependencies = [
  "ryu",
  "serde",
 ]
+
+[[package]]
+name = "simple-error"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc47a29ce97772ca5c927f75bac34866b16d64e07f330c3248e2d7226623901b"
 
 [[package]]
 name = "slab"

@@ -31,18 +31,20 @@ impl service::DockerContainerInitializer<DatastoreService> for DatastoreContaine
         return HashSet::new();
     }
 
-    fn initialize_mounted_files(mounted_files: HashMap<&str, File>) -> Result<(), dyn Error> {
+    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<(), SimpleError> {
         return Ok(());
     }
 
-    fn get_files_artifact_mountpoints() -> HashMap<&str, &str> {
+    fn get_files_artifact_mountpoints() -> HashMap<String, String> {
         return HashMap::new();
     }
 
 
-    fn get_test_volume_mountpoint() -> &str {
+    fn get_test_volume_mountpoint() -> &'static str {
         return TEST_VOLUME_MOUNTPOINT;
     }
 
-    fn get_start_command(mounted_file_filepaths: HashMap<&str, &str>, ip_addr: &str) -> Result<Vec<String>, Error>;
+    fn get_start_command(mounted_file_filepaths: HashMap<String, String>, ip_addr: &str) -> Result<Option<Vec<String>>, dyn Error> {
+        return Ok(None)
+    }
 }

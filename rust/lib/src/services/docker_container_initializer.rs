@@ -5,8 +5,8 @@
 
 use std::collections::{HashSet, HashMap};
 use crate::services::service::Service;
-use std::error::Error;
 use std::fs::File;
+use simple_error::SimpleError;
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
 //  method every time a new feature comes out!
@@ -60,7 +60,7 @@ pub trait DockerContainerInitializer<T: Service> {
                 `GetFilesToMount`
     */
     // TODO Rename "initializeFilesToGenerate"
-    fn initialize_mounted_files(mounted_files: HashMap<&str, File>) -> Result<(), dyn Error>;
+    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<(), SimpleError>;
 
     /*
         Allows the mounting of external files into a service container by mapping files artifacts (defined in your
@@ -74,7 +74,7 @@ pub trait DockerContainerInitializer<T: Service> {
                 2) The map value is the filepath inside of the service container where the
                     contents of the archive file should be mounted after decompression.
      */
-    fn get_files_artifact_mountpoints() -> HashMap<&str, &str>;
+    fn get_files_artifact_mountpoints() -> HashMap<String, String>;
 
 
     /*
@@ -86,7 +86,7 @@ pub trait DockerContainerInitializer<T: Service> {
         Returns:
             A filepath on the Docker image backing this service that's safe to mount the test volume on
     */
-    fn get_test_volume_mountpoint() -> &str;
+    fn get_test_volume_mountpoint() -> &'static str;
 
     /*
         Uses the given arguments to build the command that the Docker container running this service will be launched with.
@@ -103,11 +103,11 @@ pub trait DockerContainerInitializer<T: Service> {
 
         Returns:
             The command fragments which will be used to construct the run command which will be used to launch the Docker container
-                running the service. If this is nil, then no explicit command will be specified and whatever command the Dockerfile
+                running the service. If this is None, then no explicit command will be specified and whatever command the Dockerfile
                 specifies will be run instead.
     */
     fn get_start_command(
-        mounted_file_filepaths: HashMap<&str, &str>,
+        mounted_file_filepaths: HashMap<String, String>,
         ip_addr: &str
-    ) -> Result<Vec<String>, Error>;
+    ) -> Result<Option<Vec<String>>, SimpleError>;
 }

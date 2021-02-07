@@ -28,11 +28,11 @@ impl DatastoreService {
         };
     }
 
-    fn get_port(&self) -> u32 {
+    pub fn get_port(&self) -> u32 {
         return self.port;
     }
 
-    fn exists(&self, key: &str) -> Result<bool, dyn Error> {
+    pub fn exists(&self, key: &str) -> Result<bool, dyn Error> {
         self.get_url_for_key(key);
 
         let url = self.get_url_for_key(key);
@@ -48,7 +48,7 @@ impl DatastoreService {
         }
     }
 
-    fn get(&self, key: &str) -> Result<String, dyn Error> {
+    pub fn get(&self, key: &str) -> Result<String, dyn Error> {
         url = self.get_url_for_key(key);
         let resp = reqwest::get(url)
             .await?;
@@ -60,7 +60,7 @@ impl DatastoreService {
         return Ok(resp_body)
     }
 
-    fn upsert(&self, key: &str, value: &str) -> Result<(), dyn Error> {
+    pub fn upsert(&self, key: &str, value: &str) -> Result<(), dyn Error> {
         let url = self.get_url_for_key(key);
         let client = reqwest::Client::new();
         let resp = client.post(url)
@@ -75,6 +75,9 @@ impl DatastoreService {
         return Ok(());
     }
 
+    // ==========================================================================================
+    //                                Private helper functions
+    // ==========================================================================================
     fn get_url_for_key(&self, key: &str) -> String {
         return format!(
             "http://{}:{}/{}/{}",
