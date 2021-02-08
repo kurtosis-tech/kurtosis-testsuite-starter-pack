@@ -1,8 +1,7 @@
-use kurtosis_rust_lib::services::service;
-use std::collections::{HashSet, HashMap};
+use kurtosis_rust_lib::services::docker_container_initializer;
+use std::{collections::{HashSet, HashMap}, error::Error};
 use crate::services_impl::datastore::datastore_service::DatastoreService;
 use std::fs::File;
-use std::error::Error;
 
 const PORT: u32 = 1323;
 const PROTOCOL: &str = "tcp";
@@ -12,7 +11,7 @@ struct DatastoreContainerInitializer {
     docker_image: String,
 }
 
-impl service::DockerContainerInitializer<DatastoreService> for DatastoreContainerInitializer {
+impl docker_container_initializer::DockerContainerInitializer<DatastoreService> for DatastoreContainerInitializer {
     fn get_docker_image(&self) -> &str {
         return &self.docker_image;
     }
@@ -24,14 +23,18 @@ impl service::DockerContainerInitializer<DatastoreService> for DatastoreContaine
     }
 
     fn get_service(&self, service_id: &str, ip_addr: &str) -> DatastoreService {
-        return DatastoreService::new(service_id, ip_addr, port);
+        return DatastoreService::new(
+            service_id,
+            ip_addr, 
+            PORT
+        );
     }
 
     fn get_files_to_mount() -> HashSet<String> {
         return HashSet::new();
     }
 
-    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<(), SimpleError> {
+    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
@@ -44,7 +47,10 @@ impl service::DockerContainerInitializer<DatastoreService> for DatastoreContaine
         return TEST_VOLUME_MOUNTPOINT;
     }
 
-    fn get_start_command(mounted_file_filepaths: HashMap<String, String>, ip_addr: &str) -> Result<Option<Vec<String>>, dyn Error> {
+    fn get_start_command(
+            mounted_file_filepaths: HashMap<String, String>, 
+            ip_addr: &str
+    ) -> Result<Option<Vec<String>>, Box<dyn Error>> {
         return Ok(None)
     }
 }

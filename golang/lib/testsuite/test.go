@@ -31,7 +31,7 @@ type Test interface {
 	Args:
 		network: A user-defined representation of the network. NOTE: Because Go doesn't have generics, this will need to
 			be casted to the appropriate type.
-		context: The test context, which is the user's tool for making test assertions.
+		testCtx: The test context, which is the user's tool for making test assertions.
 	 */
 	Run(network networks.Network, testCtx TestContext)
 

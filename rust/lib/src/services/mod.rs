@@ -1,2 +1,2 @@
 pub mod service;
-mod docker_container_initializer;
+pub mod docker_container_initializer;

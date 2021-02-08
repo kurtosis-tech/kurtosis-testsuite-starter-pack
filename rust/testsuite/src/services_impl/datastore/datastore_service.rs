@@ -1,11 +1,10 @@
-use reqwest;
-
-use kurtosis_rust_lib::services::service;
-use reqwest::Request;
-use kurtosis_rust_lib::services::service::Service;
 use std::error::Error;
-use std::fs::File;
+use reqwest;
+use kurtosis_rust_lib::services::service;
+use kurtosis_rust_lib::services::service::Service;
 use reqwest::header::CONTENT_TYPE;
+use simple_error::SimpleError;
+use futures::executor::block_on;
 
 const HEALTHCHECK_URL_SLUG: &str = "health";
 const HEALTHY_VALUE: &str = "healthy";
@@ -14,16 +13,17 @@ const KEY_ENDPOINT: &str = "key";
 const NOT_FOUND_ERR_CODE: u16 = 404;
 
 pub struct DatastoreService {
-    service_id: service::ServiceId,
-    ip_addr: &'static str,
+    // TODO switch to its own type
+    service_id: String,
+    ip_addr: String,
     port: u32,
 }
 
 impl DatastoreService {
     pub fn new(service_id: &str, ip_addr: &str, port: u32) -> DatastoreService {
         return DatastoreService{
-            service_id,
-            ip_addr,
+            service_id: service_id.to_owned(),
+            ip_addr: ip_addr.to_owned(),
             port,
         };
     }
@@ -32,45 +32,57 @@ impl DatastoreService {
         return self.port;
     }
 
-    pub fn exists(&self, key: &str) -> Result<bool, dyn Error> {
+    pub fn exists(&self, key: &str) -> Result<bool, Box<dyn Error>> {
         self.get_url_for_key(key);
 
         let url = self.get_url_for_key(key);
-        let resp = reqwest::get(url)
-            .await?;
+        let future = reqwest::get(&url);
+        let resp = block_on(future)?;
         let resp_status = resp.status();
         if resp_status.is_success() {
             return Ok(true);
         } else if resp_status.as_u16() == NOT_FOUND_ERR_CODE {
             return Ok(false);
         } else {
-            return Err(format!("Got an unexpected HTTP status code: {}", resp_status));
+            return Err(
+                SimpleError::new(
+                    format!("Got an unexpected HTTP status code: {}", resp_status)
+                ).into()
+            );
         }
     }
 
-    pub fn get(&self, key: &str) -> Result<String, dyn Error> {
-        url = self.get_url_for_key(key);
-        let resp = reqwest::get(url)
-            .await?;
+    pub fn get(&self, key: &str) -> Result<String, Box<dyn Error>> {
+        let url = self.get_url_for_key(key);
+        let future = reqwest::get(&url);
+        let resp = block_on(future)?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
-            return Err(format!("A non-successful error code was returned: {}", resp_status.as_u16()))
+            return Err(
+                SimpleError::new(
+                    format!("A non-successful error code was returned: {}", resp_status.as_u16())
+                ).into()
+            );
         }
-        let resp_body = resp.text().await?;
+        let resp_body = block_on(resp.text())?;
         return Ok(resp_body)
     }
 
-    pub fn upsert(&self, key: &str, value: &str) -> Result<(), dyn Error> {
+    pub fn upsert(&self, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
         let url = self.get_url_for_key(key);
         let client = reqwest::Client::new();
-        let resp = client.post(url)
+        let future = client.post(&url)
             .header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
-            .body(value)
-            .send()
-            .await?;
+            .body(value.to_owned())
+            .send();
+        let resp = block_on(future)?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
-            return Err(format!("Got non-OK status code: {}", resp_status.as_u16()))
+            return Err(
+                SimpleError::new(
+                    format!("Got non-OK status code: {}", resp_status.as_u16())
+                ).into()
+            );
         }
         return Ok(());
     }
@@ -91,11 +103,11 @@ impl DatastoreService {
 
 impl service::Service for DatastoreService {
     fn get_service_id(&self) -> &str {
-        return self.service_id;
+        return self.service_id.as_str();
     }
 
     fn get_ip_address(&self) -> &str {
-        return self.ip_addr;
+        return self.ip_addr.as_str();
     }
 
     fn is_available(&self) -> bool {
@@ -106,9 +118,8 @@ impl service::Service for DatastoreService {
             self.port,
             HEALTHCHECK_URL_SLUG,
         );
-        let resp_or_err = client.get(url)
-            .send()
-            .await;
+        let future = client.get(&url).send();
+        let resp_or_err = block_on(future);
         if resp_or_err.is_err() {
             debug!(
                 "An HTTP error occurred when polling the health endpoint: {}",
@@ -122,7 +133,7 @@ impl service::Service for DatastoreService {
             return false;
         }
 
-        let resp_body_or_err = resp.text().await;
+        let resp_body_or_err = block_on(resp.text());
         if resp_body_or_err.is_err() {
             debug!(
                 "An error occurred reading the response body: {}",

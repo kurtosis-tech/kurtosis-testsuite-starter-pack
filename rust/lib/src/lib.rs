@@ -7,7 +7,8 @@
 // }
 
 pub mod services;
-
+pub mod execution;
+pub mod testsuite;
 
 pub fn say_hello() {
     println!("Hello, world!");
