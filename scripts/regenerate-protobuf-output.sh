@@ -13,10 +13,14 @@ INPUT_RELATIVE_DIRPATH="core-api"
 GOLANG_DIRNAME="golang"
 GO_MOD_FILENAME="go.mod"
 GO_MOD_FILE_MODULE_KEYWORD="module"
-# Relative to the root of THE LANG DIR!!!!
-GO_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"
+GO_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"   # Relative to the root of the lang dir!
+
+# -------------------------- Rust ---------------------------
+RUST_DIRNAME="rust"
+RUST_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"  # Relative to the root of the lang dir!
 
 # =============================== MAIN LOGIC =======================================================
+# -------------------------- Golang ---------------------------
 go_mod_filepath="${root_dirpath}/${GOLANG_DIRNAME}/${GO_MOD_FILENAME}"
 if ! [ -f "${go_mod_filepath}" ]; then
     echo "Error: Could not get Go module name; file '${go_mod_filepath}' doesn't exist" >&2
@@ -43,11 +47,20 @@ generate_go_protoc_args() {
     echo "--go_opt=M${protobuf_filename}=${go_bindings_pkg};$(basename "${go_bindings_pkg}")"
 }
 
+# -------------------------- Rust ---------------------------
+generate_rust_protoc_args() {
+    input_filepath="${1}"
+    output_dirpath="${2}"
+
+    echo "--rust_out ${output_dirpath}"
+}
+
 # Schema of the "object" that's the value of this map:
 # relativeOutputDirpath|patternMatchingGeneratedFiles|additionalProtocArgsGeneratingFunc
 # NOTE: the protoc args-generating function takes in two args: 1) the input filepath and 2) output dirpath
 declare -A generators
 generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|*.go|generate_go_protoc_args"
+generators["${RUST_DIRNAME}"]="${RUST_RELATIVE_OUTPUT_DIRPATH}|*.rs|generate_rust_protoc_args"
 
 
 input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"

@@ -1,37 +1,44 @@
 use std::{error::Error, time::Duration};
 
+use super::test_suite_configurator::TestSuiteConfigurator;
+
 const MAX_SUITE_REGISTRATION_RETRIES: u32 = 20;
 const TIME_BETWEEN_SUITE_REGISTRATION_RETRIES: Duration = Duration::from_millis(500);
 
-pub struct TestSuiteExecutor {
+pub struct TestSuiteExecutor<'obj> {
     kurtosis_api_socket: String,
     log_level: String,
     params_json: String,
-    // TODO configurator
+	configurator: &'obj dyn TestSuiteConfigurator,
 }
 
-impl TestSuiteExecutor {
-    pub fn new(kurtosis_api_socket: &str, log_level: &str, params_json: &str) -> TestSuiteExecutor {
+impl<'obj> TestSuiteExecutor<'obj> {
+    pub fn new(kurtosis_api_socket: &str, log_level: &str, params_json: &str, configurator: &'obj dyn TestSuiteConfigurator) -> TestSuiteExecutor {
         return TestSuiteExecutor{
             kurtosis_api_socket: kurtosis_api_socket.to_owned(),
             log_level: log_level.to_owned(),
             params_json: params_json.to_owned(),
+			configurator,
         };
     }
 
-	pub fn run(&self) -> Result((), Box(dyn Error)) {
-
-
-
-
+	pub fn run(&self) -> Result<(), Box<dyn Error>> {
+		self.configurator.set_log_level(self.log_level)?;
+		// TODO Propagate the error with a user-friendly message???
+		/*
 		if err := executor.configurator.SetLogLevel(executor.logLevelStr); err != nil {
 			return stacktrace.Propagate(err, "An error occurred setting the loglevel before running the testsuite")
 		}
+		*/
 
-		suite, err := executor.configurator.ParseParamsAndCreateSuite(executor.paramsJsonStr)
+		let suite = self.configurator.parse_params_and_create_suite(
+			self.params_json
+		)?;
+		/*
 		if err != nil {
 			return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 		}
+		*/
 
 		// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
 		conn, err := grpc.Dial(executor.kurtosisApiSocket, grpc.WithInsecure())

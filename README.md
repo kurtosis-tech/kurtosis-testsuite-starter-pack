@@ -22,6 +22,14 @@ If you see error messages after running your new testsuite, check out [the guide
 If all tests are passing, you can [proceed to customizing your testsuite](https://docs.kurtosistech.com/testsuite-customization.html).
 
 ### Developing Libraries
+Prerequisites:
+* `protoc` installed (can be installed on Mac with `brew install protobuf`)
+* The Golang extension to `protoc` installed (can be installed on Mac with `brew install protoc-gen-go`)
+* The Golang gRPC extension to `protoc` installed (can be installed on Mac with `brew install protoc-gen-go-grpc`)
+* Rust protobuf plugin installed (can be installed via [the steps here](https://github.com/stepancheg/rust-protobuf/tree/master/protobuf-codegen#but-if-you-really-want-to-use-that-plugin-heres-the-instruction))
+
+_NOTE: One day we want to push all the protobuf binding into Docker, so that the output is consistent and the developer doesn't have to install a bunch of stuff on their machine; while the dev team is small though, this is the temporary workaround_
+
 Each library needs to talk with Kurtosis Core, and the Kurtosis Core API is defined via Protobuf. Rather than storing the Protobufs in Git submodules (which add significant complexity), the `.proto` files are simply copied from the relevant version of Kurtosis Core. In the future, we can move to a more productized solution.
 
 To regenerate the bindings corresponding to the Protobuf files, use the `scripts/regenerate-protobuf-output.sh` script.
