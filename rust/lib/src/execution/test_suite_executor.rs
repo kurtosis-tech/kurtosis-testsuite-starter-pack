@@ -1,4 +1,6 @@
-use std::{error::Error, time::Duration};
+use std::{time::Duration};
+use anyhow::Result;
+use crate::core_api_bindings::api_container_api::suite_registration_service_client::SuiteRegistrationServiceClient;
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 
@@ -13,7 +15,7 @@ pub struct TestSuiteExecutor<'obj> {
 }
 
 impl<'obj> TestSuiteExecutor<'obj> {
-    pub fn new(kurtosis_api_socket: &str, log_level: &str, params_json: &str, configurator: &'obj dyn TestSuiteConfigurator) -> TestSuiteExecutor {
+    pub fn new(kurtosis_api_socket: &str, log_level: &str, params_json: &str, configurator: &'obj dyn TestSuiteConfigurator) -> TestSuiteExecutor<'obj> {
         return TestSuiteExecutor{
             kurtosis_api_socket: kurtosis_api_socket.to_owned(),
             log_level: log_level.to_owned(),
@@ -22,24 +24,16 @@ impl<'obj> TestSuiteExecutor<'obj> {
         };
     }
 
-	pub fn run(&self) -> Result<(), Box<dyn Error>> {
-		self.configurator.set_log_level(self.log_level)?;
-		// TODO Propagate the error with a user-friendly message???
-		/*
-		if err := executor.configurator.SetLogLevel(executor.logLevelStr); err != nil {
-			return stacktrace.Propagate(err, "An error occurred setting the loglevel before running the testsuite")
-		}
-		*/
+	pub fn run(&self) -> Result<()> {
+		self.configurator.set_log_level(&self.log_level)
+			.context("An error occurred setting the loglevel before running the testsuite")?;
 
-		let suite = self.configurator.parse_params_and_create_suite(
-			self.params_json
-		)?;
-		/*
-		if err != nil {
-			return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
-		}
-		*/
+		let suite = self.configurator.parse_params_and_create_suite(&self.params_json)
+			.context("An error occurred parsing the suite params JSON and creating the testsuite")?;
 
+		let client = SuiteRegistrationServiceClient::connect();
+
+		/*
 		// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
 		conn, err := grpc.Dial(executor.kurtosisApiSocket, grpc.WithInsecure())
 		if err != nil {
@@ -88,6 +82,7 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		default:
 			return stacktrace.NewError("Encountered unrecognized action '%v'; this is a bug in Kurtosis itself", action)
 		}
+		*/
 	}
 }
 

@@ -1,4 +1,5 @@
 use std::error::Error;
+use anyhow::Result;
 
 // Implementations of this interface are responsible for initialzing the testsuite to a state
 //  where it can be run
@@ -12,7 +13,7 @@ pub trait TestSuiteConfigurator {
 			 so that the logging framework can be configured.
 
 	 */
-	fn set_log_level(&self, log_level_str: &str) -> Result<(), Box<dyn Error>>;
+	fn set_log_level(&self, log_level_str: &str) -> Result<()>;
 
 	/*
 	This function should parse the custom testsuite parameters JSON (if any) and create an instance
@@ -23,5 +24,5 @@ pub trait TestSuiteConfigurator {
 			that was passed in when Kurtosis was started.
 	 */
 	// TODO MAKE RETURN TYPE OF TYPE TESTSUITE
-	fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<(), Box<dyn Error>>;
+	fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<()>;
 }
