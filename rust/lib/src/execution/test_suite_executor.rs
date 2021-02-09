@@ -89,7 +89,9 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		return Ok(());
 	}
 
-	fn run_serialize_suite_metadata_flow(testsuite: &dyn TestSuite) -> Result<()> {
+	fn run_serialize_suite_metadata_flow(testsuite: &impl TestSuite) -> Result<()> {
+		testsuite.get_tests();
+		all_test_metadata = 
 
 		/*
 	func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
