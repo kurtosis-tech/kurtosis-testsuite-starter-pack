@@ -165,7 +165,7 @@ func (test *NetworkPartitionTest) GetTestConfiguration() testsuite.TestConfigura
 }
 
 func (test NetworkPartitionTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
+	return 120 * time.Second
 }
 
 func (test NetworkPartitionTest) GetSetupTeardownBuffer() time.Duration {

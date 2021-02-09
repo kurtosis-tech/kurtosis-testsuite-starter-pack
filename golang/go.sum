@@ -42,6 +42,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.3 h1:CE8S1cTafDpPvMhIxNJ
 github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kurtosis-tech/kurtosis-libs v0.0.0-20210128220023-85d7b598a0c6 h1:c/7NpFiJPA0r3AeqMAIN9vOQGqwUO8hKQW6jIV6Upjw=
 github.com/kurtosis-tech/kurtosis-libs v0.0.0-20210129005319-318b3c446736 h1:fgJ86b2Zr7Ip4kHBvixypuqSqd6OiGgGOCZ8UynYrqo=
+github.com/kurtosis-tech/kurtosis-libs v0.0.0-20210202232951-e3ff49408d14 h1:ofQPWXehRF0kpU0L4G4eOaP5bSu7T9GOU7DKqOY46Xg=
+github.com/kurtosis-tech/kurtosis-libs v0.0.0-20210202232951-e3ff49408d14/go.mod h1:wvIAlJ6Iv8dPis5ay+cJ2CFq3mGGX7bNZisPoXHzmHA=
 github.com/kurtosis-tech/kurtosis-libs/golang v0.0.0-20210128220023-85d7b598a0c6 h1:OG75qljCk5vAg3J2p7gtaq7VVw3aXSHxKdM9e8nO310=
 github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177 h1:nRlQD0u1871kaznCnn1EvYiMbum36v7hw1DLPEjds4o=
 github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177/go.mod h1:ao5zGxj8Z4x60IOVYZUbDSmt3R8Ddo080vEgPosHpak=
