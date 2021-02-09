@@ -1,3 +1,186 @@
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SuiteRegistrationResponse {
+    #[prost(enumeration = "SuiteAction", tag = "1")]
+    pub suite_action: i32,
+}
+/// Tells the suite what action it should perform, based on the args that the API container received
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum SuiteAction {
+    /// Indicates that the testsuite should operate in metadata-serializing mode, sending suite metadata to the
+    ///  API container
+    SerializeSuiteMetadata = 0,
+    /// Indicates that the testsuite should operate in test-executing mode, running a test
+    ExecuteTest = 1,
+}
+#[doc = r" Generated client implementations."]
+pub mod suite_registration_service_client {
+    #![allow(unused_variables, dead_code, missing_docs)]
+    use tonic::codegen::*;
+    pub struct SuiteRegistrationServiceClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl SuiteRegistrationServiceClient<tonic::transport::Channel> {
+        #[doc = r" Attempt to create a new client by connecting to a given endpoint."]
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: std::convert::TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> SuiteRegistrationServiceClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T::ResponseBody: Body + HttpBody + Send + 'static,
+        T::Error: Into<StdError>,
+        <T::ResponseBody as HttpBody>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
+            let inner = tonic::client::Grpc::with_interceptor(inner, interceptor);
+            Self { inner }
+        }
+        pub async fn register_suite(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> Result<tonic::Response<super::SuiteRegistrationResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api_container_api.SuiteRegistrationService/RegisterSuite",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+    }
+    impl<T: Clone> Clone for SuiteRegistrationServiceClient<T> {
+        fn clone(&self) -> Self {
+            Self {
+                inner: self.inner.clone(),
+            }
+        }
+    }
+    impl<T> std::fmt::Debug for SuiteRegistrationServiceClient<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "SuiteRegistrationServiceClient {{ ... }}")
+        }
+    }
+}
+#[doc = r" Generated server implementations."]
+pub mod suite_registration_service_server {
+    #![allow(unused_variables, dead_code, missing_docs)]
+    use tonic::codegen::*;
+    #[doc = "Generated trait containing gRPC methods that should be implemented for use with SuiteRegistrationServiceServer."]
+    #[async_trait]
+    pub trait SuiteRegistrationService: Send + Sync + 'static {
+        async fn register_suite(
+            &self,
+            request: tonic::Request<()>,
+        ) -> Result<tonic::Response<super::SuiteRegistrationResponse>, tonic::Status>;
+    }
+    #[derive(Debug)]
+    pub struct SuiteRegistrationServiceServer<T: SuiteRegistrationService> {
+        inner: _Inner<T>,
+    }
+    struct _Inner<T>(Arc<T>, Option<tonic::Interceptor>);
+    impl<T: SuiteRegistrationService> SuiteRegistrationServiceServer<T> {
+        pub fn new(inner: T) -> Self {
+            let inner = Arc::new(inner);
+            let inner = _Inner(inner, None);
+            Self { inner }
+        }
+        pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
+            let inner = Arc::new(inner);
+            let inner = _Inner(inner, Some(interceptor.into()));
+            Self { inner }
+        }
+    }
+    impl<T, B> Service<http::Request<B>> for SuiteRegistrationServiceServer<T>
+    where
+        T: SuiteRegistrationService,
+        B: HttpBody + Send + Sync + 'static,
+        B::Error: Into<StdError> + Send + 'static,
+    {
+        type Response = http::Response<tonic::body::BoxBody>;
+        type Error = Never;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            let inner = self.inner.clone();
+            match req.uri().path() {
+                "/api_container_api.SuiteRegistrationService/RegisterSuite" => {
+                    #[allow(non_camel_case_types)]
+                    struct RegisterSuiteSvc<T: SuiteRegistrationService>(pub Arc<T>);
+                    impl<T: SuiteRegistrationService> tonic::server::UnaryService<()> for RegisterSuiteSvc<T> {
+                        type Response = super::SuiteRegistrationResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).register_suite(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = RegisterSuiteSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => Box::pin(async move {
+                    Ok(http::Response::builder()
+                        .status(200)
+                        .header("grpc-status", "12")
+                        .header("content-type", "application/grpc")
+                        .body(tonic::body::BoxBody::empty())
+                        .unwrap())
+                }),
+            }
+        }
+    }
+    impl<T: SuiteRegistrationService> Clone for SuiteRegistrationServiceServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self { inner }
+        }
+    }
+    impl<T: SuiteRegistrationService> Clone for _Inner<T> {
+        fn clone(&self) -> Self {
+            Self(self.0.clone(), self.1.clone())
+        }
+    }
+    impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self.0)
+        }
+    }
+    impl<T: SuiteRegistrationService> tonic::transport::NamedService
+        for SuiteRegistrationServiceServer<T>
+    {
+        const NAME: &'static str = "api_container_api.SuiteRegistrationService";
+    }
+}
 /// ==============================================================================================
 ///                                  Get Test Execution Info
 /// ==============================================================================================
@@ -571,5 +754,198 @@ pub mod test_execution_service_server {
     }
     impl<T: TestExecutionService> tonic::transport::NamedService for TestExecutionServiceServer<T> {
         const NAME: &'static str = "api_container_api.TestExecutionService";
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TestSuiteMetadata {
+    /// Mapping of testName -> testMetadata
+    #[prost(map = "string, message", tag = "1")]
+    pub test_metadata: ::std::collections::HashMap<::prost::alloc::string::String, TestMetadata>,
+    #[prost(uint32, tag = "2")]
+    pub network_width_bits: u32,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct TestMetadata {
+    #[prost(bool, tag = "1")]
+    pub is_partitioning_enabled: bool,
+    /// "Set" of artifact URLs used by the test
+    #[prost(map = "string, bool", tag = "2")]
+    pub used_artifact_urls: ::std::collections::HashMap<::prost::alloc::string::String, bool>,
+}
+#[doc = r" Generated client implementations."]
+pub mod suite_metadata_serialization_service_client {
+    #![allow(unused_variables, dead_code, missing_docs)]
+    use tonic::codegen::*;
+    pub struct SuiteMetadataSerializationServiceClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl SuiteMetadataSerializationServiceClient<tonic::transport::Channel> {
+        #[doc = r" Attempt to create a new client by connecting to a given endpoint."]
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: std::convert::TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> SuiteMetadataSerializationServiceClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T::ResponseBody: Body + HttpBody + Send + 'static,
+        T::Error: Into<StdError>,
+        <T::ResponseBody as HttpBody>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
+            let inner = tonic::client::Grpc::with_interceptor(inner, interceptor);
+            Self { inner }
+        }
+        pub async fn serialize_suite_metadata(
+            &mut self,
+            request: impl tonic::IntoRequest<super::TestSuiteMetadata>,
+        ) -> Result<tonic::Response<()>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api_container_api.SuiteMetadataSerializationService/SerializeSuiteMetadata",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+    }
+    impl<T: Clone> Clone for SuiteMetadataSerializationServiceClient<T> {
+        fn clone(&self) -> Self {
+            Self {
+                inner: self.inner.clone(),
+            }
+        }
+    }
+    impl<T> std::fmt::Debug for SuiteMetadataSerializationServiceClient<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "SuiteMetadataSerializationServiceClient {{ ... }}")
+        }
+    }
+}
+#[doc = r" Generated server implementations."]
+pub mod suite_metadata_serialization_service_server {
+    #![allow(unused_variables, dead_code, missing_docs)]
+    use tonic::codegen::*;
+    #[doc = "Generated trait containing gRPC methods that should be implemented for use with SuiteMetadataSerializationServiceServer."]
+    #[async_trait]
+    pub trait SuiteMetadataSerializationService: Send + Sync + 'static {
+        async fn serialize_suite_metadata(
+            &self,
+            request: tonic::Request<super::TestSuiteMetadata>,
+        ) -> Result<tonic::Response<()>, tonic::Status>;
+    }
+    #[derive(Debug)]
+    pub struct SuiteMetadataSerializationServiceServer<T: SuiteMetadataSerializationService> {
+        inner: _Inner<T>,
+    }
+    struct _Inner<T>(Arc<T>, Option<tonic::Interceptor>);
+    impl<T: SuiteMetadataSerializationService> SuiteMetadataSerializationServiceServer<T> {
+        pub fn new(inner: T) -> Self {
+            let inner = Arc::new(inner);
+            let inner = _Inner(inner, None);
+            Self { inner }
+        }
+        pub fn with_interceptor(inner: T, interceptor: impl Into<tonic::Interceptor>) -> Self {
+            let inner = Arc::new(inner);
+            let inner = _Inner(inner, Some(interceptor.into()));
+            Self { inner }
+        }
+    }
+    impl<T, B> Service<http::Request<B>> for SuiteMetadataSerializationServiceServer<T>
+    where
+        T: SuiteMetadataSerializationService,
+        B: HttpBody + Send + Sync + 'static,
+        B::Error: Into<StdError> + Send + 'static,
+    {
+        type Response = http::Response<tonic::body::BoxBody>;
+        type Error = Never;
+        type Future = BoxFuture<Self::Response, Self::Error>;
+        fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+            Poll::Ready(Ok(()))
+        }
+        fn call(&mut self, req: http::Request<B>) -> Self::Future {
+            let inner = self.inner.clone();
+            match req.uri().path() {
+                "/api_container_api.SuiteMetadataSerializationService/SerializeSuiteMetadata" => {
+                    #[allow(non_camel_case_types)]
+                    struct SerializeSuiteMetadataSvc<T: SuiteMetadataSerializationService>(
+                        pub Arc<T>,
+                    );
+                    impl<T: SuiteMetadataSerializationService>
+                        tonic::server::UnaryService<super::TestSuiteMetadata>
+                        for SerializeSuiteMetadataSvc<T>
+                    {
+                        type Response = ();
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::TestSuiteMetadata>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut =
+                                async move { (*inner).serialize_suite_metadata(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = SerializeSuiteMetadataSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                _ => Box::pin(async move {
+                    Ok(http::Response::builder()
+                        .status(200)
+                        .header("grpc-status", "12")
+                        .header("content-type", "application/grpc")
+                        .body(tonic::body::BoxBody::empty())
+                        .unwrap())
+                }),
+            }
+        }
+    }
+    impl<T: SuiteMetadataSerializationService> Clone for SuiteMetadataSerializationServiceServer<T> {
+        fn clone(&self) -> Self {
+            let inner = self.inner.clone();
+            Self { inner }
+        }
+    }
+    impl<T: SuiteMetadataSerializationService> Clone for _Inner<T> {
+        fn clone(&self) -> Self {
+            Self(self.0.clone(), self.1.clone())
+        }
+    }
+    impl<T: std::fmt::Debug> std::fmt::Debug for _Inner<T> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{:?}", self.0)
+        }
+    }
+    impl<T: SuiteMetadataSerializationService> tonic::transport::NamedService
+        for SuiteMetadataSerializationServiceServer<T>
+    {
+        const NAME: &'static str = "api_container_api.SuiteMetadataSerializationService";
     }
 }

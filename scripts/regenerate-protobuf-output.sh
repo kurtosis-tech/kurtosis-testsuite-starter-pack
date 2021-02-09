@@ -48,7 +48,8 @@ generate_go_protoc_args() {
 # NOTE: the protoc args-generating function takes in two args: 1) the input filepath and 2) output dirpath
 declare -A generators
 generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|*.go|generate_go_protoc_args"
-
+# NOTE: Rust is absent from here because the Rust binding-generating library that we use is only a library - not a protoc plugin!
+# TODO Make Go generate its own protobuf files as well (which allows us to do it in Docker builds)
 
 input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"
 for lang in "${!generators[@]}"; do
