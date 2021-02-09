@@ -2,8 +2,9 @@ use std::{thread::sleep, time::Duration};
 use anyhow::{Context, Result, anyhow};
 use futures::executor::block_on;
 use log::debug;
+use tonic::transport::{Channel, server::Connected};
 
-use crate::core_api_bindings::api_container_api::{SuiteRegistrationResponse, suite_registration_service_client::SuiteRegistrationServiceClient, suite_registration_service_server::SuiteRegistrationService};
+use crate::{core_api_bindings::api_container_api::{SuiteRegistrationResponse, TestSuiteMetadata, suite_registration_service_client::SuiteRegistrationServiceClient, suite_registration_service_server::SuiteRegistrationService, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 
@@ -35,8 +36,12 @@ impl<'obj> TestSuiteExecutor<'obj> {
 			.context("An error occurred parsing the suite params JSON and creating the testsuite")?;
 
 		// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
-		let suite_registration_client = block_on(SuiteRegistrationServiceClient::connect(self.kurtosis_api_socket.clone()))
-			.context(format!("An error occurred creating a client to connect to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?;
+		let endpoint = Channel::from_shared(self.kurtosis_api_socket.clone())
+			.context(format!("An error occurred creating the endpoint to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?;
+		let channel = block_on(endpoint.connect())
+			.context(format!("An error occurred connecting to Kurtosis API socket endpoint '{}'", &self.kurtosis_api_socket))?;
+		let suite_registration_channel = channel.clone(); // This *seems* weird to clone a channel, but this is apparently how Tonic wants it
+		let suite_registration_client = SuiteRegistrationServiceClient::new(suite_registration_channel);
 
 		let suite_registration_attempts: u32 = 0;
 		let suite_registration_resp: SuiteRegistrationResponse;
@@ -72,7 +77,7 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		let action = suite_registration_resp.suite_action;
 		match action {
 			SerializeSuiteMetadata => {
-				TestSuiteExecutor::run_serialize_suite_metadata_flow()
+				TestSuiteExecutor::run_serialize_suite_metadata_flow(suite)
 					.context("An error occurred running the suite metadata serialization flow")?;
 			}
 			ExecuteTest => {
@@ -84,9 +89,9 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		return Ok(());
 	}
 
-	fn run_serialize_suite_metadata_flow() -> Result<()> {
-	/*
+	fn run_serialize_suite_metadata_flow(testsuite: &dyn TestSuite) -> Result<()> {
 
+		/*
 	func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
 		allTestMetadata := map[string]*core_api_bindings.TestMetadata{}
 		for testName, test := range testsuite.GetTests() {
@@ -201,7 +206,7 @@ impl<'obj> TestSuiteExecutor<'obj> {
 }
 
 
-
+/*
 // Little helper function meant to be run inside a goroutine that runs the test
 func runTestInGoroutine(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
 	// See https://medium.com/@hussachai/error-handling-in-go-a-quick-opinionated-guide-9199dd7c7f76 for details
