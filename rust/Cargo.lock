@@ -512,6 +512,8 @@ name = "kurtosis_rust_lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
+ "log",
  "prost",
  "regex",
  "simple-error",

@@ -71,8 +71,7 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 			suiteRegistrationResp = resp
 			break
 		}
-		logrus.Debugf("The following error occurred registering testsuite with API container; retrying in %v:", timeBetweenSuiteRegistrationRetries)
-		fmt.Fprintln(logrus.StandardLogger().Out, err)
+		logrus.Debugf("The following error occurred registering testsuite with API container; retrying in %v: %v", timeBetweenSuiteRegistrationRetries, err)
 		time.Sleep(timeBetweenSuiteRegistrationRetries)
 		suiteRegistrationAttempts++
 	}
