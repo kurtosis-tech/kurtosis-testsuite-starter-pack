@@ -68,7 +68,7 @@ generate_golang_bindings() {
                 -I="${input_dirpath}" \
                 "${grpc_flag}" \
                 "${go_module_flag}" \
-                "${@}"; then
+                "${input_filepath}"; then
             echo "Error: An error occurred generating Golang bindings for file '${input_filepath}'" >&2
             return 1
         fi
