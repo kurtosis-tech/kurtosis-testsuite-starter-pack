@@ -11,15 +11,15 @@ use super::test_suite_configurator::TestSuiteConfigurator;
 const MAX_SUITE_REGISTRATION_RETRIES: u32 = 20;
 const TIME_BETWEEN_SUITE_REGISTRATION_RETRIES: Duration = Duration::from_millis(500);
 
-pub struct TestSuiteExecutor<'obj> {
+pub struct TestSuiteExecutor {
     kurtosis_api_socket: String,
     log_level: String,
     params_json: String,
-	configurator: &'obj dyn TestSuiteConfigurator,
+	configurator: Box<dyn TestSuiteConfigurator>,
 }
 
-impl<'obj> TestSuiteExecutor<'obj> {
-    pub fn new(kurtosis_api_socket: &str, log_level: &str, params_json: &str, configurator: &'obj dyn TestSuiteConfigurator) -> TestSuiteExecutor<'obj> {
+impl TestSuiteExecutor {
+    pub fn new(kurtosis_api_socket: &str, log_level: &str, params_json: &str, configurator: Box<dyn TestSuiteConfigurator>) -> TestSuiteExecutor {
         return TestSuiteExecutor{
             kurtosis_api_socket: kurtosis_api_socket.to_owned(),
             log_level: log_level.to_owned(),

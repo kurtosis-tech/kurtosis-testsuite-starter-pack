@@ -21,6 +21,7 @@ WORKDIR /run
 COPY --from=builder /build/testsuite.bin .
 
 # TODO Switch to exec command form, wrapping arguments with double-quote
+# TODO Use RUST_LOG envvar to configure logging
 CMD ./testsuite.bin \
     --custom-params-json="${CUSTOM_PARAMS_JSON}" \
     --kurtosis-api-socket="${KURTOSIS_API_SOCKET}" \
