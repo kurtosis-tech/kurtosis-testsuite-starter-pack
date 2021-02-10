@@ -26,9 +26,9 @@ Prerequisites:
 * `protoc` installed (can be installed on Mac with `brew install protobuf`)
 * The Golang extension to `protoc` installed (can be installed on Mac with `brew install protoc-gen-go`)
 * The Golang gRPC extension to `protoc` installed (can be installed on Mac with `brew install protoc-gen-go-grpc`)
-* Rust protobuf plugin installed (can be installed via [the steps here](https://github.com/stepancheg/rust-protobuf/tree/master/protobuf-codegen#but-if-you-really-want-to-use-that-plugin-heres-the-instruction))
+* [rust-protobuf-binding-generator](https://github.com/kurtosis-tech/rust-protobuf-binding-generator) installed
 
-_NOTE: One day we want to push all the protobuf binding into Docker, so that the output is consistent and the developer doesn't have to install a bunch of stuff on their machine; while the dev team is small though, this is the temporary workaround_
+_NOTE: One day we want to push all the protobuf binding into Docker, so that the output doesn't depend on the developer's machine; see [this issue](https://github.com/kurtosis-tech/kurtosis-libs/issues/22) for more details_
 
 Each library needs to talk with Kurtosis Core, and the Kurtosis Core API is defined via Protobuf. Rather than storing the Protobufs in Git submodules (which add significant complexity), the `.proto` files are simply copied from the relevant version of Kurtosis Core. In the future, we can move to a more productized solution.
 
