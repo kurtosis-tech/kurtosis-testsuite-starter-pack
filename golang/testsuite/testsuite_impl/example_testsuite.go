@@ -49,13 +49,6 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 		tests["filesArtifactMountingTest"] = files_artifact_mounting_test.FilesArtifactMountingTest{}
 	}
 
-	tests = map[string]testsuite.Test{
-		"basicDatastoreAndApiTest": basic_datastore_and_api_test.NewBasicDatastoreAndApiTest(
-			suite.datastoreServiceImage,
-			suite.apiServiceImage,
-		),
-	}
-
 	return tests
 }
 
