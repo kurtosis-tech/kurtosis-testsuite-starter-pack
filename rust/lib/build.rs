@@ -7,6 +7,9 @@ const EMPTY_FILE_NEEDING_DELETION_FILENAME: &str = "google.protobuf.rs";
 const MOD_FILENAME: &str = "mod.rs";
 
 fn main() -> Result<()> {
+    // NOTE: This function generates Rust Protobuf bindings pre-compilation
+    // We have it disabled as of 2021-02-10 due to https://github.com/kurtosis-tech/kurtosis-libs/issues/22
+    /*
     let current_dirpath = current_dir()
         .context("Couldn't get current directory")?;
 
@@ -105,5 +108,6 @@ fn main() -> Result<()> {
     let data = mod_file_lines.join("\n");
     write(&mod_filepath, data)
         .context(format!("Failed to write modules to {} file", MOD_FILENAME))?;
+    */
     Ok(())
 }
