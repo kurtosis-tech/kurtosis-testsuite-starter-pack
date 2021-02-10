@@ -5,18 +5,32 @@ set -euo pipefail
 script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 root_dirpath="$(dirname "${script_dirpath}")"
 
-# ================================ CONSTANTS =======================================================
+
+
+# ==================================================================================================
+#                                           Constants
+# ==================================================================================================
 # Relative to THE ROOT OF THE ENTIRE REPO
 INPUT_RELATIVE_DIRPATH="core-api"
+PROTOC_CMD="protoc"
 
-# -------------------------- Golang ---------------------------
+# ------------------------------------------- Golang -----------------------------------------------
 GOLANG_DIRNAME="golang"
 GO_MOD_FILENAME="go.mod"
 GO_MOD_FILE_MODULE_KEYWORD="module"
 GO_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"   # Relative to the root of the lang dir!
 
-# =============================== MAIN LOGIC =======================================================
-# -------------------------- Golang ---------------------------
+# -------------------------------------------- Rust -----------------------------------------------
+RUST_DIRNAME="rust"
+RUST_BINDING_GENERATOR_CMD="rust-protobuf-binding-generator"
+RUST_RELATIVE_OUTPUT_DIRPATH="lib/src/core_api_bindings"
+
+
+
+# ==================================================================================================
+#                                           Main Logic
+# ==================================================================================================
+# ------------------------------------------- Golang -----------------------------------------------
 go_mod_filepath="${root_dirpath}/${GOLANG_DIRNAME}/${GO_MOD_FILENAME}"
 if ! [ -f "${go_mod_filepath}" ]; then
     echo "Error: Could not get Go module name; file '${go_mod_filepath}' doesn't exist" >&2
@@ -29,27 +43,58 @@ if [ "${go_module}" == "" ]; then
 fi
 go_bindings_pkg="${go_module}/${GO_RELATIVE_OUTPUT_DIRPATH}"
 
-generate_go_protoc_args() {
+generate_golang_bindings() {
     input_filepath="${1}"
     output_dirpath="${2}"
 
-    protobuf_filename="$(basename "${input_filepath}")"
 
-    echo "--go_out=plugins=grpc:${output_dirpath}"
+    grpc_flag="--go_out=plugins=grpc:${output_dirpath}"
 
     # Rather than specify the go_package in source code (which means all consumers of these protobufs would get it),
     #  we specify the go_package here per https://developers.google.com/protocol-buffers/docs/reference/go-generated
     # See also: https://github.com/golang/protobuf/issues/1272
-    echo "--go_opt=M${protobuf_filename}=${go_bindings_pkg};$(basename "${go_bindings_pkg}")"
+    protobuf_filename="$(basename "${input_filepath}")"
+    go_module_flag="--go_opt=M${protobuf_filename}=${go_bindings_pkg};$(basename "${go_bindings_pkg}")"
+
+    if ! command -v "${PROTOC_CMD}" then
+        echo "Error: No '${PROTOC_CMD}' command found; you'll need to install it via 'brew install protobuf'" >&2
+        exit 1
+    fi
+
+    input_dirpath="$(dirname "${input_filepath}")"
+    "${PROTOC_CMD}" \
+            -I="${input_dirpath}" \
+            "${grpc_flag}" \
+            "${go_module_flag}" \
+            "${input_filepath}"
 }
 
+# -------------------------------------------- Rust -----------------------------------------------
+generate_rust_bindings() {
+    input_filepath="${1}"
+    output_dirpath="${2}"
+
+    if ! command -v "${RUST_BINDING_GENERATOR_CMD}" then
+        echo "Error: No '${RUST_BINDING_GENERATOR_CMD}' command found; you'll need to install it from https://github.com/kurtosis-tech/rust-protobuf-binding-generator" >&2
+        exit 1
+    fi
+
+    if ! "${RUST_BINDING_GENERATOR_CMD}" "${input_filepath}" "${output_dirpath}"; then
+        echo "Error: Could not generate Rust bindings in directory '${output_dirpath}' from Protobuf file '${input_filepath}'" >&2
+        exit 1
+    fi
+
+    protoc -I="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}" ${additional_protoc_args} "${protobuf_filepath}"
+}
+
+
+# ------------------------------------------ Shared Code-----------------------------------------------
 # Schema of the "object" that's the value of this map:
-# relativeOutputDirpath|patternMatchingGeneratedFiles|additionalProtocArgsGeneratingFunc
-# NOTE: the protoc args-generating function takes in two args: 1) the input filepath and 2) output dirpath
+# relativeOutputDirpath|findSelectorMatchingGeneratedFiles|bindingGenerationFunc
+# NOTE: the binding-generating function takes in two args: 1) the input filepath and 2) output dirpath
 declare -A generators
-generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|*.go|generate_go_protoc_args"
-# NOTE: Rust is absent from here because the Rust binding-generating library that we use is only a library - not a protoc plugin!
-# TODO Make Go generate its own protobuf files as well (which allows us to do it in Docker builds)
+generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|-name '*.go'|generate_golang_bindings"
+generators["${RUST_DIRNAME}"]="${RUST_RELATIVE_OUTPUT_DIRPATH}|-name '*.rs' ! -name 'mod.rs'|generate_rust_bindings"
 
 input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"
 for lang in "${!generators[@]}"; do
@@ -57,13 +102,13 @@ for lang in "${!generators[@]}"; do
     IFS='|' read -r -a lang_config_arr < <(echo "${lang_config_str}")
 
     rel_output_dirpath="${lang_config_arr[0]}"
-    generated_files_pattern="${lang_config_arr[1]}"
-    protoc_args_gen_func="${lang_config_arr[2]}"
+    generated_files_selectors="${lang_config_arr[1]}"
+    bindings_gen_func="${lang_config_arr[2]}"
 
     abs_output_dirpath="${root_dirpath}/${lang}/${rel_output_dirpath}"
 
     if [ "${abs_output_dirpath}/" != "/" ]; then
-        if ! find "${abs_output_dirpath}" -name "${generated_files_pattern}" -delete; then
+        if ! find "${abs_output_dirpath}" -name ${generated_files_selectors} -delete; then
             echo "Error: An error occurred removing the existing protobuf-generated code" >&2
             exit 1
         fi
@@ -73,16 +118,13 @@ for lang in "${!generators[@]}"; do
     fi
 
     for protobuf_filepath in $(find "${input_dirpath}" -name "*.proto"); do
-
-        additional_protoc_args="$(eval "${protoc_args_gen_func} ${protobuf_filepath} ${abs_output_dirpath}")"
-
         # NOTE: When multiple people start developing on this, we won't be able to rely on using the user's local protoc because they might differ. We'll need to standardize by:
         #  1) Using protoc inside the API container Dockerfile to generate the output Go files (standardizes the output files for Docker)
         #  2) Using the user's protoc to generate the output Go files on the local machine, so their IDEs will work
         #  3) Tying the protoc inside the Dockerfile and the protoc on the user's machine together using a protoc version check
         #  4) Adding the locally-generated Go output files to .gitignore
         #  5) Adding the locally-generated Go output files to .dockerignore (since they'll get generated inside Docker)
-        if ! protoc -I="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}" ${additional_protoc_args} "${protobuf_filepath}"; then
+        if ! "${bindings_gen_func}" "${protobuf_filepath}" "${abs_output_dirpath}"; then
             echo "Error: An error occurred generating ${lang} bindings from protobuf file: ${protobuf_filepath}" >&2
             exit 1
         fi
