@@ -23,7 +23,7 @@ RUN cargo build --release --bin kurtosis_rust_example
 
 FROM alpine:3.12 as runtime
 WORKDIR /app
-COPY --from=builder /app/target/release/kurtosis_rust_example /usr/local/bin
+COPY --from=builder /app/target/release/kurtosis_rust_example ./
 # TODO Switch to exec command form, wrapping arguments with double-quote
 # TODO Use RUST_LOG envvar to configure logging
 CMD ./kurtosis_rust_example \
