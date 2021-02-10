@@ -145,10 +145,10 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 
 	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
 	// TODO this should just be "register test execution started", since the API container already has the metadata
-	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
-	hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
-	registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
-	if _, err := executionClient.RegisterTestExecution(ctx, registerTestExecutionMessage); err != nil {
+	//hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
+	//hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
+	//registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
+	if _, err := executionClient.RegisterTestExecution(ctx, &emptypb.Empty{}); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
 
