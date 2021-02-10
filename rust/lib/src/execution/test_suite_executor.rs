@@ -1,10 +1,10 @@
-use std::{collections::{HashMap, HashSet}, ops::Deref, thread::sleep, time::Duration};
+use std::{collections::{HashMap}, thread::sleep, time::Duration};
 use anyhow::{Context, Result, anyhow};
 use futures::executor::block_on;
 use log::debug;
-use tonic::{Request, transport::{Channel, server::Connected}};
+use tonic::{Request, transport::{Channel}};
 
-use crate::{core_api_bindings::api_container_api::{SuiteRegistrationResponse, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient, suite_registration_service_server::SuiteRegistrationService, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
+use crate::{core_api_bindings::api_container_api::{SuiteAction, SuiteRegistrationResponse, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient}, testsuite::testsuite::TestSuite};
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 
@@ -74,13 +74,15 @@ impl TestSuiteExecutor {
 			suite_registration_attempts += 1;
 		}
 
-		let action = suite_registration_resp.suite_action;
+		let action_int = suite_registration_resp.suite_action;
+		let action = SuiteAction::from_i32(action_int)
+			.context(format!("Could not convert suite action int '{}' to enum", action_int))?;
 		match action {
-			SerializeSuiteMetadata => {
+			SuiteAction::SerializeSuiteMetadata => {
 				TestSuiteExecutor::run_serialize_suite_metadata_flow(suite, channel.clone())
 					.context("An error occurred running the suite metadata serialization flow")?;
 			}
-			ExecuteTest => {
+			SuiteAction::ExecuteTest => {
 				TestSuiteExecutor::run_test_execution_flow()
 					.context("An error occurred running the test execution flow")?;
 			}

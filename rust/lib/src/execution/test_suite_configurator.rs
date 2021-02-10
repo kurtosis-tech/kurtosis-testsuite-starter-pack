@@ -1,4 +1,3 @@
-use std::error::Error;
 use anyhow::Result;
 
 use crate::testsuite::testsuite::TestSuite;

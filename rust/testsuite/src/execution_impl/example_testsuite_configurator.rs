@@ -10,7 +10,7 @@ impl ExampleTestsuiteConfigurator {
 }
 
 impl TestSuiteConfigurator for ExampleTestsuiteConfigurator {
-    fn set_log_level(&self, log_level_str: &str) -> Result<()> {
+    fn set_log_level(&self, _: &str) -> Result<()> {
         // Nothing to do here since the log level is configured via the RUST_LOG environment variable
         return Ok(());
     }

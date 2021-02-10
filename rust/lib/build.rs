@@ -1,4 +1,4 @@
-use std::{env::current_dir, error::Error, ffi::OsString, fs::{read_dir, remove_file, write}, io::empty, path::{Path, PathBuf}, process::exit};
+use std::{env::current_dir, fs::{read_dir, remove_file, write}, path::PathBuf};
 use anyhow::{Context, Result};
 use regex::Regex;
 

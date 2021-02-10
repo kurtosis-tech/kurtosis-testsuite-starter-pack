@@ -10,7 +10,6 @@ use std::process::exit;
 use clap::{App, Arg, ArgMatches};
 use execution_impl::example_testsuite_configurator::ExampleTestsuiteConfigurator;
 use kurtosis_rust_lib::execution::test_suite_executor::TestSuiteExecutor;
-use crate::services_impl::datastore::datastore_service::DatastoreService;
 
 const CUSTOM_PARAMS_JSON_FLAG: &str = "custom-params-json";
 const KURTOSIS_API_SOCKET_FLAG: &str  = "kurtosis-api-socket";
