@@ -52,7 +52,7 @@ generate_golang_bindings() {
     output_dirpath="${1}"
     shift 1
 
-    if ! command -v "${PROTOC_CMD}"; then
+    if ! command -v "${PROTOC_CMD}" > /dev/null; then
         echo "Error: No '${PROTOC_CMD}' command found; you'll need to install it via 'brew install protobuf'" >&2
         return 1
     fi
@@ -85,7 +85,7 @@ generate_rust_bindings() {
     output_dirpath="${1}"
     shift 1
 
-    if ! command -v "${RUST_BINDING_GENERATOR_CMD}"; then
+    if ! command -v "${RUST_BINDING_GENERATOR_CMD}" > /dev/null; then
         echo "Error: No '${RUST_BINDING_GENERATOR_CMD}' command found; you'll need to install it from https://github.com/kurtosis-tech/rust-protobuf-binding-generator" >&2
         return 1
     fi
