@@ -103,10 +103,11 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 			usedArtifactUrls[artifactUrl] = true
 		}
 
-		// TODO TODO TODO ADD TEST TIMEOUTS HERE
 		testMetadata := &core_api_bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
+			TestSetupTimeout: testConfig.TestSetupTimeout,
+			TestExecutionTimeout: testConfig.TestExecutionTimeout,
 		}
 		allTestMetadata[testName] = testMetadata
 	}
