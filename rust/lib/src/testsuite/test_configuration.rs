@@ -9,10 +9,10 @@ pub struct TestConfiguration {
 	//  adding services will be slower because all the other nodes in the network will
 	//  need to update their iptables for the new node. The slowdown will scale with the
 	//  number of services in your network.
-    is_partitioning_enabled: bool,
+    pub is_partitioning_enabled: bool,
 
 	// A mapping of ID -> URL where the artifact containing files should be downloaded from
 	// The ID is the ID that service initializers will use when requesting to use the artifact
     // TODO CONVERT KEY TO FILESARTIFACTID TYPE
-    files_artifact_urls: HashMap<String, String>,
+    pub files_artifact_urls: HashMap<String, String>,
 }

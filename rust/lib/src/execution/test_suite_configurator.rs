@@ -1,6 +1,8 @@
 use std::error::Error;
 use anyhow::Result;
 
+use crate::testsuite::testsuite::TestSuite;
+
 // Implementations of this interface are responsible for initialzing the testsuite to a state
 //  where it can be run
 pub trait TestSuiteConfigurator {
@@ -23,6 +25,5 @@ pub trait TestSuiteConfigurator {
 		params_json_str: The JSON-serialized custom params data used for configuring testsuite behaviour
 			that was passed in when Kurtosis was started.
 	 */
-	// TODO MAKE RETURN TYPE OF TYPE TESTSUITE
-	fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<()>;
+	fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<Box<dyn TestSuite>>;
 }

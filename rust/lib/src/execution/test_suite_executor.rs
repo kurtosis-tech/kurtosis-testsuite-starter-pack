@@ -1,10 +1,10 @@
-use std::{thread::sleep, time::Duration};
+use std::{collections::{HashMap, HashSet}, ops::Deref, thread::sleep, time::Duration};
 use anyhow::{Context, Result, anyhow};
 use futures::executor::block_on;
 use log::debug;
-use tonic::transport::{Channel, server::Connected};
+use tonic::{Request, transport::{Channel, server::Connected}};
 
-use crate::{core_api_bindings::api_container_api::{SuiteRegistrationResponse, TestSuiteMetadata, suite_registration_service_client::SuiteRegistrationServiceClient, suite_registration_service_server::SuiteRegistrationService, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
+use crate::{core_api_bindings::api_container_api::{SuiteRegistrationResponse, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient, suite_registration_service_server::SuiteRegistrationService, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 
@@ -41,9 +41,9 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		let channel = block_on(endpoint.connect())
 			.context(format!("An error occurred connecting to Kurtosis API socket endpoint '{}'", &self.kurtosis_api_socket))?;
 		let suite_registration_channel = channel.clone(); // This *seems* weird to clone a channel, but this is apparently how Tonic wants it
-		let suite_registration_client = SuiteRegistrationServiceClient::new(suite_registration_channel);
+		let mut suite_registration_client = SuiteRegistrationServiceClient::new(suite_registration_channel);
 
-		let suite_registration_attempts: u32 = 0;
+		let mut suite_registration_attempts: u32 = 0;
 		let suite_registration_resp: SuiteRegistrationResponse;
 		loop {
 			if suite_registration_attempts >= MAX_SUITE_REGISTRATION_RETRIES {
@@ -77,7 +77,7 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		let action = suite_registration_resp.suite_action;
 		match action {
 			SerializeSuiteMetadata => {
-				TestSuiteExecutor::run_serialize_suite_metadata_flow(suite)
+				TestSuiteExecutor::run_serialize_suite_metadata_flow(suite, channel.clone())
 					.context("An error occurred running the suite metadata serialization flow")?;
 			}
 			ExecuteTest => {
@@ -89,44 +89,36 @@ impl<'obj> TestSuiteExecutor<'obj> {
 		return Ok(());
 	}
 
-	fn run_serialize_suite_metadata_flow(testsuite: &impl TestSuite) -> Result<()> {
-		testsuite.get_tests();
-		all_test_metadata = 
-
-		/*
-	func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
-		allTestMetadata := map[string]*core_api_bindings.TestMetadata{}
-		for testName, test := range testsuite.GetTests() {
-			testConfig := test.GetTestConfiguration()
-				usedArtifactUrls := map[string]bool{}
-				for _, artifactUrl := range testConfig.FilesArtifactUrls {
-					usedArtifactUrls[artifactUrl] = true
-				}
-
-				testMetadata := &core_api_bindings.TestMetadata{
-					IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
-					UsedArtifactUrls:      usedArtifactUrls,
-				}
-				allTestMetadata[testName] = testMetadata
+	fn run_serialize_suite_metadata_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
+		let mut all_test_metadata: HashMap<String, TestMetadata> = HashMap::new();
+		for (test_name, test) in testsuite.get_tests() {
+			let test_config = test.get_test_configuration();
+			let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
+			for (_, artifact_url) in test_config.files_artifact_urls {
+				used_artifact_urls.insert(artifact_url, true);
 			}
-
-			networkWidthBits := testsuite.GetNetworkWidthBits()
-			testSuiteMetadata := &core_api_bindings.TestSuiteMetadata{
-				TestMetadata:     allTestMetadata,
-				NetworkWidthBits: networkWidthBits,
-			}
-
-			metadataSerializationClient := core_api_bindings.NewSuiteMetadataSerializationServiceClient(conn)
-			if _, err := metadataSerializationClient.SerializeSuiteMetadata(ctx, testSuiteMetadata); err != nil {
-				return stacktrace.Propagate(err, "An error occurred sending the suite metadata to the Kurtosis API server")
-			}
-
-			return nil
+			let test_metadata = TestMetadata{
+			    is_partitioning_enabled: test_config.is_partitioning_enabled,
+			    used_artifact_urls: used_artifact_urls,
+			};
+			all_test_metadata.insert(test_name, test_metadata);
 		}
-		*/
+
+		let network_width_bits = testsuite.get_network_width_bits();
+		let testsuite_metadata = TestSuiteMetadata{
+		    test_metadata: all_test_metadata,
+		    network_width_bits: network_width_bits,
+		};
+
+		let mut client = SuiteMetadataSerializationServiceClient::new(channel);
+		let req = Request::new(testsuite_metadata);
+		block_on(client.serialize_suite_metadata(req))
+			.context("An error occurred sending the suite metadata to the Kurtosis API server")?;
+		return Ok(());
 	}
 
-	fn run_test_execution_flow() {
+	fn run_test_execution_flow() -> Result<()> {
+		return Ok(());
 	/*
 		func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
 		executionClient := core_api_bindings.NewTestExecutionServiceClient(conn)

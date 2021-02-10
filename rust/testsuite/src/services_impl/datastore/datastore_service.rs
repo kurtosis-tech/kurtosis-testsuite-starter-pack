@@ -32,6 +32,7 @@ impl DatastoreService {
         return self.port;
     }
 
+    // TODO Change error type to Anyhow
     pub fn exists(&self, key: &str) -> Result<bool, Box<dyn Error>> {
         self.get_url_for_key(key);
 
