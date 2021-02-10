@@ -25,7 +25,8 @@ RUST_DIRNAME="rust"
 RUST_BINDING_GENERATOR_CMD="rust-protobuf-binding-generator"
 RUST_RELATIVE_OUTPUT_DIRPATH="lib/src/core_api_bindings"
 ERRONEOUS_GENERATED_FILE="google.protobuf.rs"
-
+RUST_MOD_FILENAME="mod.rs"
+RUST_FILE_EXT=".rs"
 
 
 # ==================================================================================================
@@ -99,6 +100,19 @@ generate_rust_bindings() {
             echo "Warning: Could not remove erroneous file '${erroneous_filepath}'"
         fi
     fi
+
+    # Regenerate mod.rs file
+    mod_filepath="${output_dirpath}/${RUST_MOD_FILENAME}"
+    if [ -f "${mod_filepath}" ]; then
+        if ! rm "${mod_filepath}"; then
+            echo "Warning: Could not remove ${RUST_MOD_FILENAME} file for output directory '${output_dirpath}'"
+        fi
+    fi
+    for generated_filepath in $(find "${output_dirpath}" -name "*${RUST_FILE_EXT}" -maxdepth 1); do
+        generated_filename="$(basename "${generated_filepath}")"
+        generated_module="${generated_filename%%${RUST_FILE_EXT}}"
+        echo "pub mod ${generated_module};" >> "${mod_filepath}"
+    done
 }
 
 
@@ -108,7 +122,7 @@ generate_rust_bindings() {
 # NOTE: the binding-generating function signature is as follows: input_dirpath output_dirpath input_filepath1 [input_filepath2...]
 declare -A generators
 generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|-name '*.go'|generate_golang_bindings"
-generators["${RUST_DIRNAME}"]="${RUST_RELATIVE_OUTPUT_DIRPATH}|-name '*.rs' ! -name 'mod.rs'|generate_rust_bindings"
+generators["${RUST_DIRNAME}"]="${RUST_RELATIVE_OUTPUT_DIRPATH}|-name '*${RUST_FILE_EXT}'|generate_rust_bindings"
 
 input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"
 for lang in "${!generators[@]}"; do
