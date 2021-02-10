@@ -24,6 +24,7 @@ GO_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"   # Relative to the root of t
 RUST_DIRNAME="rust"
 RUST_BINDING_GENERATOR_CMD="rust-protobuf-binding-generator"
 RUST_RELATIVE_OUTPUT_DIRPATH="lib/src/core_api_bindings"
+ERRONEOUS_GENERATED_FILE="google.protobuf.rs"
 
 
 
@@ -89,6 +90,15 @@ generate_rust_bindings() {
     fi
 
     "${RUST_BINDING_GENERATOR_CMD}" "${input_dirpath}" "${output_dirpath}" "${@}"
+
+    # Due to https://github.com/danburkert/prost/issues/228#event-4306587537 , an erroneous empty file gets generated
+    # We remove it so as not to confuse the user
+    erroneous_filepath="${output_dirpath}/${ERRONEOUS_GENERATED_FILE}"
+    if [ -f "${erroneous_filepath}" ]; then
+        if ! rm "${erroneous_filepath}"; then
+            echo "Warning: Could not remove erroneous file '${erroneous_filepath}'"
+        fi
+    fi
 }
 
 
@@ -121,7 +131,9 @@ for lang in "${!generators[@]}"; do
         exit 1
     fi
 
-    # NOTE: When multiple people start developing on this, we won't be able to rely on using the user's local protoc because they might differ. We'll need to standardize by:
+    # NOTE: When multiple people start developing on this, we won't be able to rely on using the user's local environment for generating bindings because the environments
+    # might differ across users
+    # We'll need to standardize by:
     #  1) Using protoc inside the API container Dockerfile to generate the output Go files (standardizes the output files for Docker)
     #  2) Using the user's protoc to generate the output Go files on the local machine, so their IDEs will work
     #  3) Tying the protoc inside the Dockerfile and the protoc on the user's machine together using a protoc version check
