@@ -102,7 +102,6 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 		for _, artifactUrl := range testConfig.FilesArtifactUrls {
 			usedArtifactUrls[artifactUrl] = true
 		}
-		logrus.Infof("Test configuration: %+v", testConfig)
 		testMetadata := &core_api_bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
