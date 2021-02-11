@@ -1,10 +1,12 @@
+use anyhow::Result;
+/*
 use std::{env::current_dir, fs::{read_dir, remove_file, write}, path::PathBuf};
-use anyhow::{Context, Result};
 use regex::Regex;
 
 const RUST_FILE_NAME_REGEX: &str = r"^.*\.rs$";
 const EMPTY_FILE_NEEDING_DELETION_FILENAME: &str = "google.protobuf.rs";
 const MOD_FILENAME: &str = "mod.rs";
+*/
 
 fn main() -> Result<()> {
     // NOTE: This function generates Rust Protobuf bindings pre-compilation

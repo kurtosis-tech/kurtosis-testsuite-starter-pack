@@ -3,9 +3,10 @@
 // The ID of an artifact containing files that should be mounted into a service container
 // type FilesArtifactID string
 
-use std::{collections::{HashSet, HashMap}, error::Error};
+use std::{collections::{HashSet, HashMap}};
 use crate::services::service::Service;
 use std::fs::File;
+use anyhow::Result;
 
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
@@ -60,7 +61,7 @@ pub trait DockerContainerInitializer<T: Service> {
                 `GetFilesToMount`
     */
     // TODO Rename "initializeFilesToGenerate"
-    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<(), Box<dyn Error>>;
+    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<()>;
 
     /*
         Allows the mounting of external files into a service container by mapping files artifacts (defined in your
@@ -109,5 +110,5 @@ pub trait DockerContainerInitializer<T: Service> {
     fn get_start_command(
         mounted_file_filepaths: HashMap<String, String>,
         ip_addr: &str
-    ) -> Result<Option<Vec<String>>, Box<dyn Error>>;
+    ) -> Result<Option<Vec<String>>>;
 }

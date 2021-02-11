@@ -2,6 +2,7 @@ use kurtosis_rust_lib::services::docker_container_initializer;
 use std::{collections::{HashSet, HashMap}, error::Error};
 use crate::services_impl::datastore::datastore_service::DatastoreService;
 use std::fs::File;
+use anyhow::Result;
 
 const PORT: u32 = 1323;
 const PROTOCOL: &str = "tcp";
@@ -34,7 +35,7 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return HashSet::new();
     }
 
-    fn initialize_mounted_files(_: HashMap<String, File>) -> Result<(), Box<dyn Error>> {
+    fn initialize_mounted_files(_: HashMap<String, File>) -> Result<()> {
         return Ok(());
     }
 
@@ -50,7 +51,7 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
     fn get_start_command(
             _: HashMap<String, String>, 
             _: &str
-    ) -> Result<Option<Vec<String>>, Box<dyn Error>> {
+    ) -> Result<Option<Vec<String>>> {
         // TODO change return type???
         return Ok(None)
     }
