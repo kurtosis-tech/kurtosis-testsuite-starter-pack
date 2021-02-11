@@ -148,8 +148,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	//hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
 	//hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
 	//registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
-	if _, err := executionClient.RegisterTestExecution(ctx, &emptypb.Empty{}); err != nil {
-		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
+	if _, err := executionClient.RegisterTestSetup(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test setup with the API container")
 	}
 
 	testConfig := test.GetTestConfiguration()
@@ -166,9 +166,16 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
+	if _, err := executionClient.RegisterTestSetupCompletion(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test setup completion with the API container")
+	}
 	logrus.Info("Test network set up")
 
 	logrus.Infof("Executing test '%v'...", testName)
+
+	if _, err := executionClient.RegisterTestExecution(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
+	}
 	testResultChan := make(chan error)
 
 	go func() {
