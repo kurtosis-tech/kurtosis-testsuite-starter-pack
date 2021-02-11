@@ -9,7 +9,6 @@ import (
 	"context"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/test_suite_docker_consts/test_suite_container_mountpoints"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -21,7 +20,16 @@ const (
 	// This will alwyas resolve to the default partition ID (regardless of whether such a partition exists in the network,
 	//  or it was repartitioned away)
 	defaultPartitionId PartitionID = ""
+
+	// This value - where the suite execution volume will be mounted on the testsuite container - is
+	//  hardcoded inside Kurtosis Core
+	suiteExVolMountpoint = "/suite-execution"
 )
+
+type serviceInfo struct {
+	ipAddr       string
+	wrappingFunc func(serviceId services.ServiceID, ipAddr string) services.Service
+}
 
 type NetworkContext struct {
 	client core_api_bindings.TestExecutionServiceClient
@@ -31,7 +39,7 @@ type NetworkContext struct {
 	// Mutex protecting access to the services map
 	mutex *sync.Mutex
 
-	services map[services.ServiceID]services.Service
+	services map[services.ServiceID]serviceInfo
 }
 
 
@@ -49,7 +57,7 @@ func NewNetworkContext(
 		mutex: &sync.Mutex{},
 		client: client,
 		filesArtifactUrls: filesArtifactUrls,
-		services: map[services.ServiceID]services.Service{},
+		services: map[services.ServiceID]serviceInfo{},
 	}
 }
 
@@ -124,7 +132,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	generatedFilesFps := map[string]*os.File{}
 	generatedFilesAbsoluteFilepathsOnService := map[string]string{}
 	for fileId, relativeFilepath := range generatedFilesRelativeFilepaths {
-		absoluteFilepathOnTestsuite := path.Join(test_suite_container_mountpoints.SuiteExVolMountpoint, relativeFilepath)
+		absoluteFilepathOnTestsuite := path.Join(suiteExVolMountpoint, relativeFilepath)
 		logrus.Debugf("Opening generated file at '%v' for writing...", absoluteFilepathOnTestsuite)
 		fp, err := os.Create(absoluteFilepathOnTestsuite)
 		if err != nil {
@@ -186,10 +194,14 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
 	logrus.Tracef("Creating service interface...")
-	service := initializer.GetService(serviceId, serviceIpAddr)
+	serviceFactory := initializer.GetServiceWrappingFunc();
+	service := serviceFactory(serviceId, serviceIpAddr);
 	logrus.Tracef("Successfully created service interface")
 
-	networkCtx.services[serviceId] = service
+	networkCtx.services[serviceId] = serviceInfo{
+		ipAddr:       serviceIpAddr,
+		wrappingFunc: serviceFactory,
+	}
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
@@ -197,16 +209,19 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 }
 
 /*
-Gets the service with the given ID, or returns an error if no service with that ID exists.
+Gets an interface for interacting with the service with the given ID, or returns an error if no service with that ID exists.
  */
 func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
-	service, found := networkCtx.services[serviceId]
+	serviceInfo, found := networkCtx.services[serviceId]
 	if !found {
-		return nil, stacktrace.NewError("No service found with ID '%v'", serviceId)
+		return nil, stacktrace.NewError("No service info found for ID '%v'", serviceId)
 	}
+	serviceIpAddr := serviceInfo.ipAddr
+	wrapWithInterface := serviceInfo.wrappingFunc
+	service := wrapWithInterface(serviceId, serviceIpAddr);
 
 	return service, nil
 }

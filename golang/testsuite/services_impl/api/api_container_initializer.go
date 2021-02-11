@@ -48,8 +48,10 @@ func (initializer ApiContainerInitializer) GetUsedPorts() map[string]bool {
 	}
 }
 
-func (initializer ApiContainerInitializer) GetService(serviceId services.ServiceID, ipAddr string) services.Service {
-	return NewApiService(serviceId, ipAddr, port)
+func (initializer ApiContainerInitializer) GetServiceWrappingFunc() func(serviceId services.ServiceID, ipAddr string) services.Service {
+	return func(serviceId services.ServiceID, ipAddr string) services.Service {
+		return NewApiService(serviceId, ipAddr, port);
+	};
 }
 
 func (initializer ApiContainerInitializer) GetFilesToMount() map[string]bool {

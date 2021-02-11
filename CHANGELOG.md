@@ -8,6 +8,7 @@
 
 ### Changed
 * Moved `Dockefile` inside the `testsuite` repo of each language once again
+* Replaced the `DockerContainerInitializer`'s `GetService` function with a `GetServiceFactory` function so that `NetworkContext` can manufacture `Service` instances upon `GetService` request
 
 # 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
