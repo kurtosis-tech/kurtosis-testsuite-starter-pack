@@ -120,6 +120,6 @@ func (b BasicDatastoreAndApiTest) GetExecutionTimeout() time.Duration {
 }
 
 func (b BasicDatastoreAndApiTest) GetSetupTeardownBuffer() time.Duration {
-	return 60 * time.Second
+	return 1 * time.Second
 }
 
