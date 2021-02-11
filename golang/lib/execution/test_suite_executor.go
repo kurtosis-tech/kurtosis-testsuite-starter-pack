@@ -157,6 +157,7 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 
 	logrus.Info("Setting up the test network...")
 	untypedNetwork, err := test.Setup(networkCtx)
+	time.Sleep(2 * time.Second)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
