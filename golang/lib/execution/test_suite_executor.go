@@ -182,25 +182,12 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 		testResultChan <- runTestInGoroutine(test, untypedNetwork)
 	}()
 
-	// TODO Switch to registering the timeout with the API container rather than storing this locally
-	//  to reduce complexity inside the lib
-	// Time out the test so a poorly-written test doesn't run forever
-	testTimeout := test.GetExecutionTimeout()
-	var timedOut bool
-	var testResultErr error
-	select {
+	testResultErr := <- testResultChan
+	/*select {
 	case testResultErr = <- testResultChan:
-		logrus.Tracef("Test returned result before timeout: %v", testResultErr)
-		timedOut = false
-	case <- time.After(testTimeout):
-		logrus.Tracef("Hit timeout %v before getting a result from the test", testTimeout)
-		timedOut = true
-	}
-	logrus.Tracef("After running test w/timeout: resultErr: %v, timedOut: %v", testResultErr, timedOut)
+	}*/
+	logrus.Tracef("After running test: resultErr: %v", testResultErr)
 
-	if timedOut {
-		return stacktrace.NewError("Timed out after %v waiting for test to complete", testTimeout)
-	}
 	logrus.Infof("Executed test '%v'", testName)
 
 	if testResultErr != nil {
