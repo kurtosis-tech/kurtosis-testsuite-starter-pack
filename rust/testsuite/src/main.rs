@@ -17,7 +17,8 @@ const LOG_LEVEL_FLAG: &str = "log-level";
 const FAILURE_EXIT_CODE: i32 = 1;
 const SUCCESS_EXIT_CODE: i32 = 0;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let matches = App::new("My Super Program")
         .arg(Arg::new(CUSTOM_PARAMS_JSON_FLAG)
             .long(CUSTOM_PARAMS_JSON_FLAG)

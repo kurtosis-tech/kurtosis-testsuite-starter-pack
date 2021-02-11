@@ -1,5 +1,7 @@
-use kurtosis_rust_lib::execution::test_suite_configurator::TestSuiteConfigurator;
+use kurtosis_rust_lib::{execution::test_suite_configurator::TestSuiteConfigurator, testsuite::testsuite::TestSuite};
 use anyhow::Result;
+
+use crate::testsuite_impl::example_testsuite::ExampleTestsuite;
 
 pub struct ExampleTestsuiteConfigurator {}
 
@@ -16,6 +18,7 @@ impl TestSuiteConfigurator for ExampleTestsuiteConfigurator {
     }
 
     fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<Box<dyn kurtosis_rust_lib::testsuite::testsuite::TestSuite>> {
-        todo!()
+        // TODO use params_json_str
+        return Ok(Box::new(ExampleTestsuite::new()));
     }
 }

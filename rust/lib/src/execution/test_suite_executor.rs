@@ -36,7 +36,8 @@ impl TestSuiteExecutor {
 			.context("An error occurred parsing the suite params JSON and creating the testsuite")?;
 
 		// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
-		let endpoint = Channel::from_shared(self.kurtosis_api_socket.clone())
+		let url = format!("http://{}", self.kurtosis_api_socket);
+		let endpoint = Channel::from_shared(url)
 			.context(format!("An error occurred creating the endpoint to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?;
 		let channel = block_on(endpoint.connect())
 			.context(format!("An error occurred connecting to Kurtosis API socket endpoint '{}'", &self.kurtosis_api_socket))?;
