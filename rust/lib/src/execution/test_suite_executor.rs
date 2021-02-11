@@ -4,7 +4,7 @@ use futures::executor::block_on;
 use log::debug;
 use tonic::{Request, transport::{Channel}};
 
-use crate::{core_api_bindings::api_container_api::{SuiteAction, SuiteRegistrationResponse, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient}, testsuite::testsuite::TestSuite};
+use crate::{core_api_bindings::api_container_api::{SuiteAction, SuiteRegistrationResponse, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 
@@ -84,7 +84,7 @@ impl TestSuiteExecutor {
 					.context("An error occurred running the suite metadata serialization flow")?;
 			}
 			SuiteAction::ExecuteTest => {
-				TestSuiteExecutor::run_test_execution_flow()
+				TestSuiteExecutor::run_test_execution_flow(suite, channel.clone())
 					.context("An error occurred running the test execution flow")?;
 			}
 		}
@@ -120,26 +120,30 @@ impl TestSuiteExecutor {
 		return Ok(());
 	}
 
-	fn run_test_execution_flow() -> Result<()> {
+	fn run_test_execution_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
+		let mut client = TestExecutionServiceClient::new(channel);
+		let resp_or_err = block_on(client.get_test_execution_info(()));
+		let test_ex_info = resp_or_err
+			.context("An error occurred getting the test execution info")?
+			.into_inner();
+		let test_name = test_ex_info.test_name;
+
+		let all_tests = testsuite.get_tests();
+		if !all_tests.contains_key(&test_name) {
+			return Err(anyhow!(
+				"Testsuite was directed to execute test '{}', but no test with that name exists in the testsuite; this is a Kurtosis code bug",
+				test_name
+			));
+		}
+
+		// TODO register setup start
+
+		// TODO register setup end
+
+		// TODO register test execution start
+
 		return Ok(());
 	/*
-		func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
-		executionClient := core_api_bindings.NewTestExecutionServiceClient(conn)
-		testExecutionInfo, err := executionClient.GetTestExecutionInfo(ctx, &emptypb.Empty{})
-		if err != nil {
-			return stacktrace.Propagate(err, "An error occurred getting the test execution info")
-		}
-		testName := testExecutionInfo.TestName
-
-		allTests := testsuite.GetTests()
-		test, found := allTests[testName]
-		if !found {
-			return stacktrace.NewError(
-				"Testsuite was directed to execute test '%v', but no test with that name exists " +
-					"in the testsuite; this is a Kurtosis code bug",
-				testName)
-		}
-
 		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
 		// TODO this should just be "register test execution started", since the API container already has the metadata
 		hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
