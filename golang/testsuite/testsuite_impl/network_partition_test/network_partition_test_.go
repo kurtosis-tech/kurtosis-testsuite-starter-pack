@@ -161,15 +161,9 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 func (test *NetworkPartitionTest) GetTestConfiguration() testsuite.TestConfiguration {
 	return testsuite.TestConfiguration{
 		IsPartitioningEnabled: true,
+		TestSetupTimeout: 60,
+		TestExecutionTimeout: 120,
 	}
-}
-
-func (test NetworkPartitionTest) GetExecutionTimeout() time.Duration {
-	return 120 * time.Second
-}
-
-func (test NetworkPartitionTest) GetSetupTeardownBuffer() time.Duration {
-	return 60 * time.Second
 }
 
 // ========================================================================================================

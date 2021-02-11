@@ -12,7 +12,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
@@ -93,17 +92,8 @@ func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite
 }
 
 func (test *AdvancedNetworkTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{}
+	return testsuite.TestConfiguration{
+		TestSetupTimeout: 60,
+		TestExecutionTimeout: 60,
+	}
 }
-
-func (test AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (test AdvancedNetworkTest) GetSetupTeardownBuffer() time.Duration {
-	return 60 * time.Second
-}
-
-
-
-

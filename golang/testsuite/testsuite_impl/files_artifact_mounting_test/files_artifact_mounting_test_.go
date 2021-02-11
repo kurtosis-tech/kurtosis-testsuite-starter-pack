@@ -38,6 +38,8 @@ func (f FilesArtifactMountingTest) GetTestConfiguration() testsuite.TestConfigur
 		FilesArtifactUrls: map[services.FilesArtifactID]string{
 			testFilesArtifactId: testFilesArtifactUrl,
 		},
+		TestSetupTimeout: 30,
+		TestExecutionTimeout: 60,
 	}
 }
 
@@ -93,10 +95,3 @@ func (f FilesArtifactMountingTest) Run(network networks.Network, testCtx testsui
 	)
 }
 
-func (f FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (f FilesArtifactMountingTest) GetSetupTeardownBuffer() time.Duration {
-	return 30 * time.Second
-}
