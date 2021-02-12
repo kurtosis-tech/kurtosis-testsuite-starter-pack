@@ -194,13 +194,13 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
 	logrus.Tracef("Creating service interface...")
-	serviceFactory := initializer.GetServiceWrappingFunc();
-	service := serviceFactory(serviceId, serviceIpAddr);
+	wrapWithInterface := initializer.GetServiceWrappingFunc();
+	service := wrapWithInterface(serviceId, serviceIpAddr);
 	logrus.Tracef("Successfully created service interface")
 
 	networkCtx.services[serviceId] = serviceInfo{
 		ipAddr:       serviceIpAddr,
-		wrappingFunc: serviceFactory,
+		wrappingFunc: wrapWithInterface,
 	}
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
