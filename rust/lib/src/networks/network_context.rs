@@ -39,13 +39,13 @@ impl NetworkContext {
         };
     }
 
-    pub fn add_service<S: Service>(&self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
+    pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
         let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
-    pub fn add_service_to_partition<'a, S: Service>(&self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_mount());
 		let args = RegisterServiceArgs{
@@ -60,8 +60,8 @@ impl NetworkContext {
 		
 		let suite_ex_vol_mountpoint_on_service = initializer.get_test_volume_mountpoint();
 		let generated_files_relative_filepaths = register_service_resp.generated_files_relative_filepaths;
-		let generated_files_fps: HashMap<String, File> = HashMap::new();
-		let generated_files_abs_filepaths_on_service: HashMap<String, PathBuf> = HashMap::new();
+		let mut generated_files_fps: HashMap<String, File> = HashMap::new();
+		let mut generated_files_abs_filepaths_on_service: HashMap<String, PathBuf> = HashMap::new();
 		for (file_id, relative_filepath) in generated_files_relative_filepaths {
 			// Per https://users.rust-lang.org/t/what-is-the-idiomatic-way-to-create-a-path-from-str-fragments/42882/2 , 
 			// this is the best way to join multiple fragments into a single path
@@ -69,10 +69,10 @@ impl NetworkContext {
 			debug!("Opening generated file at '{}' for writing...", abs_filepath_on_testsuite.display());
 			let fp = File::create(abs_filepath_on_testsuite)
 				.context(format!("Could not open generated file '{}' for writing", file_id))?;
-			generated_files_fps.insert(file_id, fp);
+			generated_files_fps.insert(file_id.clone(), fp);
 
 			let abs_filepath_on_service: PathBuf = [suite_ex_vol_mountpoint_on_service, &relative_filepath].iter().collect();
-			generated_files_abs_filepaths_on_service.insert(file_id, abs_filepath_on_service);
+			generated_files_abs_filepaths_on_service.insert(file_id.clone(), abs_filepath_on_service);
 		}
 
 		trace!("Initializing generated files...");
@@ -81,7 +81,7 @@ impl NetworkContext {
 		trace!("Successfully initialized generated files");
 
 		trace!("Creating files artifact URL -> mount dirpaths map...");
-		let artifact_url_to_mount_dirpath: HashMap<String, String> = HashMap::new();
+		let mut artifact_url_to_mount_dirpath: HashMap<String, String> = HashMap::new();
 		for (files_artifact_id, mount_dirpath) in initializer.get_files_artifact_mountpoints() {
 			let artifact_url = self.files_artifact_urls.get(&files_artifact_id)
 				.context(format!(
@@ -156,7 +156,7 @@ impl NetworkContext {
     pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Box<S>> {
 		let desired_service_info = self.all_service_info.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
-		let service_interface_wrapper_func = desired_service_info.service_interface_wrapper;
+		let service_interface_wrapper_func = &desired_service_info.service_interface_wrapper;
 		let service_ptr = NetworkContext::call_service_interface_wrapping_func(
 			service_interface_wrapper_func, 
 			service_id, 

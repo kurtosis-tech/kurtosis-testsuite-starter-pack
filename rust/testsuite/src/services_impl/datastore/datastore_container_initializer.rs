@@ -1,5 +1,5 @@
-use kurtosis_rust_lib::services::docker_container_initializer;
-use std::{collections::{HashSet, HashMap}, error::Error};
+use kurtosis_rust_lib::services::{docker_container_initializer, service::Service};
+use std::{collections::{HashSet, HashMap}, error::Error, path::PathBuf};
 use crate::services_impl::datastore::datastore_service::DatastoreService;
 use std::fs::File;
 use anyhow::Result;
@@ -10,6 +10,16 @@ const TEST_VOLUME_MOUNTPOINT: &str = "/test-volume";
 
 struct DatastoreContainerInitializer {
     docker_image: String,
+}
+
+impl DatastoreContainerInitializer {
+    fn create_service(service_id: &str, ip_addr: &str) -> Box<dyn Service> {
+        let service = DatastoreService::new(
+            service_id,
+            ip_addr, 
+            PORT);
+        return Box::new(service);
+    }
 }
 
 impl docker_container_initializer::DockerContainerInitializer<DatastoreService> for DatastoreContainerInitializer {
@@ -23,36 +33,34 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return result;
     }
 
-    fn get_service(&self, service_id: &str, ip_addr: &str) -> DatastoreService {
-        return DatastoreService::new(
-            service_id,
-            ip_addr, 
-            PORT
-        );
+    fn get_service_wrapping_func(&self) -> Box<dyn Fn(&str, &str) -> Box<dyn kurtosis_rust_lib::services::service::Service>> {
+        return Box::new(DatastoreContainerInitializer::create_service);
     }
 
-    fn get_files_to_mount() -> HashSet<String> {
+    fn get_files_to_mount(&self) -> HashSet<String> {
         return HashSet::new();
     }
 
-    fn initialize_mounted_files(_: HashMap<String, File>) -> Result<()> {
+    fn initialize_mounted_files(&self, _: HashMap<String, File>) -> Result<()> {
         return Ok(());
     }
 
-    fn get_files_artifact_mountpoints() -> HashMap<String, String> {
+    fn get_files_artifact_mountpoints(&self) -> HashMap<String, String> {
         return HashMap::new();
     }
 
 
-    fn get_test_volume_mountpoint() -> &'static str {
+    fn get_test_volume_mountpoint(&self) -> &'static str {
         return TEST_VOLUME_MOUNTPOINT;
     }
 
     fn get_start_command(
-            _: HashMap<String, String>, 
+            &self,
+            _: HashMap<String, PathBuf>, 
             _: &str
     ) -> Result<Option<Vec<String>>> {
         // TODO change return type???
         return Ok(None)
     }
+
 }
