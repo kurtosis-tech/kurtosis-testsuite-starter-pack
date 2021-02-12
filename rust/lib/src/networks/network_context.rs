@@ -7,7 +7,7 @@ use log::{debug, trace};
 use tonic::{IntoRequest, transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{RegisterServiceArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_wrapper::ServiceInterfaceWrapper}};
+use crate::{core_api_bindings::api_container_api::{RegisterServiceArgs, RemoveServiceArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_wrapper::ServiceInterfaceWrapper}};
 
 use super::network::Network;
 
@@ -174,29 +174,22 @@ impl NetworkContext {
 		return Ok(result);
     }
 
-    pub fn remove_service(&self) {
-/*
-func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds uint64) error {
-	networkCtx.mutex.Lock()
-	defer networkCtx.mutex.Unlock()
-
-	logrus.Debugf("Removing service '%v'...", serviceId)
-	args := &core_api_bindings.RemoveServiceArgs{
-		ServiceId:                   string(serviceId),
-		// NOTE: This is kinda weird - when we remove a service we can never get it back so having a container
-		//  stop timeout doesn't make much sense. It will make more sense when we can stop/start containers
-		// Independent of adding/removing them from the network
-		ContainerStopTimeoutSeconds: containerStopTimeoutSeconds,
+    pub fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
+		debug!("Removing service '{}'...", service_id);
+		let args = RemoveServiceArgs{
+		    service_id: service_id.to_owned(),
+			// NOTE: This is kinda weird - when we remove a service we can never get it back so having a container
+			//  stop timeout doesn't make much sense. It will make more sense when we can stop/start containers
+			// Independent of adding/removing them from the network
+		    container_stop_timeout_seconds,
+		};
+		let req = tonic::Request::new(args);
+		block_on(self.client.remove_service(req))
+			.context(format!("An error occurred removing service '{}' from the network", service_id))?;
+		self.all_service_info.remove(service_id);
+		debug!("Successfully removed service ID '{}'", service_id);
+		return Ok(());
 	}
-	if _, err := networkCtx.client.RemoveService(context.Background(), args); err != nil {
-		return stacktrace.Propagate(err, "An error occurred removing service '%v' from the network", serviceId)
-	}
-	delete(networkCtx.services, serviceId)
-	logrus.Debugf("Successfully removed service ID %v", serviceId)
-	return nil
-}
- */
-    }
 
     fn get_repartition_builder() {
         /*
