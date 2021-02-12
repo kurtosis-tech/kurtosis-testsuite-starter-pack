@@ -9,6 +9,7 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0.38"
+downcast-rs = "1.2.0"
 futures = "0.3"
 log = "0.4"
 prost = "0.7"

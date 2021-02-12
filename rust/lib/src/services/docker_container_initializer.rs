@@ -3,10 +3,12 @@
 // The ID of an artifact containing files that should be mounted into a service container
 // type FilesArtifactID string
 
-use std::{collections::{HashSet, HashMap}};
+use std::{collections::{HashSet, HashMap}, path::PathBuf};
 use crate::services::service::Service;
 use std::fs::File;
 use anyhow::Result;
+
+use super::service_wrapper::ServiceInterfaceWrapper;
 
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
@@ -22,18 +24,12 @@ pub trait DockerContainerInitializer<T: Service> {
     fn get_used_ports(&self) -> HashSet<String>;
 
     /*
-        Uses the IP address of the Docker container running the service and the service ID to create an implementation of
-        the interface the developer has created to represent their service.
+		Get the wrapping function that will be used to transform service ID & IP addr data into instances of the service interface
 
-        NOTE: Because Go doesn't have generics, we can't properly parameterize the return type to be the actual service interface
-        that the developer has created; nonetheless, the developer should return an implementation of their interface (which itself
-        should extend Service).
-
-        Args:
-            service_id: The ID of the service being created
-            ip_addr: The IP address of the Docker container running the service
+        Returns:
+            A function with signature (service_id, service_ip_addr) -> service_interface
     */
-    fn get_service(&self, service_id: &str, ip_addr: &str) -> T;
+    fn get_service_wrapping_func(&self) -> Box<dyn ServiceInterfaceWrapper<T>>;
 
     /*
         This method is used to declare that the service will need a set of files in order to run. To do this, the developer
@@ -50,7 +46,7 @@ pub trait DockerContainerInitializer<T: Service> {
                 identified in `InitializeMountedFiles` and `GetStartCommand`
     */
     // TODO Rename "getFilesToGenerate"
-    fn get_files_to_mount() -> HashSet<String>;
+    fn get_files_to_mount(&self) -> HashSet<String>;
 
     /*
         Initializes the contents of the files that the developer requested in `GetFilesToMount` with whatever
@@ -61,7 +57,7 @@ pub trait DockerContainerInitializer<T: Service> {
                 `GetFilesToMount`
     */
     // TODO Rename "initializeFilesToGenerate"
-    fn initialize_mounted_files(mounted_files: HashMap<String, File>) -> Result<()>;
+    fn initialize_mounted_files(&self, mounted_files: HashMap<String, File>) -> Result<()>;
 
     /*
         Allows the mounting of external files into a service container by mapping files artifacts (defined in your
@@ -75,7 +71,7 @@ pub trait DockerContainerInitializer<T: Service> {
                 2) The map value is the filepath inside of the service container where the
                     contents of the archive file should be mounted after decompression.
      */
-    fn get_files_artifact_mountpoints() -> HashMap<String, String>;
+    fn get_files_artifact_mountpoints(&self) -> HashMap<String, String>;
 
 
     /*
@@ -87,7 +83,7 @@ pub trait DockerContainerInitializer<T: Service> {
         Returns:
             A filepath on the Docker image backing this service that's safe to mount the test volume on
     */
-    fn get_test_volume_mountpoint() -> &'static str;
+    fn get_test_volume_mountpoint(&self) -> &'static str;
 
     /*
         Uses the given arguments to build the command that the Docker container running this service will be launched with.
@@ -108,7 +104,8 @@ pub trait DockerContainerInitializer<T: Service> {
                 specifies will be run instead.
     */
     fn get_start_command(
-        mounted_file_filepaths: HashMap<String, String>,
+        &self,
+        mounted_file_filepaths: HashMap<String, PathBuf>,
         ip_addr: &str
     ) -> Result<Option<Vec<String>>>;
 }
