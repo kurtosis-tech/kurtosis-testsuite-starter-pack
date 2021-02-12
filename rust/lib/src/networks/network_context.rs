@@ -1,12 +1,15 @@
 use std::{any::Any, collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{Path, PathBuf}, rc::Rc};
 use std::hash::Hash;
 
+use dashmap::DashMap;
 use futures::{executor::block_on, lock::Mutex};
 use log::{debug, trace};
 use tonic::{IntoRequest, transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
 use crate::{core_api_bindings::api_container_api::{RegisterServiceArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_wrapper::ServiceInterfaceWrapper}};
+
+use super::network::Network;
 
 // TODO Make a type
 const DEFAULT_PARTITION_ID: &str = "";
@@ -17,16 +20,14 @@ const SUITE_EX_VOL_MOUNTPOINT: &str = "/suite-execution";
 
 struct ServiceInfo {
 	ip_addr: String,
-	// I really, really, really tried to make the type of this be dyn ServiceInterfaceWrapper<dyn Service>, but Rust's
-	// type system absolutely would not let me. After burning hours on this, I'm giving up... super frustrating.
-	service_interface_wrapper_box: Box<dyn Any>,
+	service_interface_wrapper: Box<dyn Fn(&str, &str) -> Box<dyn Service>>,
 }
 
 pub struct NetworkContext {
     client: TestExecutionServiceClient<Channel>,
 	// TODO Make key a separate FilesArtifactID type
 	files_artifact_urls: HashMap<String, String>,
-    mutex: Mutex<HashMap<String, ServiceInfo>>,
+    all_service_info: DashMap<String, ServiceInfo>,
 }
 
 impl NetworkContext {
@@ -34,17 +35,17 @@ impl NetworkContext {
         return NetworkContext {
             client,
 			files_artifact_urls,
-            mutex: Mutex::new(HashMap::new()),
+            all_service_info: DashMap::new(),
         };
     }
 
-    pub fn add_service<S: Service>(&self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, &AvailabilityChecker)> {
+    pub fn add_service<S: Service>(&self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
         let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
-    pub fn add_service_to_partition<S: Service>(&self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, &AvailabilityChecker)> {
+    pub fn add_service_to_partition<'a, S: Service>(&self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_mount());
 		let args = RegisterServiceArgs{
@@ -117,36 +118,60 @@ impl NetworkContext {
 
 		trace!("Creating service interface...");
 		let service_interface_wrapper = initializer.get_service_wrapping_func();
-		let service = service_interface_wrapper.wrap(service_id, &service_ip_addr);
-		trace!("Successfully created service interface");
+		let result_service_ptr = NetworkContext::call_service_interface_wrapping_func(
+			initializer.get_service_wrapping_func(), 
+			service_id, 
+			&service_ip_addr
+		);
+		let casted_result_service_ptr_or_err = result_service_ptr.downcast::<S>();
+		let casted_result_service_ptr: Box<S>;
+		match casted_result_service_ptr_or_err {
+			Ok(ptr) => casted_result_service_ptr = ptr,
+			Err(_) => return Err(anyhow!(
+				"An error occurred casting service to appropriate type"
+			)),
+		}
 
-		let service_ptr = Rc::new(service);
-		let availability_checker = AvailabilityChecker::new(service_id, service_ptr);
+		// Yes, this creates a second Service interfaces; yes, this is inefficient; yes, there's probably a better way to do this
+		// At this point though I'm *so* sick of fighting Rust's compiler and its un-Google-able, seemingly-draconian errors so
+		// I'm doing it this way (e.g. - how can I both store a value in a hashmap, use it in the AvailabilityChecker, and return
+		// it to the user??) ~ ktoday, 2021-02-12
+		let availability_checker_service_ptr = NetworkContext::call_service_interface_wrapping_func(
+			initializer.get_service_wrapping_func(), 
+			service_id, 
+			&service_ip_addr
+		);
+		let availability_checker = AvailabilityChecker::new(service_id, availability_checker_service_ptr);
+		trace!("Successfully created service interface");
 
 		let new_service_info = ServiceInfo{
 		    ip_addr: service_ip_addr,
-		    service_interface_wrapper_box: Box::new(service_interface_wrapper),
+		    service_interface_wrapper: service_interface_wrapper,
 		};
-		let all_service_info = block_on(self.mutex.lock()).deref();
-		all_service_info.insert(service_id.to_owned(), new_service_info);
+		self.all_service_info.insert(service_id.to_owned(), new_service_info);
 
-		return Ok((service_ptr, &availability_checker));
+		return Ok((casted_result_service_ptr, availability_checker));
     }
 
-    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Rc<S>> {
-		let all_service_info = block_on(self.mutex.lock()).deref();
-		let desired_service_info = all_service_info.get(service_id)
+    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Box<S>> {
+		let desired_service_info = self.all_service_info.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
-		let service_interface_wrapper_box = desired_service_info.service_interface_wrapper_box;
-		let service_interface_wrapper = service_interface_wrapper_box.downcast::<ServiceInterfaceWrapper<S>>();
-		let casted_service_or_err = desired_service_info.downcast_rc::<S>();
-		match casted_service_or_err {
-			Ok(casted_service) => return Ok(casted_service),
+		let service_interface_wrapper_func = desired_service_info.service_interface_wrapper;
+		let service_ptr = NetworkContext::call_service_interface_wrapping_func(
+			service_interface_wrapper_func, 
+			service_id, 
+			&desired_service_info.ip_addr,
+		);
+		let casted_service_ptr_or_err = service_ptr.downcast::<S>();
+		let result: Box<S>;
+		match casted_service_ptr_or_err {
+			Ok(casted_ptr) => result = casted_ptr,
 			Err(_) => return Err(anyhow!(
-					"Could not cast service with ID '{}' to desired type", 
-					service_id
+				"An error occurred casting service with ID '{}' to appropriate type",
+				service_id,
 			)),
 		}
+		return Ok(result);
     }
 
     pub fn remove_service(&self) {
@@ -234,5 +259,13 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 			result.insert(elem, true);
 		}
 		return result;
+	}
+
+	fn call_service_interface_wrapping_func<F>(
+		func: F, 
+		service_id: &str, 
+		ip_addr: &str
+	) -> Box<dyn Service> where F: Fn(&str, &str) -> Box<dyn Service> {
+		return func(service_id, ip_addr);
 	}
 }

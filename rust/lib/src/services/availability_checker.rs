@@ -6,11 +6,11 @@ use super::service::Service;
 pub struct AvailabilityChecker {
     service_id: String,
 
-    to_check: Rc<dyn Service>,
+    to_check: Box<dyn Service>,
 }
 
 impl AvailabilityChecker {
-    pub fn new(service_id: &str, to_check: Rc<dyn Service>) -> AvailabilityChecker {
+    pub fn new(service_id: &str, to_check: Box<dyn Service>) -> AvailabilityChecker {
         return AvailabilityChecker{
             service_id: service_id.to_owned(),
             to_check,
