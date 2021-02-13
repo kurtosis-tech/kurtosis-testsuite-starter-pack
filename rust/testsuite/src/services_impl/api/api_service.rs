@@ -12,12 +12,9 @@ const TEXT_CONTENT_TYPE: &str = "text/plain";
 const PERSON_ENDPOINT: &str = "person";
 const INCREMENT_BOOKS_READ_ENDPOINT: &str = "incrementBooksRead";
 
-// How long to wait before timing out HTTP requests
-const TIMEOUT_SECONDS: u64 = 3;
-
 #[derive(Serialize, Deserialize)]
 pub struct Person {
-    books_read: u64,
+    pub books_read: u64,
 }
 
 pub struct ApiService {
