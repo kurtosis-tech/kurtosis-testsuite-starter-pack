@@ -27,12 +27,12 @@ type TestConfiguration struct {
 			hard-killed. The total amount of time a test (with setup) is allowed to run
 			for = GetExecutionTimeout + GetSetupTeardownBuffer.
 	*/
-	TestSetupTimeout uint32
+	TestSetupTimeoutInSeconds uint32
 	/*
 		The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
 			is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
 			which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed
 			to run for = GetExecutionTimeout + GetSetupBuffer.
 	*/
-	TestExecutionTimeout uint32
+	TestExecutionTimeoutInSeconds uint32
 }

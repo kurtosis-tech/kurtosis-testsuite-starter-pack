@@ -93,7 +93,7 @@ func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite
 
 func (test *AdvancedNetworkTest) GetTestConfiguration() testsuite.TestConfiguration {
 	return testsuite.TestConfiguration{
-		TestSetupTimeout: 60,
-		TestExecutionTimeout: 60,
+		TestSetupTimeoutInSeconds:     60,
+		TestExecutionTimeoutInSeconds: 60,
 	}
 }

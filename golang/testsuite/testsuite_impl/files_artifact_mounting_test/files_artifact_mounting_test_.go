@@ -38,8 +38,8 @@ func (f FilesArtifactMountingTest) GetTestConfiguration() testsuite.TestConfigur
 		FilesArtifactUrls: map[services.FilesArtifactID]string{
 			testFilesArtifactId: testFilesArtifactUrl,
 		},
-		TestSetupTimeout: 30,
-		TestExecutionTimeout: 60,
+		TestSetupTimeoutInSeconds:     30,
+		TestExecutionTimeoutInSeconds: 60,
 	}
 }
 
