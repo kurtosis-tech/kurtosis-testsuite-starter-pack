@@ -16,6 +16,8 @@ import (
 	"sync"
 )
 
+type PartitionID string
+
 const (
 	// This will alwyas resolve to the default partition ID (regardless of whether such a partition exists in the network,
 	//  or it was repartitioned away)
@@ -250,40 +252,30 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 }
 
 /*
-Constructs a new repartitioner builder in preparation for a repartition.
-
-Args:
-	isDefaultPartitionConnectionBlocked: If true, when the connection details between two partitions aren't specified
-		during a repartition then traffic between them will be blocked by default
+Repartitions the network to the given state
  */
-func (networkCtx NetworkContext) GetRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
-	// This function doesn't need a mutex lock because (as of 2020-12-28) it doesn't touch internal state whatsoever
-	return newRepartitionerBuilder(isDefaultPartitionConnectionBlocked)
-}
-
-/*
-Repartitions the network using the given repartitioner. A repartitioner builder can be constructed using the
-	NewRepartitionerBuilder method of this network context object.
- */
-func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitioner) error {
+func (networkCtx *NetworkContext) RepartitionNetwork(
+		partitionServices map[PartitionID]map[services.ServiceID]bool,
+		partitionConnections map[PartitionID]map[PartitionID]*core_api_bindings.PartitionConnectionInfo,
+		defaultConnection *core_api_bindings.PartitionConnectionInfo) error {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
-	partitionServices := map[string]*core_api_bindings.PartitionServices{}
-	for partitionId, serviceIdSet := range repartitioner.partitionServices {
+	reqPartitionServices := map[string]*core_api_bindings.PartitionServices{}
+	for partitionId, serviceIdSet := range partitionServices {
 		serviceIdStrPseudoSet := map[string]bool{}
-		for _, serviceId := range serviceIdSet.getElems() {
+		for serviceId := range serviceIdSet {
 			serviceIdStr := string(serviceId)
 			serviceIdStrPseudoSet[serviceIdStr] = true
 		}
 		partitionIdStr := string(partitionId)
-		partitionServices[partitionIdStr] = &core_api_bindings.PartitionServices{
+		reqPartitionServices[partitionIdStr] = &core_api_bindings.PartitionServices{
 			ServiceIdSet: serviceIdStrPseudoSet,
 		}
 	}
 
-	partitionConns := map[string]*core_api_bindings.PartitionConnections{}
-	for partitionAId, partitionAConnsMap := range repartitioner.partitionConnections {
+	reqPartitionConns := map[string]*core_api_bindings.PartitionConnections{}
+	for partitionAId, partitionAConnsMap := range partitionConnections {
 		partitionAConnsStrMap := map[string]*core_api_bindings.PartitionConnectionInfo{}
 		for partitionBId, connInfo := range partitionAConnsMap {
 			partitionBIdStr := string(partitionBId)
@@ -293,13 +285,13 @@ func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitione
 			ConnectionInfo: partitionAConnsStrMap,
 		}
 		partitionAIdStr := string(partitionAId)
-		partitionConns[partitionAIdStr] = partitionAConns
+		reqPartitionConns[partitionAIdStr] = partitionAConns
 	}
 
 	repartitionArgs := &core_api_bindings.RepartitionArgs{
-		PartitionServices:    partitionServices,
-		PartitionConnections: partitionConns,
-		DefaultConnection:    repartitioner.defaultConnection,
+		PartitionServices:    reqPartitionServices,
+		PartitionConnections: reqPartitionConns,
+		DefaultConnection:    defaultConnection,
 	}
 	if _, err := networkCtx.client.Repartition(context.Background(), repartitionArgs); err != nil {
 		return stacktrace.Propagate(err, "An error occurred repartitioning the test network")

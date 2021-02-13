@@ -7,8 +7,12 @@
 * Added a helptext to the generated `build-and-run.sh` after bootstrapping
 
 ### Changed
-* Moved `Dockefile` inside the `testsuite` repo of each language once again
+* Moved `Dockerfile` inside the `testsuite` repo of each language once again
 * Replaced the `DockerContainerInitializer`'s `GetService` function with a `GetServiceFactory` function so that `NetworkContext` can manufacture `Service` instances upon `GetService` request
+* Made `NetworkContext.Repartition` take in the new network state directly, rather than going through the `Repartitioner`/`RepartitionerBuilder`
+
+### Removed
+* `Repartitioner` and `RepartitionerBuilder`, which added complexity for no gain
 
 # 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
