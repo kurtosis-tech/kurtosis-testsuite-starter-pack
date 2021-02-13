@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::File, io::Write, path::PathBuf};
+use std::{collections::{HashMap, HashSet}, fmt::Debug, fs::File, io::Write, path::PathBuf};
 
 use anyhow::{Context, Result};
 use kurtosis_rust_lib::services::{docker_container_initializer::DockerContainerInitializer, service::Service};
@@ -12,7 +12,7 @@ const PORT: u32 = 2434;
 const CONFIG_FILE_KEY: &str = "config-file";
 const TEST_VOLUME_MOUNTPOINT: &str = "/test-volume";
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Config {
     datastore_ip: String,
     datastore_port: u32,
@@ -67,6 +67,7 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
             datastore_ip: self.datastore.get_ip_address().to_owned(),
             datastore_port: self.datastore.get_port(),
         };
+        debug!("Config obj: {:?}", config_obj);
 
         let config_fp = mounted_files.get(CONFIG_FILE_KEY)
             .context(format!("No file found with key '{}'", CONFIG_FILE_KEY))?;

@@ -2,7 +2,6 @@ mod execution_impl;
 mod services_impl;
 mod testsuite_impl;
 
-extern crate pretty_env_logger;
 #[macro_use] extern crate log;
 
 use anyhow::{Context, Result};

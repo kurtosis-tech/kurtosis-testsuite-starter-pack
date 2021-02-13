@@ -2,15 +2,17 @@ use std::{any::Any, collections::HashMap};
 
 use kurtosis_rust_lib::{networks::network::Network, testsuite::{dyn_test::{DynTest, DynTestContainer}, test::Test, testsuite::TestSuite}};
 
-use super::basic_datastore_test::BasicDatastoreTest;
+use super::{basic_datastore_and_api_test::BasicDatastoreAndApiTest, basic_datastore_test::BasicDatastoreTest};
 
 pub struct ExampleTestsuite {
+    api_service_image: String,
     datastore_service_image: String,
 }
 
 impl ExampleTestsuite {
-    pub fn new(datastore_service_image: String) -> ExampleTestsuite {
+    pub fn new(api_service_image: String, datastore_service_image: String) -> ExampleTestsuite {
         return ExampleTestsuite{
+            api_service_image,
             datastore_service_image,
         };
     }
@@ -22,11 +24,21 @@ impl TestSuite for ExampleTestsuite {
 
         let basic_datastore_test = BasicDatastoreTest::new(&self.datastore_service_image);
         let basic_datastore_test_container = DynTestContainer::new(basic_datastore_test);
-
         result.insert(
-            "basicDatastoreTest".to_owned(), 
+            String::from("basicDatastoreTest"),
             Box::new(basic_datastore_test_container),
         );
+
+        let basic_datastore_and_api_test = BasicDatastoreAndApiTest::new(
+            self.datastore_service_image.clone(), 
+            self.api_service_image.clone()
+        );
+        let basic_datastore_and_api_test_container = DynTestContainer::new(basic_datastore_and_api_test);
+        result.insert(
+            String::from("basicDatastoreAndApiTest"),
+            Box::new(basic_datastore_and_api_test_container),
+        );
+
         return result;
     }
 
