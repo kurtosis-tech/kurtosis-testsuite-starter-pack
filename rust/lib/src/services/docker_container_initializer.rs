@@ -8,12 +8,9 @@ use crate::services::service::Service;
 use std::fs::File;
 use anyhow::Result;
 
-use super::service_wrapper::ServiceInterfaceWrapper;
-
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
 //  method every time a new feature comes out!
-// GENERIC TOOD: If Go had generics, this would be parameterized with the subtype of Service that this returns
 pub trait DockerContainerInitializer<T: Service> {
     // Gets the Docker image that will be used for instantiating the Docker container
     fn get_docker_image(&self) -> &str;
