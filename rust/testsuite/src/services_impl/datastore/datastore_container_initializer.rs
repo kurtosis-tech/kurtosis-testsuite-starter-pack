@@ -8,11 +8,17 @@ const PORT: u32 = 1323;
 const PROTOCOL: &str = "tcp";
 const TEST_VOLUME_MOUNTPOINT: &str = "/test-volume";
 
-struct DatastoreContainerInitializer {
+pub struct DatastoreContainerInitializer {
     docker_image: String,
 }
 
 impl DatastoreContainerInitializer {
+    pub fn new(docker_image: &str) -> DatastoreContainerInitializer {
+        return DatastoreContainerInitializer{
+            docker_image: docker_image.to_owned(),
+        };
+    }
+
     fn create_service(service_id: &str, ip_addr: &str) -> Box<dyn Service> {
         let service = DatastoreService::new(
             service_id,

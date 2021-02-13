@@ -121,7 +121,7 @@ impl TestSuiteExecutor {
 	}
 
 	fn run_test_execution_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
-		let mut client = TestExecutionServiceClient::new(channel);
+		let mut client = TestExecutionServiceClient::new(channel.clone());
 		let resp_or_err = block_on(client.get_test_execution_info(()));
 		let test_ex_info = resp_or_err
 			.context("An error occurred getting the test execution info")?
@@ -129,97 +129,16 @@ impl TestSuiteExecutor {
 		let test_name = test_ex_info.test_name;
 
 		let all_tests = testsuite.get_tests();
-		if !all_tests.contains_key(&test_name) {
-			return Err(anyhow!(
+		let test = all_tests.get(&test_name)
+			.context(format!(
 				"Testsuite was directed to execute test '{}', but no test with that name exists in the testsuite; this is a Kurtosis code bug",
 				test_name
-			));
-		}
+			))?;
 
-		// TODO register setup start
-
-		// TODO register setup end
-
-		// TODO register test execution start
+		// TODO TODO TODO wrap this entire thing with panic-catching
+		test.setup_and_run(channel)
+			.context(format!("An error occurred setting up & executing test '{}'", &test_name))?;
 
 		return Ok(());
-	/*
-		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
-		// TODO this should just be "register test execution started", since the API container already has the metadata
-		hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
-		hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
-		registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
-		if _, err := executionClient.RegisterTestExecution(ctx, registerTestExecutionMessage); err != nil {
-			return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
-		}
-
-		testConfig := test.GetTestConfiguration()
-		filesArtifactUrls := testConfig.FilesArtifactUrls
-
-		networkCtx := networks.NewNetworkContext(
-			executionClient,
-			filesArtifactUrls)
-
-		// TODO Also time out the setup with the API container rather than storing this locally
-		//  to reduce complexity inside the lib
-		logrus.Info("Setting up the test network...")
-		untypedNetwork, err := test.Setup(networkCtx)
-		if err != nil {
-			return stacktrace.Propagate(err, "An error occurred setting up the test network")
-		}
-		logrus.Info("Test network set up")
-
-		logrus.Infof("Executing test '%v'...", testName)
-		testResultChan := make(chan error)
-
-		go func() {
-			testResultChan <- runTestInGoroutine(test, untypedNetwork)
-		}()
-
-		// TODO Switch to registering the timeout with the API container rather than storing this locally
-		//  to reduce complexity inside the lib
-		// Time out the test so a poorly-written test doesn't run forever
-		testTimeout := test.GetExecutionTimeout()
-		var timedOut bool
-		var testResultErr error
-		select {
-		case testResultErr = <- testResultChan:
-			logrus.Tracef("Test returned result before timeout: %v", testResultErr)
-			timedOut = false
-		case <- time.After(testTimeout):
-			logrus.Tracef("Hit timeout %v before getting a result from the test", testTimeout)
-			timedOut = true
-		}
-		logrus.Tracef("After running test w/timeout: resultErr: %v, timedOut: %v", testResultErr, timedOut)
-
-		if timedOut {
-			return stacktrace.NewError("Timed out after %v waiting for test to complete", testTimeout)
-		}
-		logrus.Infof("Executed test '%v'", testName)
-
-		if testResultErr != nil {
-			return stacktrace.Propagate(testResultErr, "An error occurred when running the test")
-		}
-
-		return nil
-	*/
 	}
 }
-
-
-/*
-// Little helper function meant to be run inside a goroutine that runs the test
-func runTestInGoroutine(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
-	// See https://medium.com/@hussachai/error-handling-in-go-a-quick-opinionated-guide-9199dd7c7f76 for details
-	defer func() {
-		if recoverResult := recover(); recoverResult != nil {
-			logrus.Tracef("Caught panic while running test: %v", recoverResult)
-			resultErr = recoverResult.(error)
-		}
-	}()
-	test.Run(untypedNetwork, testsuite.TestContext{})
-	logrus.Tracef("Test completed successfully")
-	return
-}
-
- */

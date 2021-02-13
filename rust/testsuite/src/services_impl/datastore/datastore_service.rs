@@ -1,9 +1,8 @@
-use std::error::Error;
+use anyhow::{anyhow, Result};
 use reqwest;
 use kurtosis_rust_lib::services::service;
 use kurtosis_rust_lib::services::service::Service;
 use reqwest::header::CONTENT_TYPE;
-use simple_error::SimpleError;
 use futures::executor::block_on;
 
 const HEALTHCHECK_URL_SLUG: &str = "health";
@@ -33,7 +32,7 @@ impl DatastoreService {
     }
 
     // TODO Change error type to Anyhow
-    pub fn exists(&self, key: &str) -> Result<bool, Box<dyn Error>> {
+    pub fn exists(&self, key: &str) -> Result<bool> {
         self.get_url_for_key(key);
 
         let url = self.get_url_for_key(key);
@@ -45,31 +44,29 @@ impl DatastoreService {
         } else if resp_status.as_u16() == NOT_FOUND_ERR_CODE {
             return Ok(false);
         } else {
-            return Err(
-                SimpleError::new(
-                    format!("Got an unexpected HTTP status code: {}", resp_status)
-                ).into()
-            );
+            return Err(anyhow!(
+                "Got an unexpected HTTP status code: {}", 
+                resp_status,
+            ));
         }
     }
 
-    pub fn get(&self, key: &str) -> Result<String, Box<dyn Error>> {
+    pub fn get(&self, key: &str) -> Result<String> {
         let url = self.get_url_for_key(key);
         let future = reqwest::get(&url);
         let resp = block_on(future)?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
-            return Err(
-                SimpleError::new(
-                    format!("A non-successful error code was returned: {}", resp_status.as_u16())
-                ).into()
-            );
+            return Err(anyhow!(
+                "A non-successful error code was returned: {}", 
+                resp_status.as_u16()
+            ));
         }
         let resp_body = block_on(resp.text())?;
         return Ok(resp_body)
     }
 
-    pub fn upsert(&self, key: &str, value: &str) -> Result<(), Box<dyn Error>> {
+    pub fn upsert(&self, key: &str, value: &str) -> Result<()> {
         let url = self.get_url_for_key(key);
         let client = reqwest::Client::new();
         let future = client.post(&url)
@@ -79,11 +76,10 @@ impl DatastoreService {
         let resp = block_on(future)?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
-            return Err(
-                SimpleError::new(
-                    format!("Got non-OK status code: {}", resp_status.as_u16())
-                ).into()
-            );
+            return Err(anyhow!(
+                "Got non-OK status code: {}", 
+                resp_status.as_u16(),
+            ));
         }
         return Ok(());
     }

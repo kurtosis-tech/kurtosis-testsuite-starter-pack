@@ -18,7 +18,7 @@ impl TestSuiteConfigurator for ExampleTestsuiteConfigurator {
     }
 
     fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<Box<dyn kurtosis_rust_lib::testsuite::testsuite::TestSuite>> {
-        // TODO use params_json_str
-        return Ok(Box::new(ExampleTestsuite::new()));
+        // TODO actually parse params_json_str
+        return Ok(Box::new(ExampleTestsuite::new(String::from("kurtosistech/example-microservices_datastore"))));
     }
 }

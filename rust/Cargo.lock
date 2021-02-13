@@ -520,7 +520,6 @@ dependencies = [
  "log",
  "pretty_env_logger",
  "reqwest",
- "simple-error",
  "tokio",
  "tonic",
 ]

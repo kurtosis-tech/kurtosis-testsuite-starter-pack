@@ -251,3 +251,5 @@ impl NetworkContext {
 		return func(service_id, ip_addr);
 	}
 }
+
+impl Network for NetworkContext { }

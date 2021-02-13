@@ -1,2 +1,2 @@
 pub mod datastore_service;
-mod datastore_container_initializer;
+pub mod datastore_container_initializer;
