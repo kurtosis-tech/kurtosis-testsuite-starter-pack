@@ -111,7 +111,7 @@ impl NetworkContext {
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};
 		let start_service_req = tonic::Request::new(start_service_args);
-		let start_service_resp = block_on(self.client.start_service(start_service_req))
+		block_on(self.client.start_service(start_service_req))
 			.context("An error occurred starting the service with the Kurtosis API")?
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");

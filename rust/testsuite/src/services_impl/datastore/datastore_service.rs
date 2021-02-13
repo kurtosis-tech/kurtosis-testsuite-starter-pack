@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{Context, Result, anyhow};
 use reqwest;
 use kurtosis_rust_lib::services::service;
 use kurtosis_rust_lib::services::service::Service;
@@ -54,7 +54,8 @@ impl DatastoreService {
     pub fn get(&self, key: &str) -> Result<String> {
         let url = self.get_url_for_key(key);
         let future = reqwest::get(&url);
-        let resp = block_on(future)?;
+        let resp = block_on(future)
+            .context("An error occurred getting the response after the GET request")?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
             return Err(anyhow!(
@@ -62,7 +63,8 @@ impl DatastoreService {
                 resp_status.as_u16()
             ));
         }
-        let resp_body = block_on(resp.text())?;
+        let resp_body = block_on(resp.text())
+            .context("Could not read response body")?;
         return Ok(resp_body)
     }
 
@@ -73,7 +75,8 @@ impl DatastoreService {
             .header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
             .body(value.to_owned())
             .send();
-        let resp = block_on(future)?;
+        let resp = block_on(future)
+            .context("An error occurred getting the response after the POST request")?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
             return Err(anyhow!(
