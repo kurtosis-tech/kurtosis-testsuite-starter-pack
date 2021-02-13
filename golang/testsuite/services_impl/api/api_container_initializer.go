@@ -73,7 +73,10 @@ func (initializer ApiContainerInitializer) InitializeMountedFiles(mountedFiles m
 
 	logrus.Debugf("API config JSON: %v", string(configBytes))
 
-	configFp := mountedFiles[configFileKey]
+	configFp, found := mountedFiles[configFileKey]
+	if !found {
+		return stacktrace.NewError("No file found with key '%v'", configFileKey);
+	}
 	if _, err := configFp.Write(configBytes); err != nil {
 		return stacktrace.Propagate(err, "An error occurred writing the serialized config JSON to file")
 	}
@@ -91,7 +94,10 @@ func (initializer ApiContainerInitializer) GetTestVolumeMountpoint() string {
 
 func (initializer ApiContainerInitializer) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string) ([]string, error) {
 	// TODO Replace this with a productized way to start a container using only environment variables
-	configFilepath := mountedFileFilepaths[configFileKey]
+	configFilepath, found := mountedFileFilepaths[configFileKey]
+	if !found {
+		return nil, stacktrace.NewError("No filepath found for config file key '%v'", configFileKey);
+	}
 	startCmd := []string{
 		"./api.bin",
 		"--config",
