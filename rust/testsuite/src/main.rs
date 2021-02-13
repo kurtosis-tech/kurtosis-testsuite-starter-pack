@@ -5,6 +5,7 @@ mod testsuite_impl;
 extern crate pretty_env_logger;
 #[macro_use] extern crate log;
 
+use anyhow::{Context, Result};
 use std::process::exit;
 
 use clap::{App, Arg, ArgMatches};
@@ -15,10 +16,9 @@ const CUSTOM_PARAMS_JSON_FLAG: &str = "custom-params-json";
 const KURTOSIS_API_SOCKET_FLAG: &str  = "kurtosis-api-socket";
 const LOG_LEVEL_FLAG: &str = "log-level";
 const FAILURE_EXIT_CODE: i32 = 1;
-const SUCCESS_EXIT_CODE: i32 = 0;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let matches = App::new("My Super Program")
         .arg(Arg::new(CUSTOM_PARAMS_JSON_FLAG)
             .long(CUSTOM_PARAMS_JSON_FLAG)
@@ -40,9 +40,13 @@ async fn main() {
             .value_name("LEVEL"))
         .get_matches();
 
-    let custom_params_json = get_arg_value(&matches, CUSTOM_PARAMS_JSON_FLAG);
-    let kurtosis_api_socket = get_arg_value(&matches, KURTOSIS_API_SOCKET_FLAG);
-    let log_level = get_arg_value(&matches, LOG_LEVEL_FLAG);
+    let custom_params_json = matches.value_of(CUSTOM_PARAMS_JSON_FLAG)
+        .context(format!("No '{}' arg provided", CUSTOM_PARAMS_JSON_FLAG))?;
+    let kurtosis_api_socket = matches.value_of(KURTOSIS_API_SOCKET_FLAG)
+        .context(format!("No '{}' arg provided", KURTOSIS_API_SOCKET_FLAG))?;
+    let log_level = matches.value_of(LOG_LEVEL_FLAG)
+        .context(format!("No '{}' flag provided", LOG_LEVEL_FLAG))?;
+
 
     // >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
 	let configurator = ExampleTestsuiteConfigurator::new();
@@ -55,22 +59,6 @@ async fn main() {
         custom_params_json,
         configurator_box
     );
-    let run_result = executor.run();
-    if run_result.is_err() {
-        let err = run_result.unwrap_err();
-        // The {:#} incantation is how you display the full error info of an Anyhow error, as per
-        // https://docs.rs/anyhow/1.0.26/anyhow/struct.Error.html
-        error!("An error occurred running the test suite executor: {:#}", err);
-        exit(FAILURE_EXIT_CODE);
-    }
-    exit(SUCCESS_EXIT_CODE);
-}
-
-fn get_arg_value<'a>(matches: &'a ArgMatches, arg_name: &'static str) -> &'a str {
-    let arg_opt = matches.value_of(arg_name);
-    if arg_opt.is_none() {
-        error!("No argument '{}' supplied, even though it's required", arg_name);
-        exit(FAILURE_EXIT_CODE);
-    }
-    return arg_opt.unwrap();
+    executor.run().context("An error occurred running the test suite executor")?;
+    return Ok(());
 }

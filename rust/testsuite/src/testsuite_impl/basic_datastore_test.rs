@@ -56,8 +56,8 @@ impl Test for BasicDatastoreTest {
 		info!("Confirmed that key '{}' doesn't already exist", TEST_KEY);
 
 		info!("Inserting value '{}' at key '{}'...", TEST_KEY, TEST_VALUE);
-		let upsert_result = service.upsert(TEST_KEY, TEST_VALUE);
-		test_ctx.assert_true(upsert_result.is_ok(), upsert_result.unwrap_err());
+		service.upsert(TEST_KEY, TEST_VALUE)
+			.context(format!("An error occurred upserting value '{}' at key '{}'", TEST_VALUE, TEST_KEY))?;
 		info!("Inserted value successfully");
 
 		info!("Getting the key we just inserted to verify the value...");
@@ -71,6 +71,7 @@ impl Test for BasicDatastoreTest {
 				TEST_VALUE,
 			),
 		);
+		// TODO induce panic and ensure we recover from it!
 		info!("Value verified");
 		return Ok(());
     }

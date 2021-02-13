@@ -39,6 +39,7 @@ impl TestSuiteExecutor {
 		let url = format!("http://{}", self.kurtosis_api_socket);
 		let endpoint = Channel::from_shared(url)
 			.context(format!("An error occurred creating the endpoint to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?;
+		// TODO Implement retrying!
 		let channel = block_on(endpoint.connect())
 			.context(format!("An error occurred connecting to Kurtosis API socket endpoint '{}'", &self.kurtosis_api_socket))?;
 		let suite_registration_channel = channel.clone(); // This *seems* weird to clone a channel, but this is apparently how Tonic wants it

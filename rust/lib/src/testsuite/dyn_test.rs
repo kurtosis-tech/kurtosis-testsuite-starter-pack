@@ -64,6 +64,14 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         let network_ctx = NetworkContext::new(network_ctx_client, files_artifact_urls);
         let mut registration_client = TestExecutionServiceClient::new(channel.clone());
 
+		// TODO this needs to be refactored to the new world!!!
+        let test_execution_timeout = self.test.get_execution_timeout() + self.test.get_setup_teardown_buffer();
+        let register_test_execution_req = tonic::Request::new(RegisterTestExecutionArgs{
+            timeout_seconds: test_execution_timeout.as_secs(),
+        });
+        block_on(registration_client.register_test_execution(register_test_execution_req))
+            .context("An error occurred registering the test execution with the API container")?;
+
         info!("Setting up the test network...");
         // TODO register setup
         let network = self.test.setup(network_ctx)
@@ -71,15 +79,9 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         // TODO register setup completion
         info!("Test network set up");
 
-        let test_execution_timeout = self.test.get_execution_timeout();
         let test_ctx = TestContext{};
-        let register_test_execution_req = tonic::Request::new(RegisterTestExecutionArgs{
-            timeout_seconds: test_execution_timeout.as_secs(),
-        });
 
         info!("Executing the test...");
-        block_on(registration_client.register_test_execution(register_test_execution_req))
-            .context("An error occurred registering the test execution with the API container")?;
 
         self.test.run(network, test_ctx)
             .context("An error occurred executing the test")?;
