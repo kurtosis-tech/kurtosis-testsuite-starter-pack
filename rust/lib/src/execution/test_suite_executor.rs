@@ -8,8 +8,8 @@ use crate::{core_api_bindings::api_container_api::{SuiteAction, SuiteRegistratio
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 
-const MAX_SUITE_REGISTRATION_RETRIES: u32 = 20;
-const TIME_BETWEEN_SUITE_REGISTRATION_RETRIES: Duration = Duration::from_millis(500);
+const MAX_CONNECTION_ATTEMPTS: u32 = 20;
+const TIME_BETWEEN_CONNECTION_RETRIES: Duration = Duration::from_millis(500);
 
 pub struct TestSuiteExecutor {
     kurtosis_api_socket: String,
@@ -39,42 +39,43 @@ impl TestSuiteExecutor {
 		let url = format!("http://{}", self.kurtosis_api_socket);
 		let endpoint = Channel::from_shared(url)
 			.context(format!("An error occurred creating the endpoint to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?;
-		// TODO Implement retrying!
-		let channel = block_on(endpoint.connect())
-			.context(format!("An error occurred connecting to Kurtosis API socket endpoint '{}'", &self.kurtosis_api_socket))?;
-		let suite_registration_channel = channel.clone(); // This *seems* weird to clone a channel, but this is apparently how Tonic wants it
-		let mut suite_registration_client = SuiteRegistrationServiceClient::new(suite_registration_channel);
 
-		let mut suite_registration_attempts: u32 = 0;
-		let suite_registration_resp: SuiteRegistrationResponse;
+		// Sometimes the API container is still in the process of starting, so we retry the channel connection a few times
+		let channel: Channel;
+		let mut connection_attempts: u32 = 0;
 		loop {
-			if suite_registration_attempts >= MAX_SUITE_REGISTRATION_RETRIES {
+			if connection_attempts >= MAX_CONNECTION_ATTEMPTS {
 				return Err(
 					anyhow!(
-						"Failed to register testsuite with API container, even after {} retries spaced {}ms apart",
-						MAX_SUITE_REGISTRATION_RETRIES,
-						TIME_BETWEEN_SUITE_REGISTRATION_RETRIES.as_millis(),
+						"Failed to connect to API container, even after {} retries spaced {}ms apart",
+						MAX_CONNECTION_ATTEMPTS,
+						TIME_BETWEEN_CONNECTION_RETRIES.as_millis(),
 					)
 				);
 			}
-
-			let resp_or_err = block_on(suite_registration_client.register_suite(()));
-			match resp_or_err {
-				Ok(resp) => {
-					suite_registration_resp = resp.into_inner();
+			let channel_or_err = block_on(endpoint.connect());
+			match channel_or_err {
+				Ok(returned_channel) => {
+					channel = returned_channel;
 					break;
 				}
 				Err(err) => {
 					debug!(
-						"The following error occurred registering testsuite with API container; retrying in {}ms: {}", 
-						TIME_BETWEEN_SUITE_REGISTRATION_RETRIES.as_millis(),
-						err.message()
+						"The following error occurred connecting to the API container; retrying in {}ms: {}", 
+						TIME_BETWEEN_CONNECTION_RETRIES.as_millis(),
+						err.to_string()
 					);
 				}
 			}
-			sleep(TIME_BETWEEN_SUITE_REGISTRATION_RETRIES);
-			suite_registration_attempts += 1;
+			sleep(TIME_BETWEEN_CONNECTION_RETRIES);
+			connection_attempts += 1;
 		}
+
+		let suite_registration_channel = channel.clone(); // This *seems* weird to clone a channel, but this is apparently how Tonic wants it
+		let mut suite_registration_client = SuiteRegistrationServiceClient::new(suite_registration_channel);
+		let suite_registration_resp = block_on(suite_registration_client.register_suite(()))
+			.context("An error occurred registering the testsuite container with the API container")?
+			.into_inner();
 
 		let action_int = suite_registration_resp.suite_action;
 		let action = SuiteAction::from_i32(action_int)
