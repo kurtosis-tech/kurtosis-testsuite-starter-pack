@@ -159,7 +159,7 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
-	time.Sleep(10 * time.Second)
+
 	if _, err := executionClient.RegisterTestSetupCompletion(ctx, &emptypb.Empty{}); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test setup completion with the API container")
 	}
