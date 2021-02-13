@@ -76,11 +76,10 @@ func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.T
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test key after upload"))
 	}
-	logrus.Info("Value verified")
-
 	testCtx.AssertTrue(
 		value == testValue,
 		stacktrace.NewError("Returned value '%v' != test value '%v'", value, testValue))
+	logrus.Info("Value verified")
 }
 
 
