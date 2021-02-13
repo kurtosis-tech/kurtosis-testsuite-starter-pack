@@ -16,7 +16,7 @@ const INCREMENT_BOOKS_READ_ENDPOINT: &str = "incrementBooksRead";
 const TIMEOUT_SECONDS: u64 = 3;
 
 #[derive(Serialize, Deserialize)]
-struct Person {
+pub struct Person {
     books_read: u64,
 }
 
