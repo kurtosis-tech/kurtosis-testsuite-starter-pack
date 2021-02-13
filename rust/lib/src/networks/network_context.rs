@@ -7,7 +7,7 @@ use log::{debug, trace};
 use tonic::{IntoRequest, transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{RegisterServiceArgs, RemoveServiceArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_wrapper::ServiceInterfaceWrapper}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_wrapper::ServiceInterfaceWrapper}};
 
 use super::network::Network;
 
@@ -191,57 +191,46 @@ impl NetworkContext {
 		return Ok(());
 	}
 
-    fn get_repartition_builder() {
-        /*
-        func (networkCtx NetworkContext) GetRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
-	// This function doesn't need a mutex lock because (as of 2020-12-28) it doesn't touch internal state whatsoever
-	return newRepartitionerBuilder(isDefaultPartitionConnectionBlocked)
-}
- */
-    }
-
-    fn repartition_network() {
-        /* 	networkCtx.mutex.Lock()
-	defer networkCtx.mutex.Unlock()
-
-	partitionServices := map[string]*core_api_bindings.PartitionServices{}
-	for partitionId, serviceIdSet := range repartitioner.partitionServices {
-		serviceIdStrPseudoSet := map[string]bool{}
-		for _, serviceId := range serviceIdSet.getElems() {
-			serviceIdStr := string(serviceId)
-			serviceIdStrPseudoSet[serviceIdStr] = true
+    pub fn repartition_network(
+		&mut self, 
+		partition_services: HashMap<String, HashSet<String>>,
+		partition_connections: HashMap<String, HashMap<String, PartitionConnectionInfo>>,
+		default_connection_info: PartitionConnectionInfo,
+	) -> Result<()> {
+		let mut req_partition_services: HashMap<String, PartitionServices> = HashMap::new();
+		for (partition_id, service_id_set) in partition_services {
+			let mut service_id_str_pseudo_set: HashMap<String, bool> = HashMap::new();
+			for service_id in service_id_set {
+				service_id_str_pseudo_set.insert(service_id, true);
+			}
+			req_partition_services.insert(partition_id, PartitionServices{
+			    service_id_set: service_id_str_pseudo_set,
+			});
 		}
-		partitionIdStr := string(partitionId)
-		partitionServices[partitionIdStr] = &core_api_bindings.PartitionServices{
-			ServiceIdSet: serviceIdStrPseudoSet,
-		}
-	}
 
-	partitionConns := map[string]*core_api_bindings.PartitionConnections{}
-	for partitionAId, partitionAConnsMap := range repartitioner.partitionConnections {
-		partitionAConnsStrMap := map[string]*core_api_bindings.PartitionConnectionInfo{}
-		for partitionBId, connInfo := range partitionAConnsMap {
-			partitionBIdStr := string(partitionBId)
-			partitionAConnsStrMap[partitionBIdStr] = connInfo
+		let mut req_partition_connections: HashMap<String, PartitionConnections> = HashMap::new();
+		for (partition_a_id, partition_a_conns_map) in partition_connections {
+			let mut partition_a_conns_str_map: HashMap<String, PartitionConnectionInfo> = HashMap::new();
+			for (partition_b_id, conn_info) in partition_a_conns_map {
+				partition_a_conns_str_map.insert(partition_b_id, conn_info);
+			}
+			let partition_a_conns = PartitionConnections{
+			    connection_info: partition_a_conns_str_map,
+			};
+			req_partition_connections.insert(partition_a_id, partition_a_conns);
 		}
-		partitionAConns := &core_api_bindings.PartitionConnections{
-			ConnectionInfo: partitionAConnsStrMap,
-		}
-		partitionAIdStr := string(partitionAId)
-		partitionConns[partitionAIdStr] = partitionAConns
-	}
 
-	repartitionArgs := &core_api_bindings.RepartitionArgs{
-		PartitionServices:    partitionServices,
-		PartitionConnections: partitionConns,
-		DefaultConnection:    repartitioner.defaultConnection,
-	}
-	if _, err := networkCtx.client.Repartition(context.Background(), repartitionArgs); err != nil {
-		return stacktrace.Propagate(err, "An error occurred repartitioning the test network")
-	}
-	return nil
-}
- */
+		let args = RepartitionArgs{
+		    partition_services: req_partition_services,
+		    partition_connections: req_partition_connections,
+			// NOTE: It's unclear why tonic generates this as "optional"; it's not
+		    default_connection: Some(default_connection_info),
+		};
+
+		let req = tonic::Request::new(args);
+		block_on(self.client.repartition(req))
+			.context("An error occurred repartitioning the test network")?;
+		return Ok(());
     }
 
 	fn convert_hashset_to_hashmap<T>(
