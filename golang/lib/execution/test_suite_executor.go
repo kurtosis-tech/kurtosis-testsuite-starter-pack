@@ -169,13 +169,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	if _, err := executionClient.RegisterTestExecution(ctx, &emptypb.Empty{}); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
-	testResultChan := make(chan error)
 
-	go func() {
-		testResultChan <- runTestInGoroutine(test, untypedNetwork)
-	}()
-
-	testResultErr := <- testResultChan
+	testResultErr := runTest(test, untypedNetwork)
 
 	logrus.Tracef("After running test: resultErr: %v", testResultErr)
 	logrus.Infof("Executed test '%v'", testName)
@@ -187,8 +182,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	return nil
 }
 
-// Little helper function meant to be run inside a goroutine that runs the test
-func runTestInGoroutine(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
+// Little helper function that runs the test and captures panics on test failures, returning them as errors
+func runTest(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
 	// See https://medium.com/@hussachai/error-handling-in-go-a-quick-opinionated-guide-9199dd7c7f76 for details
 	defer func() {
 		if recoverResult := recover(); recoverResult != nil {
