@@ -19,7 +19,7 @@ const (
 	datastoreServiceId services.ServiceID = "datastore"
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxPolls = 30
+	waitForStartupMaxPolls = 15
 
 	testKey = "test-key"
 	testValue = "test-value"

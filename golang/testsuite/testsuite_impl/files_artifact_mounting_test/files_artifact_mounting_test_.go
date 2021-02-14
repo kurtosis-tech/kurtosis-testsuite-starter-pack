@@ -18,7 +18,7 @@ const (
 	fileServerServiceId services.ServiceID = "file-server"
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxRetries = 5
+	waitForStartupMaxRetries = 15
 
 	testFilesArtifactId  services.FilesArtifactID = "test-files-artifact"
 	testFilesArtifactUrl                          = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"

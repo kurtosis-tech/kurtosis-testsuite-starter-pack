@@ -21,7 +21,7 @@ const (
 	apiServiceId services.ServiceID = "api"
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxNumPolls = 30
+	waitForStartupMaxNumPolls = 15
 
 	testPersonId = 23
 	testNumBooksRead = 3
