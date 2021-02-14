@@ -74,7 +74,7 @@ if [ -z "${output_dirpath}" ]; then
     echo "Error: Output dirpath must not be empty" >&2
     show_help_and_exit
 fi
-if [ "$(ls -A "${output_dirpath}")" ]; then
+if [ -d "${output_dirpath}" ] && [ "$(ls -A "${output_dirpath}")" ]; then
     echo "Error: Output directory '${output_dirpath}' exists, but is not empty"
     exit 1
 fi
@@ -143,15 +143,27 @@ script_dirpath="\$(cd "\$(dirname "\${0}")" && pwd)"
 root_dirpath="\$(dirname "\${script_dirpath}")"
 kurtosis_core_dirpath="\${root_dirpath}/${OUTPUT_KURTOSIS_CORE_DIRNAME}"
 
-# Arg-parsing
+show_help_and_exit() {
+    echo ""
+    echo "Usage: \$(basename "\${0}") action [kurtosis.sh_arg1] [kurtosis.sh_arg2]..."
+    echo ""
+    echo "  action              The action that should be passed to the underlying ${BUILD_AND_RUN_CORE_FILENAME} script to tell it which action should be taken (call"
+    echo "                          'bash \${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME} help' directly for all available actions)"
+    echo "  kurtosis.sh_args    Optional, supplemental args that should be passed to the ${WRAPPER_SCRIPT_FILENAME} script to modify testsuite execution behaviour (call"
+    echo "                          'bash \${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME} --help' directly for all available args)"
+    echo ""
+    exit 1  # Exit with error so CI will fail if it accidentally calls this
+}
+
 if [ "\${#}" -eq 0 ]; then
-    echo "Error: Must provide at least one argument (pass 'help' to see options)" >&2
-    exit 1
+    show_help_and_exit
 fi
 action="\${1:-}"
 shift 1
+if [ "\${action}" == "help" ]; then
+    show_help_and_exit
+fi
 
-# Main code
 # >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
 custom_params_json='${bootstrap_params_json}'
 # >>>>>>>> Add custom testsuite parameters here <<<<<<<<<<<<<
@@ -160,7 +172,7 @@ bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \\
     "\${action}" \\
     "${testsuite_image}" \\
     "\${root_dirpath}" \\
-    "\${root_dirpath}/Dockerfile" \\
+    "\${root_dirpath}/testsuite/Dockerfile" \\
     "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \\
     --custom-params "\${custom_params_json}" \\
     \${1+"\${@}"}
@@ -179,9 +191,7 @@ output_readme_filepath="${output_dirpath}/${OUTPUT_README_FILENAME}"
 cat << EOF > "${output_readme_filepath}"
 My Kurtosis Testsuite
 =====================
-Welcome to your new Kurtosis testsuite! Now that you've bootstrapped, you can continue with the quickstart section from the "Run your testsuite" section.
-
-To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'
+Welcome to your new Kurtosis testsuite! To run your testsuite, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} all'. To see help information, run 'bash ${OUTPUT_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME} help'.
 EOF
 if [ "${?}" -ne 0 ]; then
     echo "Error: Could not write README file to '${output_readme_filepath}'" >&2

@@ -8,14 +8,18 @@ This repo contains:
 
 ### Testsuite Quickstart
 Prerequisites:
+* A [Kurtosis user account](https://www.kurtosistech.com/sign-up)
 * `git` installed on your machine
 * `docker` installed on your machine
 
-<!-- TODO embed the supported-languages file in this Markdown -->
-Steps:
-1. Clone this repo's `master` branch: `git clone --single-branch --branch master THIS_REPO_URL`
-1. View the `supported-languages.txt` file and choose the language you'd like your testsuite in
-1. Run `bootstrap/bootstrap.sh YOUR_LANG /path/to/output/testsuite/dir`
+Quickstart steps:
+1. Clone this repo's `master` branch: `git clone --single-branch --branch master $THIS_REPO_URL`
+1. View [the supported languages](https://github.com/kurtosis-tech/kurtosis-libs/blob/master/supported-languages.txt) and choose the language you'd like your testsuite in
+1. Run `bootstrap/bootstrap.sh $DESIRED_LANG /path/to/output/testsuite/dir` and follow the instructions
+
+If you see error messages after running your new testsuite, check out [the guide for debugging failed tests](./debugging-failed-tests.md) which contains solutions to common issues. If this still doesn't resolve your issue, feel free to ask for help in [the Kurtosis Discord server](https://discord.gg/6Jjp9c89z9).
+
+If all tests are passing, you can [proceed to customizing your testsuite](https://docs.kurtosistech.com/testsuite-customization.html).
 
 ### Developing Libraries
 Each library needs to talk with Kurtosis Core, and the Kurtosis Core API is defined via Protobuf. Rather than storing the Protobufs in Git submodules (which add significant complexity), the `.proto` files are simply copied from the relevant version of Kurtosis Core. In the future, we can move to a more productized solution.

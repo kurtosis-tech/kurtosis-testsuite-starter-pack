@@ -1,4 +1,16 @@
-## 1.8.0
+# 1.8.1
+### Fixed
+* `kurtosis.sh` issue where passing in `--help` would result in an error
+
+### Added
+* Additional quickstarting instructions in README
+* Added a helptext to the generated `build-and-run.sh` after bootstrapping
+
+### Changed
+* Moved `Dockefile` inside the `testsuite` repo of each language once again
+* Modified API container API to control test setup and execution timeouts in Kurtosis Core instead of kurtosis libs
+
+# 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages
 * Fixing CircleCI to work with new `kurtosis-libs` repo
 * Fix `build_and_run` to work with new repo
@@ -8,11 +20,11 @@
     * Place `build-and-run.sh` inside the `scripts` directory of the Golang subdirectory, that calls down to `build-and-run-core.sh`
 * Fix bootstrapping to support multiple languages by
 
-## 1.7.1
+# 1.7.1
 * Do a better job grabbing the name of the current Git ref
 * Remove scary bootstrapping message with a more reasonable verification
 
-## 1.7.0
+# 1.7.0
 * Make README point to the quickstart docs, rather than duplicating them
 * Upgraded to use the new Protobuf-based APIs of Kurtosis Core 1.7.0
 * Replaced the Kurtosis `Client` with `TestExecutor` and `TestExecutorConfigurator` to allow users to set log level, parse custom params, and initialize their testsuite without needing to modify `main.go` or the `Dockerfile`
@@ -21,7 +33,7 @@
     * Added logic (transparent to the end user) inside TestExecutor for running the test execution or metadata serialization flows
 * Removed a ton of now-unnecessary Docker environment variables:
 
-## 1.6.1
+# 1.6.1
 * Upgrade to `kurtosis.sh` script that will pull the latest Docker Kurtosis Core images automatically
 * Fail CI if we detect the string `ERRO`, to catch problems that don't get propagated to the exit code (e.g. not printing the testsuite container logs)
 * Don't break on empty `${@}` in build_and_run (regression introduced when switching to `kurtosis.sh`)
@@ -30,7 +42,7 @@
     2. Disable those extra tests after a user has bootstrapped, since it will exceed their free trial test limit
 * Make sure `.dockerignore` gets created after bootstrapping
 
-## 1.6.0
+# 1.6.0
 * Use Kurtosis Core v1.6.0
 * Implement API changes to allow users to mount external artifacts inside Kurtosis service containers
     * The Kurtosis client now must be instantiated with `NewKurtosisClient`
@@ -38,7 +50,7 @@
     * Added `GetFilesArtifactMountpoints` to `DockerContainerInitializer` to use files artifacts in a service
 * Added `FilesArtifactMountingTest` to test the new external artifact-mounting functionality
 
-## 1.5.0
+# 1.5.0
 * Add a `.dockerignore` file, and a check in `build_and_run.sh` to ensure it exists
 * Add the `Service.GetServiceID` method
 * Renamed `DockerContainerInitializer.GetServiceFromIp` -> `GetService`, and passed in the `ServiceID` as a new first argument
@@ -56,19 +68,19 @@
     * Add a new method, `GetFilesArtifactMountpoints`, to `DockerContainerInitializer` for defining where to mount external files artifacts
     * Add `FilesArtifactTest` to test pulling down a files artifact, mounting it inside a service, and using those files
 
-## 1.4.1
+# 1.4.1
 * Point all old `kurtosis-docs` references to `docs.kurtosistech.com`
 * Switch `build_and_run.sh` to use `kurtosis.sh`
 * Upgrade to Kurtosis Core 1.4
 * Reduce the size of the testsuite image by using the `golang` image only for building, and then `alpine` for execution; this results in a reduction of 325 MB -> 14 MB
 
-## 1.4.0
+# 1.4.0
 * BREAKING: Moved `ServiceID` from the `networks` package to the `services` package
 * Add a more explanatory help message to `build_and_run`
 * After calling `bootstrap.sh`, ensure the volume is named based off the name of the user's Docker image
 * Update the example testsuite to use the Kurtosis-developed example API service and example datastore service, to show dependencies and file generation
 
-## 1.3.0
+# 1.3.0
 * Bump kurtosis-core-channel to 1.2.0
 * Heavily refactored the client architecture to make it much less confusing to define testsuite infrastructure:
     * The notion of `dependencies` that showed up in several places (e.g. `ServiceInitializerCore.GetStartCommand`, `ServiceAvailabilityCheckerCore.IsServiceUp`, etc) have been removed due to being too confusing
@@ -93,20 +105,20 @@
 * Disable logging from the RetryingHTTPClient inside `KurtosisService`, as the output isn't useful (and can be unnecessarily alarming, when a request fails)
 * Remove the `FixedSizeNginxNetwork` from the example implementation, to demonstrate a simpler `Test.Setup` usage without a custom `Network`
 
-## 1.2.0
+# 1.2.0
 * Remove socket in favor of `ExampleService.GetIpAddress` and `ExapleService.GetPort` methods
 * Remove TODO on allowing non-TCP ports
 * Removed the `example_` prefix to make bootstrapping even easier (users need only modify the existing suite, no need to remove the `example_` prefix)
 * Support UDP ports
 
-## 1.1.1
+# 1.1.1
 * Remove log filepath (which is no longer needed now that Kurtosis core reads Docker logs directly)
 * Switch to using [our forked version of action-comment-run](https://github.com/mieubrisse/actions-comment-run) that allows user whitelisting
 * Bump kurtosis-core to 1.1.0
 * Make the requests to the Kurtosis API container retry every second, with 10s retry maximum for normal operations (e.g. add/remove services) and 60s retry maximum for test suite registration
 * Update the version of the `actions-comment-run` Github Action which allows for running CI on untrusted PRs, to match the advice we give in the "Running In CI" instructions
 
-## 1.1.0
+# 1.1.0
 * Add Apache license
 * Fix changelog check in CircleCI 
 * Cleaning TODOs 
@@ -121,7 +133,7 @@
 * When no arguments are provided to `build_and_run.sh`, the script errors
 * In CircleCI config, don't run the `validate` workflow on `develop` and `master` (because they should already be validated by PR merge)
 
-## 1.0.0
+# 1.0.0
 * Created example test suite to validate that the client library work
 * Bugfix in volume-writing location, and force pretty formatting on written logs
 * Made the existing test actually query the node it created

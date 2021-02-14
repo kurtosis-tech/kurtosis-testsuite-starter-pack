@@ -112,11 +112,10 @@ func (test *BasicDatastoreAndApiTest) GetTestConfiguration() testsuite.TestConfi
 	return testsuite.TestConfiguration{}
 }
 
-func (b BasicDatastoreAndApiTest) GetExecutionTimeout() time.Duration {
+func (test *BasicDatastoreAndApiTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (b BasicDatastoreAndApiTest) GetSetupTeardownBuffer() time.Duration {
+func (test *BasicDatastoreAndApiTest) GetSetupTeardownBuffer() time.Duration {
 	return 60 * time.Second
 }
-

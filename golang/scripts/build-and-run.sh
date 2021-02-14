@@ -22,7 +22,7 @@ bash "${repo_root_dirpath}/.kurtosis/build-and-run-core.sh" \
     "${action}" \
     "${KURTOSIS_DOCKERHUB_ORG}/kurtosis-go-example" \
     "${lang_root_dirpath}" \
-    "${lang_root_dirpath}/Dockerfile" \
+    "${lang_root_dirpath}/testsuite/Dockerfile" \
     "${repo_root_dirpath}/.kurtosis/kurtosis.sh" \
     --custom-params "${custom_params_json}" \
     ${1+"${@}"}

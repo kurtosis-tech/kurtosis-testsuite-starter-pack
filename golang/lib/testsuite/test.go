@@ -36,17 +36,18 @@ type Test interface {
 	Run(network networks.Network, testCtx TestContext)
 
 	/*
-	The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
-		is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
-		which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed
-		to run for = GetExecutionTimeout + GetSetupBuffer.
-	 */
-	GetExecutionTimeout() time.Duration
+		How long the test will be given to do the pre-execution setup before the test will be
+			hard-killed. The total amount of time a test (with setup) is allowed to run
+			for = GetExecutionTimeout + GetSetupTeardownBuffer.
+	*/
+	GetSetupTeardownBuffer() time.Duration
 
 	/*
-	How long the test will be given to do the pre-execution setup and post-setup teardown before the test will be
-		hard-killed. The total amount of time a test (with setup & teardown) is allowed to run
-		for = GetExecutionTimeout + GetSetupTeardownBuffer.
-	 */
-	GetSetupTeardownBuffer() time.Duration
+		The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
+			is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
+			which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed
+			to run for = GetExecutionTimeout + GetSetupBuffer.
+	*/
+	GetExecutionTimeout() time.Duration
+
 }
