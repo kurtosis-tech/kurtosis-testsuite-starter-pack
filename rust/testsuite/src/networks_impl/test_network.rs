@@ -1,7 +1,7 @@
 use std::{borrow::Borrow, collections::HashMap, ops::Deref, time::Duration};
 use anyhow::{Context, Result, anyhow};
 
-use kurtosis_rust_lib::networks::network_context::NetworkContext;
+use kurtosis_rust_lib::networks::{network::Network, network_context::NetworkContext};
 
 use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::{datastore_container_initializer::DatastoreContainerInitializer, datastore_service::DatastoreService}};
 
@@ -82,3 +82,5 @@ impl TestNetwork {
         return Ok(service.borrow());
     }
 }
+
+impl Network for TestNetwork {}

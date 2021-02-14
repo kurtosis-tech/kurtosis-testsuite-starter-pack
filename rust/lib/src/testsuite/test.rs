@@ -16,7 +16,7 @@ pub trait Test {
 	fn get_test_configuration(&self) -> TestConfiguration;
 
 	// Initializes the network to the desired state before test execution
-	fn setup(&self, network_ctx: NetworkContext) -> Result<Box<Self::N>>;
+	fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<Self::N>>;
 
 	/// Runs test logic against the given network, with failures reported using the given context.
 	///
