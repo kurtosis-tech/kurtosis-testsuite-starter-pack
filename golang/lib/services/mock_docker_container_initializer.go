@@ -34,7 +34,7 @@ func (m MockDockerContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{}
 }
 
-func (m MockDockerContainerInitializer) InitializeFilesToGenerate(mountedFiles map[string]*os.File) error {
+func (m MockDockerContainerInitializer) InitializeFilesToGenerate(filesToGenerate map[string]*os.File) error {
 	return nil
 }
 
