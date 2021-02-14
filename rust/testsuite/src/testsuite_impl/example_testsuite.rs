@@ -2,7 +2,7 @@ use std::{any::Any, collections::HashMap};
 
 use kurtosis_rust_lib::{networks::network::Network, testsuite::{dyn_test::{DynTest, DynTestContainer}, test::Test, testsuite::TestSuite}};
 
-use super::{basic_datastore_and_api_test::BasicDatastoreAndApiTest, basic_datastore_test::BasicDatastoreTest};
+use super::{advanced_network_test::AdvancedNetworkTest, basic_datastore_and_api_test::BasicDatastoreAndApiTest, basic_datastore_test::BasicDatastoreTest};
 
 pub struct ExampleTestsuite {
     api_service_image: String,
@@ -37,6 +37,16 @@ impl TestSuite for ExampleTestsuite {
         result.insert(
             String::from("basicDatastoreAndApiTest"),
             Box::new(basic_datastore_and_api_test_container),
+        );
+
+        let advanced_network_test = AdvancedNetworkTest::new(
+            self.datastore_service_image.clone(), 
+            self.api_service_image.clone()
+        );
+        let advanced_network_test_container = DynTestContainer::new(advanced_network_test);
+        result.insert(
+            String::from("advancedNetworkTest"),
+            Box::new(advanced_network_test_container),
         );
 
         return result;
