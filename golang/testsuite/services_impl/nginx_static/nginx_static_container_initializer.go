@@ -40,12 +40,12 @@ func (s NginxStaticContainerInitializer) GetService(serviceId services.ServiceID
 	}
 }
 
-func (s NginxStaticContainerInitializer) GetFilesToMount() map[string]bool {
+func (s NginxStaticContainerInitializer) GetFilesToGenerate() map[string]bool {
 	// No generated files to mount
 	return map[string]bool{}
 }
 
-func (s NginxStaticContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
+func (s NginxStaticContainerInitializer) InitializeFilesToGenerate(mountedFiles map[string]*os.File) error {
 	// No generated files to initialize
 	return nil
 }

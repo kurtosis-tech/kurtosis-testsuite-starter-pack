@@ -30,11 +30,11 @@ func (m MockDockerContainerInitializer) GetService(serviceId ServiceID, ipAddr s
 	return NewMockService(serviceId, ipAddr, 1)
 }
 
-func (m MockDockerContainerInitializer) GetFilesToMount() map[string]bool {
+func (m MockDockerContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{}
 }
 
-func (m MockDockerContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
+func (m MockDockerContainerInitializer) InitializeFilesToGenerate(mountedFiles map[string]*os.File) error {
 	return nil
 }
 

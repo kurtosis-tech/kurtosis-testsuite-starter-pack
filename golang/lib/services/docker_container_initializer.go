@@ -43,7 +43,7 @@ type DockerContainerInitializer interface {
 	/*
 		This method is used to declare that the service will need a set of files in order to run. To do this, the developer
 		declares a set of string keys that are meaningful to the developer, and Kurtosis will create one file per key. These newly-createed
-		file objects will then be passed in to the `InitializeMountedFiles` and `GetStartCommand` functions below keyed on the
+		file objects will then be passed in to the `InitializeFilesToGenerate` and `GetStartCommand` functions below keyed on the
 		strings that the developer passed in, so that the developer can initialize the contents of the files as they please.
 		Kurtosis then guarantees that these files will be made available to the service at startup time.
 
@@ -52,21 +52,19 @@ type DockerContainerInitializer interface {
 
 		Returns:
 			A "set" of user-defined key strings identifying the files that the service will need, which is how files will be
-				identified in `InitializeMountedFiles` and `GetStartCommand`
+				identified in `InitializeFilesToGenerate` and `GetStartCommand`
 	*/
-	// TODO Rename "getFilesToGenerate"
-	GetFilesToMount() map[string]bool
+	GetFilesToGenerate() map[string]bool
 
 	/*
-		Initializes the contents of the files that the developer requested in `GetFilesToMount` with whatever
+		Initializes the contents of the files that the developer requested in `GetFilesToGenerate` with whatever
 			contents the developer desires. This will be called before service startup.
 
 		Args:
-			mountedFiles: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in
-				`GetFilesToMount`
+			filesToGenerate: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in
+				`GetFilesToGenerate`
 	*/
-	// TODO Rename "initializeFilesToGenerate"
-	InitializeMountedFiles(mountedFiles map[string]*os.File) error
+	InitializeFilesToGenerate(filesToGenerate map[string]*os.File) error
 
 	/*
 		Allows the mounting of external files into a service container by mapping files artifacts (defined in your
@@ -83,7 +81,7 @@ type DockerContainerInitializer interface {
 	GetFilesArtifactMountpoints() map[FilesArtifactID]string
 
 	/*
-		Kurtosis mounts the files that the developer requested in `GetFilesToMount` via a Docker volume, but Kurtosis doesn't
+		Kurtosis mounts the files that the developer requested in `GetFilesToGenerate` via a Docker volume, but Kurtosis doesn't
 		know anything about the Docker image backing the service so therefore doesn't know what filepath it can safely mount
 		the volume on. This function uses the developer's knowledge of the Docker image running the service to inform
 		Kurtosis of a filepath where the Docker volume can be safely mounted.
@@ -102,8 +100,8 @@ type DockerContainerInitializer interface {
 
 		Args:
 			mountedFileFilepaths: Mapping of developer_key -> initialized_file_filepath where developer_key corresponds to the keys returned
-				in the `GetFilesToMount` function, and initialized_file_filepath is the path *on the Docker container* of where the
-				file has been mounted. The files will have already been initialized via the `InitializeMountedFiles` function.
+				in the `GetFilesToGenerate` function, and initialized_file_filepath is the path *on the Docker container* of where the
+				file has been mounted. The files will have already been initialized via the `InitializeFilesToGenerate` function.
 			ipAddr: The IP address of the service being started.
 
 		Returns:

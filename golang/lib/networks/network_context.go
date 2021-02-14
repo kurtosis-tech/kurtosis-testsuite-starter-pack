@@ -108,7 +108,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	registerServiceArgs := &core_api_bindings.RegisterServiceArgs{
 		ServiceId:       string(serviceId),
 		PartitionId:     string(partitionId),
-		FilesToGenerate: initializer.GetFilesToMount(),
+		FilesToGenerate: initializer.GetFilesToGenerate(),
 	}
 	registerServiceResp, err := networkCtx.client.RegisterService(ctx, registerServiceArgs)
 	if err != nil {
@@ -141,7 +141,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 
 	logrus.Trace("Initializing generated files...")
-	if err := initializer.InitializeMountedFiles(generatedFilesFps); err != nil {
+	if err := initializer.InitializeFilesToGenerate(generatedFilesFps); err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred initializing the generated files")
 	}
 	logrus.Trace("Successfully initialized generated files")

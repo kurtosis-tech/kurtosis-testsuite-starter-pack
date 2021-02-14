@@ -39,11 +39,11 @@ func (d DatastoreContainerInitializer) GetService(serviceId services.ServiceID, 
 	return NewDatastoreService(serviceId, ipAddr, port)
 }
 
-func (d DatastoreContainerInitializer) GetFilesToMount() map[string]bool {
+func (d DatastoreContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{}
 }
 
-func (d DatastoreContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
+func (d DatastoreContainerInitializer) InitializeFilesToGenerate(mountedFiles map[string]*os.File) error {
 	return nil
 }
 
