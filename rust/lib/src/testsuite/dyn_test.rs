@@ -14,7 +14,7 @@ use tonic::transport::Channel;
 pub trait DynTest {
     fn get_test_configuration(&self) -> TestConfiguration;
 
-    fn setup_and_run(&self, channel: Channel) -> Result<()>;
+    fn setup_and_run(&mut self, channel: Channel) -> Result<()>;
 }
 
 // This struct exists to shield the genericized N parameter
@@ -54,7 +54,7 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         return self.test.get_test_configuration();
     }
     
-    fn setup_and_run(&self, channel: Channel) -> Result<()> {
+    fn setup_and_run(&mut self, channel: Channel) -> Result<()> {
         // TODO create NetworkContext????
         let test_config = self.test.get_test_configuration();
         let files_artifact_urls = test_config.files_artifact_urls;

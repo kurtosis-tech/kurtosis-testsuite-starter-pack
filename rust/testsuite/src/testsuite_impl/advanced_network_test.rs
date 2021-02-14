@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap, time::Duration};
 
 use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
 
@@ -37,7 +37,7 @@ impl Test for AdvancedNetworkTest {
     }
 
     fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<TestNetwork>> {
-        let network = TestNetwork::new(network_ctx, self.datastore_service_image, self.api_service_image);
+        let mut network = TestNetwork::new(network_ctx, self.datastore_service_image.clone(), self.api_service_image.clone());
 
         network.add_datastore().context("An error occurred adding the datastore")?;
 
@@ -53,13 +53,24 @@ impl Test for AdvancedNetworkTest {
     }
 
     fn run(&self, network: Box<TestNetwork>, test_ctx: TestContext) -> anyhow::Result<()> {
-        let person_modifying_service_id = self.person_modifying_api_service_id
-            .context("No person-modifying service ID exists; this is a code bug")?;
+        let person_modifying_service_id;
+        match self.person_modifying_api_service_id {
+            Some(ref service_id) => person_modifying_service_id = service_id,
+            None => return Err(anyhow!(
+                "No person-modifying service ID exists; this is a code bug"
+            )),
+        };
         let person_modifier = network.get_api_service(person_modifying_service_id)
             .context("An error occurred getting the person-modifying API service")?;
 
-        let person_retrieving_service_id = self.person_retrieving_api_service_id
-            .context("No person-retrieving service ID exists; this is a code bug")?;
+
+        let person_retrieving_service_id;
+        match self.person_retrieving_api_service_id {
+            Some(ref service_id) => person_retrieving_service_id = service_id,
+            None => return Err(anyhow!(
+                "No person-retrieving service ID exists; this is a code bug"
+            )),
+        }
         let person_retriever = network.get_api_service(person_retrieving_service_id)
             .context("An error occurred getting the person-retrieving API service")?;
 

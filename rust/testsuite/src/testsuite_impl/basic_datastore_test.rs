@@ -36,7 +36,7 @@ impl Test for BasicDatastoreTest {
 		};
     }
 
-    fn setup(&self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
+    fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
 		let initializer = DatastoreContainerInitializer::new(&self.datastore_image);
 		let (_, availability_checker) = network_ctx.borrow_mut().add_service(DATASTORE_SERVICE_ID, &initializer)
 			.context("An error occurred adding the datastore service")?;

@@ -36,7 +36,7 @@ impl Test for BasicDatastoreAndApiTest {
         };
     }
 
-    fn setup(&self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
+    fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
         let wait_for_startup_time_between_polls = Duration::new(WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS, 0);
 
         let datastore_initializer = DatastoreContainerInitializer::new(&self.datastore_image);

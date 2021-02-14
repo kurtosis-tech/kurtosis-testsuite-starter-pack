@@ -132,8 +132,8 @@ impl TestSuiteExecutor {
 			.into_inner();
 		let test_name = test_ex_info.test_name;
 
-		let all_tests = testsuite.get_tests();
-		let test = all_tests.get(&test_name)
+		let mut all_tests = testsuite.get_tests();
+		let test = all_tests.get_mut(&test_name)
 			.context(format!(
 				"Testsuite was directed to execute test '{}', but no test with that name exists in the testsuite; this is a Kurtosis code bug",
 				test_name
