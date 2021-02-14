@@ -1,8 +1,6 @@
 use std::{collections::HashMap};
 
-use crate::networks::network::Network;
-
-use super::{dyn_test::{self, DynTest}, test::Test};
+use super::{dyn_test::{DynTest}};
 
 /*
 An interface which the user implements to register their tests.

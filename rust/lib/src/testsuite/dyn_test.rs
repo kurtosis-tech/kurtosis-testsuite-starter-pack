@@ -1,6 +1,4 @@
-use std::{borrow::Borrow, ops::Deref};
-
-use crate::{core_api_bindings::api_container_api::{RegisterTestExecutionArgs, suite_registration_service_client, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, networks::network_context::NetworkContext};
+use crate::{core_api_bindings::api_container_api::{RegisterTestExecutionArgs, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
 
 use super::{test::Test, test_configuration::TestConfiguration, test_context::TestContext};
 use anyhow::{Context, Result};

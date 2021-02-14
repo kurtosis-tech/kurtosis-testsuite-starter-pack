@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fmt::Debug, fs::File, io::Write, path::PathBuf};
+use std::{collections::{HashMap, HashSet}, fmt::Debug, fs::File, path::PathBuf};
 
 use anyhow::{Context, Result};
 use kurtosis_rust_lib::services::{docker_container_initializer::DockerContainerInitializer, service::Service};

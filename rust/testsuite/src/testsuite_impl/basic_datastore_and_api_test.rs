@@ -72,7 +72,7 @@ impl Test for BasicDatastoreAndApiTest {
         info!("Test person added");
 
         info!("Incrementing test person's number of books read by {}...", TEST_NUM_BOOKS_READ);
-        for i in 0..TEST_NUM_BOOKS_READ {
+        for _ in 0..TEST_NUM_BOOKS_READ {
             api_service.increment_books_read(TEST_PERSON_ID)
                 .context("An error occurred incrementing the number of books read")?;
         }

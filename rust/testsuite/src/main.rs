@@ -6,16 +6,14 @@ mod testsuite_impl;
 #[macro_use] extern crate log;
 
 use anyhow::{Context, Result};
-use std::process::exit;
 
-use clap::{App, Arg, ArgMatches};
+use clap::{App, Arg};
 use execution_impl::example_testsuite_configurator::ExampleTestsuiteConfigurator;
 use kurtosis_rust_lib::execution::test_suite_executor::TestSuiteExecutor;
 
 const CUSTOM_PARAMS_JSON_FLAG: &str = "custom-params-json";
 const KURTOSIS_API_SOCKET_FLAG: &str  = "kurtosis-api-socket";
 const LOG_LEVEL_FLAG: &str = "log-level";
-const FAILURE_EXIT_CODE: i32 = 1;
 
 #[tokio::main]
 async fn main() -> Result<()> {

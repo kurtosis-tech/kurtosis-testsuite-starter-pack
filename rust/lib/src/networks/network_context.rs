@@ -1,13 +1,13 @@
-use std::{any::Any, collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{Path, PathBuf}, rc::Rc};
+use std::{collections::{HashMap, HashSet}, fs::File, path::{PathBuf}};
 use std::hash::Hash;
 
 use dashmap::DashMap;
-use futures::{executor::block_on, lock::Mutex};
+use futures::{executor::block_on};
 use log::{debug, trace};
-use tonic::{IntoRequest, transport::Channel};
+use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient, test_execution_service_server::TestExecutionService}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service}};
 
 use super::network::Network;
 

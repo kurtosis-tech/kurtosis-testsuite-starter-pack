@@ -4,7 +4,7 @@ use futures::executor::block_on;
 use log::debug;
 use tonic::{Request, transport::{Channel}};
 
-use crate::{core_api_bindings::api_container_api::{SuiteAction, SuiteRegistrationResponse, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
+use crate::{core_api_bindings::api_container_api::{SuiteAction, TestMetadata, TestSuiteMetadata, suite_metadata_serialization_service_client::SuiteMetadataSerializationServiceClient, suite_registration_service_client::SuiteRegistrationServiceClient, test_execution_service_client::TestExecutionServiceClient}, testsuite::testsuite::TestSuite};
 
 use super::test_suite_configurator::TestSuiteConfigurator;
 

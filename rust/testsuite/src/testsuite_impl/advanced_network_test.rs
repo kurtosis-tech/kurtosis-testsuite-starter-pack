@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Context, Result};
-use std::{borrow::Borrow, collections::HashMap, time::Duration};
+use std::{collections::HashMap, time::Duration};
 
 use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
 

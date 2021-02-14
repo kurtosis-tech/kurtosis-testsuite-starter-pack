@@ -1,5 +1,5 @@
 use kurtosis_rust_lib::services::{docker_container_initializer, service::Service};
-use std::{collections::{HashSet, HashMap}, error::Error, path::PathBuf};
+use std::{collections::{HashSet, HashMap}, path::PathBuf};
 use crate::services_impl::datastore::datastore_service::DatastoreService;
 use std::fs::File;
 use anyhow::Result;

@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::HashMap, ops::Deref, time::Duration};
+use std::{borrow::Borrow, collections::HashMap, time::Duration};
 use anyhow::{Context, Result, anyhow};
 
 use kurtosis_rust_lib::networks::{network::Network, network_context::NetworkContext};

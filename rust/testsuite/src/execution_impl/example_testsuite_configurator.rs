@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
-use kurtosis_rust_lib::{execution::test_suite_configurator::TestSuiteConfigurator, testsuite::testsuite::TestSuite};
+use kurtosis_rust_lib::{execution::test_suite_configurator::TestSuiteConfigurator};
 use anyhow::{Context, Result};
-use log::{Level, LevelFilter};
+use log::{LevelFilter};
 use simplelog::{Config, TermLogger};
 
 use crate::testsuite_impl::example_testsuite::ExampleTestsuite;
