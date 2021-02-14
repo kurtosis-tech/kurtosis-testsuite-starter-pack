@@ -93,10 +93,10 @@ func (f FilesArtifactMountingTest) Run(network networks.Network, testCtx testsui
 	)
 }
 
-func (f FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
+func (test FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (f FilesArtifactMountingTest) GetSetupTeardownBuffer() time.Duration {
+func (test FilesArtifactMountingTest) GetSetupTeardownBuffer() time.Duration {
 	return 30 * time.Second
 }

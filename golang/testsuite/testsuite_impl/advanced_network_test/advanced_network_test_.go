@@ -96,14 +96,11 @@ func (test *AdvancedNetworkTest) GetTestConfiguration() testsuite.TestConfigurat
 	return testsuite.TestConfiguration{}
 }
 
-func (test AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
+
+func (test *AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test AdvancedNetworkTest) GetSetupTeardownBuffer() time.Duration {
+func (test *AdvancedNetworkTest) GetSetupTeardownBuffer() time.Duration {
 	return 60 * time.Second
 }
-
-
-
-

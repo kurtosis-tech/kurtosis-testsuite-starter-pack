@@ -8,6 +8,7 @@
 
 ### Changed
 * Moved `Dockefile` inside the `testsuite` repo of each language once again
+* Modified API container API to control test setup and execution timeouts in Kurtosis Core instead of kurtosis libs
 
 # 1.8.0
 * Refactor directory structure and `regenerate-protobuf-output.sh` script to support multiple languages

@@ -21,4 +21,5 @@ type TestConfiguration struct {
 	// A mapping of ID -> URL where the artifact containing files should be downloaded from
 	// The ID is the ID that service initializers will use when requesting to use the artifact
 	FilesArtifactUrls map[services.FilesArtifactID]string
+
 }
