@@ -7,6 +7,8 @@ use simplelog::{Config, TermLogger};
 
 use crate::testsuite_impl::example_testsuite::ExampleTestsuite;
 
+use super::example_testsuite_args::ExampleTestsuiteArgs;
+
 pub struct ExampleTestsuiteConfigurator {}
 
 impl ExampleTestsuiteConfigurator {
@@ -25,10 +27,11 @@ impl TestSuiteConfigurator for ExampleTestsuiteConfigurator {
     }
 
     fn parse_params_and_create_suite(&self, params_json_str: &str) -> Result<Box<dyn kurtosis_rust_lib::testsuite::testsuite::TestSuite>> {
-        // TODO actually parse params_json_str
+        let args: ExampleTestsuiteArgs = serde_json::from_str(params_json_str)
+            .context("Could not deserialize params JSON string to testsuite args")?;
         let suite = ExampleTestsuite::new(
-            String::from("kurtosistech/example-microservices_api"),
-            String::from("kurtosistech/example-microservices_datastore"),
+            args.api_service_image,
+            args.datastore_service_image,
         );
         return Ok(Box::new(suite));
     }
