@@ -105,8 +105,8 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 		testMetadata := &core_api_bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
-			TestSetupTimeoutInSeconds: testConfig.TestSetupTimeoutInSeconds,
-			TestExecutionTimeoutInSeconds: testConfig.TestExecutionTimeoutInSeconds,
+			TestSetupTimeoutInSeconds: uint32(test.GetSetupTeardownBuffer().Seconds()),
+			TestExecutionTimeoutInSeconds: uint32(test.GetExecutionTimeout().Seconds()),
 		}
 		allTestMetadata[testName] = testMetadata
 	}

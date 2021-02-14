@@ -85,8 +85,13 @@ func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.T
 
 
 func (test *BasicDatastoreTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{
-		TestSetupTimeoutInSeconds:     60,
-		TestExecutionTimeoutInSeconds: 60,
-	}
+	return testsuite.TestConfiguration{}
+}
+
+func (test *BasicDatastoreTest) GetExecutionTimeout() time.Duration {
+	return 60 * time.Second
+}
+
+func (test *BasicDatastoreTest) GetSetupTeardownBuffer() time.Duration {
+	return 60 * time.Second
 }
