@@ -7,7 +7,7 @@ const DATASTORE_SERVICE_ID: &str = "datastore";
 const API_SERVICE_ID: &str = "api";
 
 const WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS: u64 = 1;
-const WAIT_FOR_STARTUP_MAX_NUM_POLLS: u32 = 30;
+const WAIT_FOR_STARTUP_MAX_NUM_POLLS: u32 = 15;
 
 const TEST_PERSON_ID: u32 = 23;
 const TEST_NUM_BOOKS_READ: u64 = 3;

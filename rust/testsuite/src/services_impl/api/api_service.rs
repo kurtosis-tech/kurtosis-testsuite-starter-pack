@@ -14,6 +14,7 @@ const INCREMENT_BOOKS_READ_ENDPOINT: &str = "incrementBooksRead";
 
 #[derive(Serialize, Deserialize)]
 pub struct Person {
+    #[serde(rename = "booksRead")]
     pub books_read: u64,
 }
 

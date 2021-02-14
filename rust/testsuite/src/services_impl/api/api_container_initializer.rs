@@ -14,7 +14,10 @@ const TEST_VOLUME_MOUNTPOINT: &str = "/test-volume";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {
+    #[serde(rename = "datastoreIp")]
     datastore_ip: String,
+
+    #[serde(rename = "datastorePort")]
     datastore_port: u32,
 }
 
@@ -96,6 +99,7 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
             .context(format!("No filepath found for config file key '{}'", CONFIG_FILE_KEY))?;
         let config_filepath_str = config_filepath.to_str()
             .context("An error occurred converting the config filepath to a string")?;
+        debug!("Config filepath: {}", config_filepath_str);
         let start_cmd: Vec<String> = vec![
             String::from("./api.bin"),
             String::from("--config"),

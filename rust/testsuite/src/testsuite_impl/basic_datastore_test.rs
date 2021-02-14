@@ -9,7 +9,7 @@ use crate::services_impl::datastore::{datastore_container_initializer, datastore
 const DATASTORE_SERVICE_ID: &str = "datastore";
 
 const WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS: u64 = 1;
-const WAIT_FOR_STARTUP_MAX_POLLS: u32 = 30;
+const WAIT_FOR_STARTUP_MAX_POLLS: u32 = 15;
 
 const TEST_KEY: &str = "test-key";
 const TEST_VALUE: &str = "test-value";

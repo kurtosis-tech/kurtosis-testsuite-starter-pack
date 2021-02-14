@@ -10,6 +10,7 @@ use super::test_suite_configurator::TestSuiteConfigurator;
 
 const MAX_CONNECTION_ATTEMPTS: u32 = 20;
 const TIME_BETWEEN_CONNECTION_RETRIES: Duration = Duration::from_millis(500);
+const CHANNEL_TIMEOUT_SECONDS: u64 = 30;
 
 pub struct TestSuiteExecutor {
     kurtosis_api_socket: String,
@@ -35,10 +36,11 @@ impl TestSuiteExecutor {
 		let suite = self.configurator.parse_params_and_create_suite(&self.params_json)
 			.context("An error occurred parsing the suite params JSON and creating the testsuite")?;
 
-		// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
 		let url = format!("http://{}", self.kurtosis_api_socket);
 		let endpoint = Channel::from_shared(url)
-			.context(format!("An error occurred creating the endpoint to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?;
+			.context(format!("An error occurred creating the endpoint to Kurtosis API socket '{}'", &self.kurtosis_api_socket))?
+			// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
+			.timeout(Duration::new(CHANNEL_TIMEOUT_SECONDS, 0));
 
 		// Sometimes the API container is still in the process of starting, so we retry the channel connection a few times
 		let channel: Channel;
