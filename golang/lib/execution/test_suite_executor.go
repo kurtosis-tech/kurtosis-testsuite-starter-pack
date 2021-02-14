@@ -100,10 +100,11 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 		for _, artifactUrl := range testConfig.FilesArtifactUrls {
 			usedArtifactUrls[artifactUrl] = true
 		}
-
 		testMetadata := &core_api_bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
+			TestSetupTimeoutInSeconds: uint32(test.GetSetupTeardownBuffer().Seconds()),
+			TestExecutionTimeoutInSeconds: uint32(test.GetExecutionTimeout().Seconds()),
 		}
 		allTestMetadata[testName] = testMetadata
 	}
@@ -140,12 +141,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	}
 
 	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
-	// TODO this should just be "register test execution started", since the API container already has the metadata
-	hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
-	hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
-	registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
-	if _, err := executionClient.RegisterTestExecution(ctx, registerTestExecutionMessage); err != nil {
-		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
+	if _, err := executionClient.RegisterTestSetup(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test setup with the API container")
 	}
 
 	testConfig := test.GetTestConfiguration()
@@ -155,41 +152,25 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 		executionClient,
 		filesArtifactUrls)
 
-	// TODO Also time out the setup with the API container rather than storing this locally
-	//  to reduce complexity inside the lib
 	logrus.Info("Setting up the test network...")
 	untypedNetwork, err := test.Setup(networkCtx)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
+	if _, err := executionClient.RegisterTestSetupCompletion(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test setup completion with the API container")
+	}
 	logrus.Info("Test network set up")
 
 	logrus.Infof("Executing test '%v'...", testName)
-	testResultChan := make(chan error)
 
-	go func() {
-		testResultChan <- runTestInGoroutine(test, untypedNetwork)
-	}()
-
-	// TODO Switch to registering the timeout with the API container rather than storing this locally
-	//  to reduce complexity inside the lib
-	// Time out the test so a poorly-written test doesn't run forever
-	testTimeout := test.GetExecutionTimeout()
-	var timedOut bool
-	var testResultErr error
-	select {
-	case testResultErr = <- testResultChan:
-		logrus.Tracef("Test returned result before timeout: %v", testResultErr)
-		timedOut = false
-	case <- time.After(testTimeout):
-		logrus.Tracef("Hit timeout %v before getting a result from the test", testTimeout)
-		timedOut = true
+	if _, err := executionClient.RegisterTestExecution(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
-	logrus.Tracef("After running test w/timeout: resultErr: %v, timedOut: %v", testResultErr, timedOut)
 
-	if timedOut {
-		return stacktrace.NewError("Timed out after %v waiting for test to complete", testTimeout)
-	}
+	testResultErr := runTest(test, untypedNetwork)
+
+	logrus.Tracef("After running test: resultErr: %v", testResultErr)
 	logrus.Infof("Executed test '%v'", testName)
 
 	if testResultErr != nil {
@@ -199,8 +180,8 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	return nil
 }
 
-// Little helper function meant to be run inside a goroutine that runs the test
-func runTestInGoroutine(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
+// Little helper function that runs the test and captures panics on test failures, returning them as errors
+func runTest(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
 	// See https://medium.com/@hussachai/error-handling-in-go-a-quick-opinionated-guide-9199dd7c7f76 for details
 	defer func() {
 		if recoverResult := recover(); recoverResult != nil {
