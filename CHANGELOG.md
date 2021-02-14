@@ -1,4 +1,4 @@
-# TBD
+# 1.8.1
 ### Fixed
 * `kurtosis.sh` issue where passing in `--help` would result in an error
 
