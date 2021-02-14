@@ -1,5 +1,6 @@
 # TBD
 ### Changed
+* Renamed GetFilesToMount to GetFilesToGenerate, and InitializeMountedFiles to InitializeFilesToGenerate
 
 # 1.8.1
 ### Fixed
