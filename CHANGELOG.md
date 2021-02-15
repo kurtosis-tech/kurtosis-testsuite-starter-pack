@@ -1,4 +1,4 @@
-# TBD
+# 1.9.0
 ### Added
 * Rust client library
 
