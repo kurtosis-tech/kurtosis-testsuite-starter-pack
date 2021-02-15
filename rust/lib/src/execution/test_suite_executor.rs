@@ -99,15 +99,8 @@ impl TestSuiteExecutor {
 	fn run_serialize_suite_metadata_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
 		let mut all_test_metadata: HashMap<String, TestMetadata> = HashMap::new();
 		for (test_name, test) in testsuite.get_tests() {
-			let test_config = test.get_test_configuration();
-			let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
-			for (_, artifact_url) in test_config.files_artifact_urls {
-				used_artifact_urls.insert(artifact_url, true);
-			}
-			let test_metadata = TestMetadata{
-			    is_partitioning_enabled: test_config.is_partitioning_enabled,
-			    used_artifact_urls: used_artifact_urls,
-			};
+			let test_metadata = test.get_test_metadata()
+				.context(format!("An error occurred getting metadata for test '{}'", test_name))?;
 			all_test_metadata.insert(test_name, test_metadata);
 		}
 

@@ -1,6 +1,8 @@
-use crate::{core_api_bindings::api_container_api::{RegisterTestExecutionArgs, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
+use std::{collections::HashMap, convert::TryInto, u32};
 
-use super::{test::Test, test_configuration::TestConfiguration, test_context::TestContext};
+use crate::{core_api_bindings::api_container_api::{TestMetadata, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
+
+use super::{test::Test, test_context::TestContext};
 use anyhow::{Context, Result};
 use futures::executor::block_on;
 use log::info;
@@ -10,7 +12,7 @@ use tonic::transport::Channel;
 // since Rust doesn't allow things like HashMap<String, Test<? extends Network>>
 // See: https://discord.com/channels/442252698964721669/448238009733742612/809977090740977674
 pub trait DynTest {
-    fn get_test_configuration(&self) -> TestConfiguration;
+	fn get_test_metadata(&self) -> Result<TestMetadata>;
 
     fn setup_and_run(&mut self, channel: Channel) -> Result<()>;
 }
@@ -48,8 +50,23 @@ func runTestInGoroutine(test testsuite.Test, untypedNetwork interface{}) (result
 }
 
 impl<T: Test> DynTest for DynTestContainer<T> {
-    fn get_test_configuration(&self) -> TestConfiguration {
-        return self.test.get_test_configuration();
+    fn get_test_metadata(&self) -> Result<TestMetadata> {
+		let test_config = self.test.get_test_configuration();
+		let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
+		for (_, artifact_url) in test_config.files_artifact_urls {
+			used_artifact_urls.insert(artifact_url, true);
+		}
+		let test_setup_timeout_seconds: u32 = self.test.get_setup_teardown_buffer().as_secs().try_into()
+			.context("Could not convert execution timeout duration to u32")?;
+		let test_execution_timeout_seconds: u32 = self.test.get_execution_timeout().as_secs().try_into()
+			.context("Could not convert execution timeout duration to u32")?;
+		let test_metadata = TestMetadata{
+			is_partitioning_enabled: test_config.is_partitioning_enabled,
+			used_artifact_urls: used_artifact_urls,
+			test_setup_timeout_in_seconds: test_setup_timeout_seconds,
+		    test_execution_timeout_in_seconds: test_execution_timeout_seconds,
+		};
+		return Ok(test_metadata);
     }
     
     fn setup_and_run(&mut self, channel: Channel) -> Result<()> {
@@ -62,90 +79,25 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         let network_ctx = NetworkContext::new(network_ctx_client, files_artifact_urls);
         let mut registration_client = TestExecutionServiceClient::new(channel.clone());
 
-		// TODO this needs to be refactored to the new world!!!
-        let test_execution_timeout = self.test.get_execution_timeout() + self.test.get_setup_teardown_buffer();
-        let register_test_execution_req = tonic::Request::new(RegisterTestExecutionArgs{
-            timeout_seconds: test_execution_timeout.as_secs(),
-        });
-        block_on(registration_client.register_test_execution(register_test_execution_req))
-            .context("An error occurred registering the test execution with the API container")?;
-
         info!("Setting up the test network...");
-        // TODO register setup
+		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
+		block_on(registration_client.register_test_setup(()))
+			.context("An error occurred registering the test setup with the API container")?;
         let network = self.test.setup(network_ctx)
             .context("An error occurred setting up the test network")?;
-        // TODO register setup completion
+		block_on(registration_client.register_test_setup_completion(()))
+			.context("An error occurred registering the test setup completion with the API container")?;
         info!("Test network set up");
 
         let test_ctx = TestContext{};
 
         info!("Executing the test...");
-
+		block_on(registration_client.register_test_execution(()))
+			.context("An error occurred registering the test execution with the API container")?;
         self.test.run(network, test_ctx)
             .context("An error occurred executing the test")?;
         info!("Test execution completed");
 
         return Ok(());
-	/*
-
-		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
-		// TODO this should just be "register test execution started", since the API container already has the metadata
-		hardTestTimeout := test.GetExecutionTimeout() + test.GetSetupTeardownBuffer()
-		hardTestTimeoutSeconds := uint64(hardTestTimeout.Seconds())
-		registerTestExecutionMessage := &core_api_bindings.RegisterTestExecutionArgs{TimeoutSeconds: hardTestTimeoutSeconds}
-		if _, err := executionClient.RegisterTestExecution(ctx, registerTestExecutionMessage); err != nil {
-			return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
-		}
-
-		testConfig := test.GetTestConfiguration()
-		filesArtifactUrls := testConfig.FilesArtifactUrls
-
-		networkCtx := networks.NewNetworkContext(
-			executionClient,
-			filesArtifactUrls)
-
-		// TODO Also time out the setup with the API container rather than storing this locally
-		//  to reduce complexity inside the lib
-		logrus.Info("Setting up the test network...")
-		untypedNetwork, err := test.Setup(networkCtx)
-		if err != nil {
-			return stacktrace.Propagate(err, "An error occurred setting up the test network")
-		}
-		logrus.Info("Test network set up")
-
-		logrus.Infof("Executing test '%v'...", testName)
-		testResultChan := make(chan error)
-
-		go func() {
-			testResultChan <- runTestInGoroutine(test, untypedNetwork)
-		}()
-
-		// TODO Switch to registering the timeout with the API container rather than storing this locally
-		//  to reduce complexity inside the lib
-		// Time out the test so a poorly-written test doesn't run forever
-		testTimeout := test.GetExecutionTimeout()
-		var timedOut bool
-		var testResultErr error
-		select {
-		case testResultErr = <- testResultChan:
-			logrus.Tracef("Test returned result before timeout: %v", testResultErr)
-			timedOut = false
-		case <- time.After(testTimeout):
-			logrus.Tracef("Hit timeout %v before getting a result from the test", testTimeout)
-			timedOut = true
-		}
-		logrus.Tracef("After running test w/timeout: resultErr: %v, timedOut: %v", testResultErr, timedOut)
-
-		if timedOut {
-			return stacktrace.NewError("Timed out after %v waiting for test to complete", testTimeout)
-		}
-		logrus.Infof("Executed test '%v'", testName)
-
-		if testResultErr != nil {
-			return stacktrace.Propagate(testResultErr, "An error occurred when running the test")
-		}
-
-		return nil
-	*/
     }
 }

@@ -140,10 +140,6 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 			testName)
 	}
 
-	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
-	if _, err := executionClient.RegisterTestSetup(ctx, &emptypb.Empty{}); err != nil {
-		return stacktrace.Propagate(err, "An error occurred registering the test setup with the API container")
-	}
 
 	testConfig := test.GetTestConfiguration()
 	filesArtifactUrls := testConfig.FilesArtifactUrls
@@ -153,6 +149,10 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 		filesArtifactUrls)
 
 	logrus.Info("Setting up the test network...")
+	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
+	if _, err := executionClient.RegisterTestSetup(ctx, &emptypb.Empty{}); err != nil {
+		return stacktrace.Propagate(err, "An error occurred registering the test setup with the API container")
+	}
 	untypedNetwork, err := test.Setup(networkCtx)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
@@ -163,13 +163,10 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	logrus.Info("Test network set up")
 
 	logrus.Infof("Executing test '%v'...", testName)
-
 	if _, err := executionClient.RegisterTestExecution(ctx, &emptypb.Empty{}); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test execution with the API container")
 	}
-
 	testResultErr := runTest(test, untypedNetwork)
-
 	logrus.Tracef("After running test: resultErr: %v", testResultErr)
 	logrus.Infof("Executed test '%v'", testName)
 

@@ -191,16 +191,6 @@ pub struct TestExecutionInfo {
     pub test_name: ::prost::alloc::string::String,
 }
 /// ==============================================================================================
-///                                  Register Test Execution
-/// ==============================================================================================
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RegisterTestExecutionArgs {
-    /// TODO This should actually be unnecessary - we should pass in testsuite metadata at API container startup time,
-    ///  so that registration just says "I'm starting" and the API container can look up the timeout
-    #[prost(uint64, tag = "1")]
-    pub timeout_seconds: u64,
-}
-/// ==============================================================================================
 ///                                     Register Service
 /// ==============================================================================================
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -355,10 +345,44 @@ pub mod test_execution_service_client {
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        #[doc = " Registers that the testsuite is about to setup a test"]
+        pub async fn register_test_setup(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> Result<tonic::Response<()>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api_container_api.TestExecutionService/RegisterTestSetup",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
+        #[doc = " Registers that the testsuite has completed test setup"]
+        pub async fn register_test_setup_completion(
+            &mut self,
+            request: impl tonic::IntoRequest<()>,
+        ) -> Result<tonic::Response<()>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api_container_api.TestExecutionService/RegisterTestSetupCompletion",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
         #[doc = " Registers that the testsuite is about to start executing test logic"]
         pub async fn register_test_execution(
             &mut self,
-            request: impl tonic::IntoRequest<super::RegisterTestExecutionArgs>,
+            request: impl tonic::IntoRequest<()>,
         ) -> Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -468,10 +492,20 @@ pub mod test_execution_service_server {
             &self,
             request: tonic::Request<()>,
         ) -> Result<tonic::Response<super::TestExecutionInfo>, tonic::Status>;
+        #[doc = " Registers that the testsuite is about to setup a test"]
+        async fn register_test_setup(
+            &self,
+            request: tonic::Request<()>,
+        ) -> Result<tonic::Response<()>, tonic::Status>;
+        #[doc = " Registers that the testsuite has completed test setup"]
+        async fn register_test_setup_completion(
+            &self,
+            request: tonic::Request<()>,
+        ) -> Result<tonic::Response<()>, tonic::Status>;
         #[doc = " Registers that the testsuite is about to start executing test logic"]
         async fn register_test_execution(
             &self,
-            request: tonic::Request<super::RegisterTestExecutionArgs>,
+            request: tonic::Request<()>,
         ) -> Result<tonic::Response<()>, tonic::Status>;
         #[doc = " Registers a service with the API container but doesn't start the container for it"]
         async fn register_service(
@@ -555,19 +589,73 @@ pub mod test_execution_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/api_container_api.TestExecutionService/RegisterTestExecution" => {
+                "/api_container_api.TestExecutionService/RegisterTestSetup" => {
                     #[allow(non_camel_case_types)]
-                    struct RegisterTestExecutionSvc<T: TestExecutionService>(pub Arc<T>);
-                    impl<T: TestExecutionService>
-                        tonic::server::UnaryService<super::RegisterTestExecutionArgs>
-                        for RegisterTestExecutionSvc<T>
+                    struct RegisterTestSetupSvc<T: TestExecutionService>(pub Arc<T>);
+                    impl<T: TestExecutionService> tonic::server::UnaryService<()> for RegisterTestSetupSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).register_test_setup(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = RegisterTestSetupSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/api_container_api.TestExecutionService/RegisterTestSetupCompletion" => {
+                    #[allow(non_camel_case_types)]
+                    struct RegisterTestSetupCompletionSvc<T: TestExecutionService>(pub Arc<T>);
+                    impl<T: TestExecutionService> tonic::server::UnaryService<()>
+                        for RegisterTestSetupCompletionSvc<T>
                     {
                         type Response = ();
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::RegisterTestExecutionArgs>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move {
+                                (*inner).register_test_setup_completion(request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = RegisterTestSetupCompletionSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/api_container_api.TestExecutionService/RegisterTestExecution" => {
+                    #[allow(non_camel_case_types)]
+                    struct RegisterTestExecutionSvc<T: TestExecutionService>(pub Arc<T>);
+                    impl<T: TestExecutionService> tonic::server::UnaryService<()> for RegisterTestExecutionSvc<T> {
+                        type Response = ();
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
                             let inner = self.0.clone();
                             let fut =
                                 async move { (*inner).register_test_execution(request).await };
@@ -771,6 +859,10 @@ pub struct TestMetadata {
     /// "Set" of artifact URLs used by the test
     #[prost(map = "string, bool", tag = "2")]
     pub used_artifact_urls: ::std::collections::HashMap<::prost::alloc::string::String, bool>,
+    #[prost(uint32, tag = "3")]
+    pub test_setup_timeout_in_seconds: u32,
+    #[prost(uint32, tag = "4")]
+    pub test_execution_timeout_in_seconds: u32,
 }
 #[doc = r" Generated client implementations."]
 pub mod suite_metadata_serialization_service_client {
