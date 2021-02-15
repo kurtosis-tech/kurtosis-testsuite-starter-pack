@@ -1,3 +1,15 @@
+# 1.9.0
+### Added
+* Rust client library
+
+### Changed
+* Replaced the `DockerContainerInitializer`'s `GetService` function with a `GetServiceWrappingFunc` factory-getting function so that `NetworkContext` can manufacture `Service` instances upon `GetService` request
+* Made Golang `NetworkContext.Repartition` take in the new network state directly, rather than going through the `Repartitioner`/`RepartitionerBuilder`
+* Renamed `GetSetupTeardownBuffer` -> `GetSetupTimeout` on the `Test` interface
+
+### Removed
+* `Repartitioner` and `RepartitionerBuilder`, which added complexity for no gain
+
 # 1.8.1
 ### Fixed
 * `kurtosis.sh` issue where passing in `--help` would result in an error
@@ -7,7 +19,7 @@
 * Added a helptext to the generated `build-and-run.sh` after bootstrapping
 
 ### Changed
-* Moved `Dockefile` inside the `testsuite` repo of each language once again
+* Moved `Dockerfile` inside the `testsuite` repo of each language once again
 * Modified API container API to control test setup and execution timeouts in Kurtosis Core instead of kurtosis libs
 
 # 1.8.0

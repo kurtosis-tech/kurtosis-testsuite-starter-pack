@@ -9,7 +9,6 @@ import (
 	"context"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/test_suite_docker_consts/test_suite_container_mountpoints"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -17,11 +16,22 @@ import (
 	"sync"
 )
 
+type PartitionID string
+
 const (
 	// This will alwyas resolve to the default partition ID (regardless of whether such a partition exists in the network,
 	//  or it was repartitioned away)
 	defaultPartitionId PartitionID = ""
+
+	// This value - where the suite execution volume will be mounted on the testsuite container - is
+	//  hardcoded inside Kurtosis Core
+	suiteExVolMountpoint = "/suite-execution"
 )
+
+type serviceInfo struct {
+	ipAddr       string
+	wrappingFunc func(serviceId services.ServiceID, ipAddr string) services.Service
+}
 
 type NetworkContext struct {
 	client core_api_bindings.TestExecutionServiceClient
@@ -31,7 +41,7 @@ type NetworkContext struct {
 	// Mutex protecting access to the services map
 	mutex *sync.Mutex
 
-	services map[services.ServiceID]services.Service
+	services map[services.ServiceID]serviceInfo
 }
 
 
@@ -49,7 +59,7 @@ func NewNetworkContext(
 		mutex: &sync.Mutex{},
 		client: client,
 		filesArtifactUrls: filesArtifactUrls,
-		services: map[services.ServiceID]services.Service{},
+		services: map[services.ServiceID]serviceInfo{},
 	}
 }
 
@@ -124,7 +134,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	generatedFilesFps := map[string]*os.File{}
 	generatedFilesAbsoluteFilepathsOnService := map[string]string{}
 	for fileId, relativeFilepath := range generatedFilesRelativeFilepaths {
-		absoluteFilepathOnTestsuite := path.Join(test_suite_container_mountpoints.SuiteExVolMountpoint, relativeFilepath)
+		absoluteFilepathOnTestsuite := path.Join(suiteExVolMountpoint, relativeFilepath)
 		logrus.Debugf("Opening generated file at '%v' for writing...", absoluteFilepathOnTestsuite)
 		fp, err := os.Create(absoluteFilepathOnTestsuite)
 		if err != nil {
@@ -186,10 +196,14 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
 	logrus.Tracef("Creating service interface...")
-	service := initializer.GetService(serviceId, serviceIpAddr)
+	wrapWithInterface := initializer.GetServiceWrappingFunc();
+	service := wrapWithInterface(serviceId, serviceIpAddr);
 	logrus.Tracef("Successfully created service interface")
 
-	networkCtx.services[serviceId] = service
+	networkCtx.services[serviceId] = serviceInfo{
+		ipAddr:       serviceIpAddr,
+		wrappingFunc: wrapWithInterface,
+	}
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
@@ -197,16 +211,19 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 }
 
 /*
-Gets the service with the given ID, or returns an error if no service with that ID exists.
+Gets an interface for interacting with the service with the given ID, or returns an error if no service with that ID exists.
  */
 func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
-	service, found := networkCtx.services[serviceId]
+	serviceInfo, found := networkCtx.services[serviceId]
 	if !found {
-		return nil, stacktrace.NewError("No service found with ID '%v'", serviceId)
+		return nil, stacktrace.NewError("No service info found for ID '%v'", serviceId)
 	}
+	serviceIpAddr := serviceInfo.ipAddr
+	wrapWithInterface := serviceInfo.wrappingFunc
+	service := wrapWithInterface(serviceId, serviceIpAddr);
 
 	return service, nil
 }
@@ -235,40 +252,30 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 }
 
 /*
-Constructs a new repartitioner builder in preparation for a repartition.
-
-Args:
-	isDefaultPartitionConnectionBlocked: If true, when the connection details between two partitions aren't specified
-		during a repartition then traffic between them will be blocked by default
+Repartitions the network to the given state
  */
-func (networkCtx NetworkContext) GetRepartitionerBuilder(isDefaultPartitionConnectionBlocked bool) *RepartitionerBuilder {
-	// This function doesn't need a mutex lock because (as of 2020-12-28) it doesn't touch internal state whatsoever
-	return newRepartitionerBuilder(isDefaultPartitionConnectionBlocked)
-}
-
-/*
-Repartitions the network using the given repartitioner. A repartitioner builder can be constructed using the
-	NewRepartitionerBuilder method of this network context object.
- */
-func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitioner) error {
+func (networkCtx *NetworkContext) RepartitionNetwork(
+		partitionServices map[PartitionID]map[services.ServiceID]bool,
+		partitionConnections map[PartitionID]map[PartitionID]*core_api_bindings.PartitionConnectionInfo,
+		defaultConnection *core_api_bindings.PartitionConnectionInfo) error {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
-	partitionServices := map[string]*core_api_bindings.PartitionServices{}
-	for partitionId, serviceIdSet := range repartitioner.partitionServices {
+	reqPartitionServices := map[string]*core_api_bindings.PartitionServices{}
+	for partitionId, serviceIdSet := range partitionServices {
 		serviceIdStrPseudoSet := map[string]bool{}
-		for _, serviceId := range serviceIdSet.getElems() {
+		for serviceId := range serviceIdSet {
 			serviceIdStr := string(serviceId)
 			serviceIdStrPseudoSet[serviceIdStr] = true
 		}
 		partitionIdStr := string(partitionId)
-		partitionServices[partitionIdStr] = &core_api_bindings.PartitionServices{
+		reqPartitionServices[partitionIdStr] = &core_api_bindings.PartitionServices{
 			ServiceIdSet: serviceIdStrPseudoSet,
 		}
 	}
 
-	partitionConns := map[string]*core_api_bindings.PartitionConnections{}
-	for partitionAId, partitionAConnsMap := range repartitioner.partitionConnections {
+	reqPartitionConns := map[string]*core_api_bindings.PartitionConnections{}
+	for partitionAId, partitionAConnsMap := range partitionConnections {
 		partitionAConnsStrMap := map[string]*core_api_bindings.PartitionConnectionInfo{}
 		for partitionBId, connInfo := range partitionAConnsMap {
 			partitionBIdStr := string(partitionBId)
@@ -278,13 +285,13 @@ func (networkCtx *NetworkContext) RepartitionNetwork(repartitioner *Repartitione
 			ConnectionInfo: partitionAConnsStrMap,
 		}
 		partitionAIdStr := string(partitionAId)
-		partitionConns[partitionAIdStr] = partitionAConns
+		reqPartitionConns[partitionAIdStr] = partitionAConns
 	}
 
 	repartitionArgs := &core_api_bindings.RepartitionArgs{
-		PartitionServices:    partitionServices,
-		PartitionConnections: partitionConns,
-		DefaultConnection:    repartitioner.defaultConnection,
+		PartitionServices:    reqPartitionServices,
+		PartitionConnections: reqPartitionConns,
+		DefaultConnection:    defaultConnection,
 	}
 	if _, err := networkCtx.client.Repartition(context.Background(), repartitionArgs); err != nil {
 		return stacktrace.Propagate(err, "An error occurred repartitioning the test network")

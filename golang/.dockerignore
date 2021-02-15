@@ -8,8 +8,5 @@
 LICENSE
 *.md
 
-bootstrap
-docs
 scripts
-
 testsuite/Dockerfile
