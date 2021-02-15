@@ -80,7 +80,7 @@ impl Test for BasicDatastoreTest {
 		return Duration::new(60, 0);
     }
 
-    fn get_setup_teardown_buffer(&self) -> std::time::Duration {
+    fn get_setup_timeout(&self) -> std::time::Duration {
 		return Duration::new(60, 0);
     }
 }
