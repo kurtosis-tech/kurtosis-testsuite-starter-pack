@@ -2,7 +2,7 @@ use std::{collections::HashMap, convert::TryInto, u32};
 
 use crate::{core_api_bindings::api_container_api::{TestMetadata, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
 
-use super::{test::Test, test_context::TestContext};
+use super::{dyn_test::DynTest, test::Test, test_context::TestContext};
 use anyhow::{Context, Result};
 use futures::executor::block_on;
 use log::info;

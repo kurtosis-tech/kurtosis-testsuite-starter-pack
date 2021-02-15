@@ -1,6 +1,6 @@
 use std::{collections::HashMap};
 
-use kurtosis_rust_lib::{testsuite::{dyn_test::{DynTest, DynTestContainer}, testsuite::TestSuite}};
+use kurtosis_rust_lib::{testsuite::{dyn_test::{DynTest}, dyn_test_container::DynTestContainer, testsuite::TestSuite}};
 
 use super::{advanced_network_test::AdvancedNetworkTest, basic_datastore_and_api_test::BasicDatastoreAndApiTest, basic_datastore_test::BasicDatastoreTest};
 

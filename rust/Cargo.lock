@@ -501,13 +501,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "kurtosis_rust_example"
+name = "kurtosis-rust-example"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
  "futures",
- "kurtosis_rust_lib",
+ "kurtosis-rust-lib",
  "log",
  "reqwest",
  "serde",
@@ -518,7 +518,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "kurtosis_rust_lib"
+name = "kurtosis-rust-lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",

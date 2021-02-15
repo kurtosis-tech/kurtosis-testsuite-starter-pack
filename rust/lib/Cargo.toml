@@ -4,6 +4,7 @@ edition = "2018"
 version = "0.1.0"
 
 [lib]
+name = "kurtosis_rust_lib"
 path = "src/lib.rs"
 
 [dependencies]
