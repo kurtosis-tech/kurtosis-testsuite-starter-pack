@@ -35,8 +35,10 @@ func (d DatastoreContainerInitializer) GetUsedPorts() map[string]bool {
 	}
 }
 
-func (d DatastoreContainerInitializer) GetService(serviceId services.ServiceID, ipAddr string) services.Service {
-	return NewDatastoreService(serviceId, ipAddr, port)
+func (d DatastoreContainerInitializer) GetServiceWrappingFunc() func (serviceId services.ServiceID, ipAddr string) services.Service {
+	return func(serviceId services.ServiceID, ipAddr string) services.Service {
+		return NewDatastoreService(serviceId, ipAddr, port);
+	}
 }
 
 func (d DatastoreContainerInitializer) GetFilesToMount() map[string]bool {

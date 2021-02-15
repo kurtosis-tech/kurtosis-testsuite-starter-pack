@@ -6,6 +6,7 @@
 package network_partition_test
 
 import (
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
@@ -27,7 +28,7 @@ const (
 
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxNumPolls = 30
+	waitForStartupMaxNumPolls = 15
 
 	testPersonId = 46
 )
@@ -77,11 +78,7 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 
 
 	logrus.Info("Partitioning API and datastore services off from each other...")
-	blockedConnRepartitioner, err := getTwoPartitionsRepartitioner(castedNetwork, true, false)
-	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the 2-partition repartitioner with blocked connection"))
-	}
-	if err := castedNetwork.RepartitionNetwork(blockedConnRepartitioner); err != nil {
+	if err := repartitionNetwork(castedNetwork, true, false); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred repartitioning the network to block access between API <-> datastore"))
 	}
 	logrus.Info("Repartition complete")
@@ -125,11 +122,7 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 
 	// Now, open the network back up
 	logrus.Info("Repartitioning to heal partition between API and datastore...")
-	openConnRepartitioner, err := getTwoPartitionsRepartitioner(castedNetwork, false, true)
-	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the 2-partition repartitioner with open connection"))
-	}
-	if err := castedNetwork.RepartitionNetwork(openConnRepartitioner); err != nil {
+	if err := repartitionNetwork(castedNetwork, false, true); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred healing the partition"))
 	}
 	logrus.Info("Partition healed successfully")
@@ -186,44 +179,47 @@ func (test NetworkPartitionTest) addApiService(
 /*
 Creates a repartitioner that will partition the network between the API & datastore services, with the connection between them configurable
  */
-func getTwoPartitionsRepartitioner(
+func repartitionNetwork(
 		networkCtx *networks.NetworkContext,
 		isConnectionBlocked bool,
-		isApi2ServiceAddedYet bool) (*networks.Repartitioner, error){
-	apiPartitionServiceIds := []services.ServiceID{
-		api1ServiceId,
+		isApi2ServiceAddedYet bool) error {
+	apiPartitionServiceIds := map[services.ServiceID]bool{
+		api1ServiceId: true,
 	}
 	if isApi2ServiceAddedYet {
-		apiPartitionServiceIds = append(apiPartitionServiceIds, api2ServiceId)
+		apiPartitionServiceIds[api2ServiceId] = true
 	}
 
-	repartitioner, err := networkCtx.GetRepartitionerBuilder(
-			false,
-		).WithPartition(
-			apiPartitionId,
-			apiPartitionServiceIds...
-		).WithPartition(
-			datastorePartitionId,
-			datastoreServiceId,
-		).WithPartitionConnection(
-			apiPartitionId,
-			datastorePartitionId,
-			isConnectionBlocked,
-		).Build()
-	if err != nil {
-		return nil, stacktrace.Propagate(
+	partitionServices := map[networks.PartitionID]map[services.ServiceID]bool{
+		apiPartitionId: apiPartitionServiceIds,
+		datastorePartitionId: {
+			datastoreServiceId: true,
+		},
+	}
+	partitionConnections := map[networks.PartitionID]map[networks.PartitionID]*core_api_bindings.PartitionConnectionInfo{
+		apiPartitionId: {
+			datastorePartitionId: &core_api_bindings.PartitionConnectionInfo{
+				IsBlocked: isConnectionBlocked,
+			},
+		},
+	}
+	defaultPartitionConnection := &core_api_bindings.PartitionConnectionInfo{
+		IsBlocked: false,
+	}
+	if err := networkCtx.RepartitionNetwork(partitionServices, partitionConnections, defaultPartitionConnection); err != nil {
+		return stacktrace.Propagate(
 			err,
-			"An error occurred creating a three-partition repartitioner with isConnectionBlocked = %v",
+			"An error occurred repartitioning the network with isConnectionBlocked = %v",
 			isConnectionBlocked)
 	}
-	return repartitioner, nil
+	return nil
 }
 
 func (test *NetworkPartitionTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *NetworkPartitionTest) GetSetupTeardownBuffer() time.Duration {
+func (test *NetworkPartitionTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }
 

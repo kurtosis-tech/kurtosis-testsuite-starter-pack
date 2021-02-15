@@ -19,7 +19,7 @@ const (
 	datastoreServiceId services.ServiceID = "datastore"
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxPolls = 30
+	waitForStartupMaxPolls = 15
 
 	testKey = "test-key"
 	testValue = "test-value"
@@ -76,11 +76,10 @@ func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.T
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test key after upload"))
 	}
-	logrus.Info("Value verified")
-
 	testCtx.AssertTrue(
 		value == testValue,
 		stacktrace.NewError("Returned value '%v' != test value '%v'", value, testValue))
+	logrus.Info("Value verified")
 }
 
 
@@ -92,6 +91,6 @@ func (test *BasicDatastoreTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *BasicDatastoreTest) GetSetupTeardownBuffer() time.Duration {
+func (test *BasicDatastoreTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }

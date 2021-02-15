@@ -31,22 +31,20 @@ type Test interface {
 	Args:
 		network: A user-defined representation of the network. NOTE: Because Go doesn't have generics, this will need to
 			be casted to the appropriate type.
-		context: The test context, which is the user's tool for making test assertions.
+		testCtx: The test context, which is the user's tool for making test assertions.
 	 */
 	Run(network networks.Network, testCtx TestContext)
 
 	/*
 		How long the test will be given to do the pre-execution setup before the test will be
-			hard-killed. The total amount of time a test (with setup) is allowed to run
-			for = GetExecutionTimeout + GetSetupTeardownBuffer.
+			hard-killed.
 	*/
-	GetSetupTeardownBuffer() time.Duration
+	GetSetupTimeout() time.Duration
 
 	/*
 		The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
-			is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
-			which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed
-			to run for = GetExecutionTimeout + GetSetupBuffer.
+			is marked as failed. This does NOT include the time needed to do pre-test setup, which is handled by
+			GetSetupTimeout.
 	*/
 	GetExecutionTimeout() time.Duration
 

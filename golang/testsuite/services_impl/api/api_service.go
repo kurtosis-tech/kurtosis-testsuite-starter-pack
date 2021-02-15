@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
 const (
@@ -24,9 +23,6 @@ const (
 
 	personEndpoint = "person"
 	incrementBooksReadEndpoint = "incrementBooksRead"
-
-	// How long to wait before timing out HTTP requests
-	timeoutSeconds = 3 * time.Second
 )
 
 type Person struct {

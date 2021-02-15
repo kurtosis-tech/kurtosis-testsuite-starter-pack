@@ -64,7 +64,7 @@ func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service"))
 	}
 
-	logrus.Infof("Adding test person via first person-modifying API service...")
+	logrus.Infof("Adding test person via person-modifying API service...")
 	if err := personModifier.AddPerson(testPersonId); err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding test person"))
 	}
@@ -101,6 +101,6 @@ func (test *AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *AdvancedNetworkTest) GetSetupTeardownBuffer() time.Duration {
+func (test *AdvancedNetworkTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }
