@@ -36,7 +36,7 @@ func main() {
 	logLevelArg := flag.String(
 		"log-level",
 		"",
-		"Loglevel string that the test suite will output with",
+		"String indicating the loglevel that the test suite should output with",
 	)
 
 	flag.Parse()

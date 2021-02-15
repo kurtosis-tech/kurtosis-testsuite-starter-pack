@@ -1,0 +1,26 @@
+[package]
+name = "kurtosis-rust-lib"
+edition = "2018"
+version = "0.1.0"
+
+[lib]
+name = "kurtosis_rust_lib"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0.38"
+dashmap = "4.0.2"
+downcast-rs = "1.2.0"
+futures = "0.3"
+log = "0.4"
+prost = "0.7"
+simple-error = "0.2.3"
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+tonic = "0.4.0"
+
+[build-dependencies]
+anyhow = "1.0.38"
+regex = "1.4.3"
+# Must be kept in sync with the "tonic" version above, because Cargo.toml doesn't support envvars yet
+# See: https://github.com/rust-lang/cargo/issues/4221
+tonic-build = "0.4.0"

@@ -20,7 +20,7 @@ const (
 	apiServiceIdPrefix = "api-"
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxNumPolls = 30
+	waitForStartupMaxNumPolls = 15
 )
 
 type TestNetwork struct {

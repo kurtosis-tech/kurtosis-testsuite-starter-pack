@@ -21,7 +21,7 @@ const (
 	apiServiceId services.ServiceID = "api"
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxNumPolls = 30
+	waitForStartupMaxNumPolls = 15
 
 	testPersonId = 23
 	testNumBooksRead = 3
@@ -116,6 +116,6 @@ func (test *BasicDatastoreAndApiTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *BasicDatastoreAndApiTest) GetSetupTeardownBuffer() time.Duration {
+func (test *BasicDatastoreAndApiTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }
