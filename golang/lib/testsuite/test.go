@@ -37,16 +37,14 @@ type Test interface {
 
 	/*
 		How long the test will be given to do the pre-execution setup before the test will be
-			hard-killed. The total amount of time a test (with setup) is allowed to run
-			for = GetExecutionTimeout + GetSetupTeardownBuffer.
+			hard-killed.
 	*/
-	GetSetupTeardownBuffer() time.Duration
+	GetSetupTimeout() time.Duration
 
 	/*
 		The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
-			is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
-			which is handled by `GetSetupTeardownBuffer`. The total amount of time a test (with setup & teardown) is allowed
-			to run for = GetExecutionTimeout + GetSetupBuffer.
+			is marked as failed. This does NOT include the time needed to do pre-test setup, which is handled by
+			GetSetupTimeout.
 	*/
 	GetExecutionTimeout() time.Duration
 

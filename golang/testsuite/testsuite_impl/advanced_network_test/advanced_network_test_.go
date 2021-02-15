@@ -101,6 +101,6 @@ func (test *AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *AdvancedNetworkTest) GetSetupTeardownBuffer() time.Duration {
+func (test *AdvancedNetworkTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }

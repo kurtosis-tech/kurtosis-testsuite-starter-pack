@@ -219,7 +219,7 @@ func (test *NetworkPartitionTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *NetworkPartitionTest) GetSetupTeardownBuffer() time.Duration {
+func (test *NetworkPartitionTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }
 

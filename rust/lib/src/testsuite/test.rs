@@ -25,16 +25,12 @@ pub trait Test {
 	/// 	test_ctx: The test context, which is the user's tool for making test assertions.
 	fn run(&self, network: Box<Self::N>, test_ctx: TestContext) -> Result<()>;
 
-	/// The amount of time the test's [Test::run] method will be allowed to execute for before it's killed and the test
- 	/// is marked as failed. This does NOT include the time needed to do pre-test setup or post-test teardown,
- 	/// which is handled by [Test::get_setup_teardown_buffer]. 
-	/// 
-	/// The total amount of time a test (with setup & teardown) is allowed to run for = execution 
-	/// timeout + setup/teardown buffer.
-	fn get_execution_timeout(&self) -> Duration;
+	/// How long the test will be given to do the pre-execution setup before the test will be
+	/// 	hard-killed.
+	fn get_setup_timeout(&self) -> Duration;
 
-	/// How long the test will be given to do the pre-execution setup and post-setup teardown before the test will be
-	/// hard-killed. The total amount of time a test (with setup & teardown) is allowed to run
-	/// for = GetExecutionTimeout + GetSetupTeardownBuffer.
-	fn get_setup_teardown_buffer(&self) -> Duration;
+	/// The amount of time the test's `Run` method will be allowed to execute for before it's killed and the test
+	/// is marked as failed. This does NOT include the time needed to do pre-test setup, which is handled by
+	/// GetSetupTimeout.
+	fn get_execution_timeout(&self) -> Duration;
 }

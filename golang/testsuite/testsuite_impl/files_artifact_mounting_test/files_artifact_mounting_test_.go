@@ -97,6 +97,6 @@ func (test FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test FilesArtifactMountingTest) GetSetupTeardownBuffer() time.Duration {
+func (test FilesArtifactMountingTest) GetSetupTimeout() time.Duration {
 	return 30 * time.Second
 }

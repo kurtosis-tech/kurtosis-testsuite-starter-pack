@@ -56,7 +56,7 @@ impl<T: Test> DynTest for DynTestContainer<T> {
 		for (_, artifact_url) in test_config.files_artifact_urls {
 			used_artifact_urls.insert(artifact_url, true);
 		}
-		let test_setup_timeout_seconds: u32 = self.test.get_setup_teardown_buffer().as_secs().try_into()
+		let test_setup_timeout_seconds: u32 = self.test.get_setup_timeout().as_secs().try_into()
 			.context("Could not convert execution timeout duration to u32")?;
 		let test_execution_timeout_seconds: u32 = self.test.get_execution_timeout().as_secs().try_into()
 			.context("Could not convert execution timeout duration to u32")?;

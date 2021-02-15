@@ -91,6 +91,6 @@ func (test *BasicDatastoreTest) GetExecutionTimeout() time.Duration {
 	return 60 * time.Second
 }
 
-func (test *BasicDatastoreTest) GetSetupTeardownBuffer() time.Duration {
+func (test *BasicDatastoreTest) GetSetupTimeout() time.Duration {
 	return 60 * time.Second
 }
