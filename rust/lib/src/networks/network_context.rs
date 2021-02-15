@@ -104,8 +104,7 @@ impl NetworkContext {
 		    service_id: service_id.to_owned(),
 		    docker_image: initializer.get_docker_image().to_owned(),
 		    used_ports: NetworkContext::convert_hashset_to_hashmap(initializer.get_used_ports()),
-			// NOTE: If empty vector isn't the "use default Docker CMD" then we need something else
-		    start_cmd_args: start_cmd_args_opt.unwrap_or(Vec::new()),
+		    start_cmd_args: start_cmd_args_opt.unwrap_or(Vec::new()),  // Empty vector says "use default Docker CMD args"
 		    docker_env_vars: HashMap::new(),  // TODO actually support Docker env vars!
 		    suite_execution_vol_mnt_dirpath: initializer.get_test_volume_mountpoint().to_owned(),
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
@@ -223,7 +222,7 @@ impl NetworkContext {
 		let args = RepartitionArgs{
 		    partition_services: req_partition_services,
 		    partition_connections: req_partition_connections,
-			// NOTE: It's unclear why tonic generates this as "optional"; it's not
+			// NOTE: It's unclear why tonic generates this as "optional"; it's not optional in the .proto file
 		    default_connection: Some(default_connection_info),
 		};
 

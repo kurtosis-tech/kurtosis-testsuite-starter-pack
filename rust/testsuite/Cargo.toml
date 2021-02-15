@@ -1,11 +1,10 @@
 [package]
-name = "kurtosis_rust_example"
-version = "0.1.0"
-authors = ["mieubrisse <mieubrisse@gmail.com>"]
+name = "kurtosis-rust-example"
 edition = "2018"
+version = "0.1.0"
 
 [[bin]]
-name = "kurtosis_rust_example"
+name = "kurtosis-rust-example"
 path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

@@ -6,7 +6,7 @@ use crate::services_impl::{api::{api_container_initializer::ApiContainerInitiali
 const DATASTORE_SERVICE_ID: &str = "datastore";
 const API_SERVICE_ID: &str = "api";
 
-const WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS: u64 = 1;
+const WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS: Duration = Duration::from_secs(1);
 const WAIT_FOR_STARTUP_MAX_NUM_POLLS: u32 = 15;
 
 const TEST_PERSON_ID: u32 = 23;
@@ -37,18 +37,16 @@ impl Test for BasicDatastoreAndApiTest {
     }
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
-        let wait_for_startup_time_between_polls = Duration::new(WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS, 0);
-
         let datastore_initializer = DatastoreContainerInitializer::new(&self.datastore_image);
         let (datastore_service, datastore_checker) = network_ctx.add_service(DATASTORE_SERVICE_ID, &datastore_initializer)
             .context("An error occurred adding the datastore service")?;
-        datastore_checker.wait_for_startup(&wait_for_startup_time_between_polls, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
+        datastore_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
 
         let api_initializer = ApiContainerInitializer::new(self.api_image.clone(), &datastore_service);
         let (_, api_checker) = network_ctx.add_service(API_SERVICE_ID, &api_initializer)
             .context("An error occurred adding the API service")?;
-        api_checker.wait_for_startup(&wait_for_startup_time_between_polls, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
+        api_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the API service to start")?;
         return Ok(Box::new(network_ctx));
     }

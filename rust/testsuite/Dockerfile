@@ -1,53 +1,3 @@
-# # This entire Dockerfile inspired by https://github.com/LukeMathWalker/cargo-chef, to cache
-# # Rust dependencies
-# ARG RUST_IMAGE=ekidd/rust-musl-builder:stable
-# ARG CHEF_VERSION=0.1.14
-# 
-# FROM ${RUST_IMAGE} as planner
-# ARG CHEF_VERSION
-# WORKDIR /app
-# # We only pay the installation cost once, 
-# # it will be cached from the second build onwards
-# RUN cargo install cargo-chef --version ${CHEF_VERSION}
-# COPY . .
-# # The 'chown' is necessary due to https://github.com/emk/rust-musl-builder/issues/26
-# RUN sudo chmod -R a+rwX .
-# RUN cargo chef prepare  --recipe-path recipe.json
-# 
-# FROM ${RUST_IMAGE} as cacher
-# ARG CHEF_VERSION
-# WORKDIR /app
-# RUN cargo install cargo-chef --version ${CHEF_VERSION}
-# COPY --from=planner /app/recipe.json recipe.json
-# # The 'chown' is necessary due to https://github.com/emk/rust-musl-builder/issues/26
-# RUN sudo chmod -R a+rwX .
-# RUN cargo chef cook --release --recipe-path recipe.json
-# 
-# FROM ${RUST_IMAGE} as builder
-# WORKDIR /app
-# ENV TARGET=x86_64-unknown-linux-musl
-# COPY . .
-# COPY --from=cacher /app/target target
-# COPY --from=cacher /usr/local/cargo /usr/local/cargo
-# # The 'chown' is necessary due to https://github.com/emk/rust-musl-builder/issues/26
-# RUN sudo chmod -R a+rwX .
-# RUN cargo test --release
-# RUN cargo build --release --target ${TARGET} --bin kurtosis_rust_example
-# 
-# FROM alpine:3.12 as runtime
-# WORKDIR /app
-# COPY --from=builder /app/target/release/kurtosis_rust_example .
-# # TODO Switch to exec command form, wrapping arguments with double-quote
-# # TODO Use RUST_LOG envvar to configure logging
-# CMD ./kurtosis_rust_example \
-#     --custom-params-json="${CUSTOM_PARAMS_JSON}" \
-#     --kurtosis-api-socket="${KURTOSIS_API_SOCKET}" \
-#     --log-level="${LOG_LEVEL}"
-
-
-# ARG TARGET=x86_64-unknown-linux-musl
-
-# FROM rust:1.49-alpine3.12 AS builder
 FROM ekidd/rust-musl-builder:stable AS builder
 WORKDIR /home/rust
 
@@ -69,18 +19,17 @@ RUN cargo build --release --lib
 
 # Next copy the example testsuite code, so that if we make changes there we don't need to rebuild the lib
 COPY --chown=rust:rust testsuite testsuite
-RUN cargo test --release --bin kurtosis_rust_example
-RUN cargo build --release --bin kurtosis_rust_example
+RUN cargo test --release --bin kurtosis-rust-example
+RUN cargo build --release --bin kurtosis-rust-example
 
 # ============= Execution Stage ================
 FROM alpine:3.12 AS execution
 
 # Copy the code into the container
-COPY --from=builder /home/rust/target/x86_64-unknown-linux-musl/release/kurtosis_rust_example ./
+COPY --from=builder /home/rust/target/x86_64-unknown-linux-musl/release/kurtosis-rust-example ./
 
 # TODO Switch to exec command form, wrapping arguments with double-quote
-# TODO Use RUST_LOG envvar to configure logging
-CMD RUST_BACKTRACE=1 ./kurtosis_rust_example \
+CMD RUST_BACKTRACE=1 ./kurtosis-rust-example \
     --custom-params-json="${CUSTOM_PARAMS_JSON}" \
     --kurtosis-api-socket="${KURTOSIS_API_SOCKET}" \
     --log-level="${LOG_LEVEL}"

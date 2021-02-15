@@ -3,7 +3,7 @@
 * Rust client library
 
 ### Changed
-* Replaced the `DockerContainerInitializer`'s `GetService` function with a `GetServiceFactory` function so that `NetworkContext` can manufacture `Service` instances upon `GetService` request
+* Replaced the `DockerContainerInitializer`'s `GetService` function with a `GetServiceWrappingFunc` factory-getting function so that `NetworkContext` can manufacture `Service` instances upon `GetService` request
 * Made Golang `NetworkContext.Repartition` take in the new network state directly, rather than going through the `Repartitioner`/`RepartitionerBuilder`
 * Renamed `GetSetupTeardownBuffer` -> `GetSetupTimeout` on the `Test` interface
 

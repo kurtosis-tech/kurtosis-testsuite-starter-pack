@@ -8,7 +8,7 @@ use crate::services_impl::datastore::{datastore_container_initializer, datastore
 
 const DATASTORE_SERVICE_ID: &str = "datastore";
 
-const WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS: u64 = 1;
+const WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS: Duration = Duration::from_secs(1);
 const WAIT_FOR_STARTUP_MAX_POLLS: u32 = 15;
 
 const TEST_KEY: &str = "test-key";
@@ -40,8 +40,7 @@ impl Test for BasicDatastoreTest {
 		let initializer = DatastoreContainerInitializer::new(&self.datastore_image);
 		let (_, availability_checker) = network_ctx.borrow_mut().add_service(DATASTORE_SERVICE_ID, &initializer)
 			.context("An error occurred adding the datastore service")?;
-		let wait_for_startup_time_between_polls = Duration::new(WAIT_FOR_STARTUP_SECONDS_BETWEEN_POLLS, 0);
-		availability_checker.wait_for_startup(&wait_for_startup_time_between_polls, WAIT_FOR_STARTUP_MAX_POLLS)
+		availability_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_POLLS)
 			.context("An error occurred waiting for the datastore service to become available")?;
 		return Ok(Box::new(network_ctx));
 	}
