@@ -18,7 +18,7 @@ RUST_LANG_DIRNAME="rust"
 RUST_LIB_PACKAGE_DIRNAME="lib"
 RUST_TESTSUITE_PACKAGE_DIRNAME="testsuite"
 CARGO_TOML_FILENAME="Cargo.toml"
-CARGO_TOML_VERSION_LINE='^version = ".*"$'
+CARGO_TOML_VERSION_LINE='^version = ".*$'
 
 
 
@@ -87,7 +87,7 @@ function make_rust_pre_release_modifications() {
     new_version="${1}"
 
     # Frustratingly, Rust ONLY allows you to specify a crate's version in the Cargo.toml which means we need to 'sed' that file on every release
-    new_version_line="version = \"${new_version}\""
+    new_version_line="version = \"${new_version}\"  # Do not modify; gets automatically updated during release!"
     for filepath in "${rust_cargo_toml_filepaths[@]}"; do
         if ! sed -i '' "s/${CARGO_TOML_VERSION_LINE}/${new_version_line}/" "${filepath}"; then
             echo "Error: Could not sed '${CARGO_TOML_VERSION_LINE}' -> '${new_version_line}' in ${CARGO_TOML_FILENAME} file '${filepath}'" >&2
