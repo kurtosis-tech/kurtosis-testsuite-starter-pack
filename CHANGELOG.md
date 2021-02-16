@@ -1,6 +1,7 @@
 # TBD
 ### Added
 * Rust example testsuite to the set of testsuites that get checked in the CircleCI config
+* Rust testsuite bootstrapping
 
 ### Changed
 * Refactored CircleCI config to support validating multiple testsuites & pushing multiple example testsuite Docker images
