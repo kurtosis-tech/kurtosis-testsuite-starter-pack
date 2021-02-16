@@ -10,7 +10,8 @@ root_dirpath="$(dirname "${script_dirpath}")"
 DEVELOP_BRANCH="develop"
 GITFLOW_PP_FILENAME="gitflow-pp.sh"
 CHANGELOG_FILENAME="CHANGELOG.md"
-CHANGELOG_TBD_LINE="^# TBD$"
+CHANGELOG_TBD_LINE="# TBD"
+CHANGELOG_TBD_LINE_PATTERN="^${CHANGELOG_TBD_LINE}$"
 EXPECTED_NUM_VERSION_FRAGMENTS=3   # We expected X.Y.Z versions
 
 # Rust
@@ -18,7 +19,7 @@ RUST_LANG_DIRNAME="rust"
 RUST_LIB_PACKAGE_DIRNAME="lib"
 RUST_TESTSUITE_PACKAGE_DIRNAME="testsuite"
 CARGO_TOML_FILENAME="Cargo.toml"
-CARGO_TOML_VERSION_LINE='^version = ".*$'
+CARGO_TOML_VERSION_LINE_PATTERN='^version = ".*$'
 
 
 
@@ -42,9 +43,9 @@ if ! [ -f "${changelog_filepath}" ]; then
     echo "Error: No changelog file found at '${changelog_filepath}'" >&2
     exit 1
 fi
-num_tbd_lines="$(grep -c "${CHANGELOG_TBD_LINE}" "${changelog_filepath}")"
+num_tbd_lines="$(grep -c "${CHANGELOG_TBD_LINE_PATTERN}" "${changelog_filepath}")"
 if [ "${num_tbd_lines}" -eq 0 ] || [ "${num_tbd_lines}" -gt 1 ]; then
-    echo "Error: Expected exactly one line matching pattern '${CHANGELOG_TBD_LINE}' in '${changelog_filepath}' but found ${num_tbd_lines}" >&2
+    echo "Error: Expected exactly one line matching pattern '${CHANGELOG_TBD_LINE_PATTERN}' in '${changelog_filepath}' but found ${num_tbd_lines}" >&2
     exit 1
 fi
 
@@ -60,9 +61,9 @@ for filepath in "${rust_cargo_toml_filepaths[@]}"; do
         echo "Error: Missing expected ${CARGO_TOML_FILENAME} at '${lib_cargo_toml_filepath}'" >&2
         exit 1
     fi
-    num_version_lines="$(grep -c "${CARGO_TOML_VERSION_LINE}" "${filepath}")"
+    num_version_lines="$(grep -c "${CARGO_TOML_VERSION_LINE_PATTERN}" "${filepath}")"
     if [ "${num_version_lines}" -eq 0 ] || [ "${num_version_lines}" -gt 1 ]; then
-        echo "Error: Expected exactly one line matching pattern '${CARGO_TOML_VERSION_LINE}' in '${filepath}' but found ${num_version_lines}" >&2
+        echo "Error: Expected exactly one line matching pattern '${CARGO_TOML_VERSION_LINE_PATTERN}' in '${filepath}' but found ${num_version_lines}" >&2
         exit 1
     fi
 done
@@ -77,8 +78,9 @@ function make_shared_pre_release_modifications() {
 
     # Update changelog
     new_version_line="# ${new_version}"
-    if ! sed -i '' "s/${CHANGELOG_TBD_LINE}/${new_version_line}/" "${changelog_filepath}"; then
-        echo "Error: Could not sed TBD line '${CHANGELOG_TBD_LINE}' -> '${new_version_line}' in changelog file '${changelog_filepath}'" >&2
+    total_replace="$(echo -e "${CHANGELOG_TBD_LINE}\n\n${new_version_line}")"
+    if ! sed -i '' "s/${CHANGELOG_TBD_LINE_PATTERN}/${total_replace}/" "${changelog_filepath}"; then
+        echo "Error: Could not sed TBD line '${CHANGELOG_TBD_LINE_PATTERN}' -> '${new_version_line}' in changelog file '${changelog_filepath}'" >&2
         return 1
     fi
 }
@@ -89,8 +91,8 @@ function make_rust_pre_release_modifications() {
     # Frustratingly, Rust ONLY allows you to specify a crate's version in the Cargo.toml which means we need to 'sed' that file on every release
     new_version_line="version = \"${new_version}\"  # Do not modify; gets automatically updated during release!"
     for filepath in "${rust_cargo_toml_filepaths[@]}"; do
-        if ! sed -i '' "s/${CARGO_TOML_VERSION_LINE}/${new_version_line}/" "${filepath}"; then
-            echo "Error: Could not sed '${CARGO_TOML_VERSION_LINE}' -> '${new_version_line}' in ${CARGO_TOML_FILENAME} file '${filepath}'" >&2
+        if ! sed -i '' "s/${CARGO_TOML_VERSION_LINE_PATTERN}/${new_version_line}/" "${filepath}"; then
+            echo "Error: Could not sed '${CARGO_TOML_VERSION_LINE_PATTERN}' -> '${new_version_line}' in ${CARGO_TOML_FILENAME} file '${filepath}'" >&2
             exit 1
         fi
     done
