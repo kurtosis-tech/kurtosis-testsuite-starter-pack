@@ -25,37 +25,13 @@ jobs:
       # - We have to use 'origin/develop' rather than 'develop' because Circle does a shallow checkout, and 'develop' gets set to something weird and wrong that makes the check buggy
       - run: "! git --no-pager diff --exit-code origin/develop...HEAD CHANGELOG.md"
       
-      # Docker is restricting anonymous image pulls, so we log in before we do any pulling
-      - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-
-      - run: |
-          golang/scripts/build-and-run.sh all --client-id "${KURTOSIS_INTERNAL_CLIENT_ID}" --client-secret "${KURTOSIS_INTERNAL_CLIENT_SECRET}" 2>&1 | tee build-output.txt
-
-      # Grep exits with 0 if one or more lines match, and 1 if not so we invert this to fail the build if the word 'ERROR' is detected
-      # This helps us catch errors that might show up in the testsuite logs but not get propagated to the actual exit codes
-      - run: "! grep 'ERRO' build-output.txt"
+      - run: bash .circleci/validate-all-testsuites.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${KURTOSIS_INTERNAL_CLIENT_ID}" "${KURTOSIS_INTERNAL_CLIENT_SECRET}"
 
   push_docker_image:
-    environment:
-      IMAGE_REPO: "kurtosistech/kurtosis-go-example"
     executor: ubuntu_vm
     steps:
       - checkout
-      # Docker is restricting anonymous image pulls, so we log in before we do any pulling
-      - run: "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-      - run: "golang/scripts/build-and-run.sh build"
-      - when:
-          condition: "<<pipeline.git.tag>>"
-          steps:
-            - run: echo 'export TAG_NAME=<<pipeline.git.tag>>' >> ${BASH_ENV}
-
-            # When we run as the result of a tag build, the built image gets a tag called "HEAD" so we need to re-tag to the X.Y.Z name
-            - run: "docker tag ${IMAGE_REPO}:HEAD ${IMAGE_REPO}:<<pipeline.git.tag>>"
-      - unless:
-          condition: "<<pipeline.git.tag>>"
-          steps:
-            - run: echo 'export TAG_NAME=<<pipeline.git.branch>>' >> ${BASH_ENV}
-      - run: "docker push ${IMAGE_REPO}:${TAG_NAME}"
+      - run: bash .circleci/build-and-push-example-images.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "<<pipeline.git.tag>>" "<<pipeline.git.branch>>"
 
 workflows:
   build:
