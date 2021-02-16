@@ -1,6 +1,6 @@
 # TBD
 ### Changed
-* Renamed `DockerContainerInitializer.GetFilesToMount` to `GetFilesToGenerate`, and `InitializeMountedFiles` to `InitializeGeneratedFiles`
+* Renamed `DockerContainerInitializer.GetFilesToMount` to `GetFilesToGenerate`, and `InitializeMountedFiles` to `InitializeGeneratedFiles`, in both Rust and Go
 
 # 1.9.0
 ### Added

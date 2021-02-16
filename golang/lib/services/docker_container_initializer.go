@@ -89,10 +89,6 @@ type DockerContainerInitializer interface {
 	/*
 		Uses the given arguments to build the command that the Docker container running this service will be launched with.
 
-		NOTE: Because the IP address of the container is an implementation detail, any references to the IP address of the
-			container should use the placeholder "SERVICEIP" instead. This will get replaced at launch time with the service's
-			actual IP.
-
 		Args:
 			generatedFileFilepaths: Mapping of developer_key -> generated_file_filepath where developer_key corresponds to the keys returned
 				in the `GetFilesToGenerate` function, and generated_file_filepath is the path *on the Docker container* of where the
