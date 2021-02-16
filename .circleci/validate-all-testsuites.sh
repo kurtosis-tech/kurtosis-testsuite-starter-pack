@@ -50,7 +50,7 @@ fi
 
 # Building and running testsuites take a very long time, so we do some optimizations:
 # 1) skip building/running testsuites if only docs changes
-if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md'; then
+if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' > /dev/null; then
     echo "Skipping building and running testsuites as the only changes are in Markdown files"
     exit 0
 fi
@@ -60,7 +60,7 @@ not_lang_dirs_filters=""
 for lang in $(cat "${supported_langs_filepath}"); do
     not_lang_dirs_filters="${not_lang_dirs_filters} :!${lang}"
 done
-if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' ${not_lang_dirs_filters}; then
+if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' ${not_lang_dirs_filters} > /dev/null; then
     has_shared_code_changes="false"
 else
     has_shared_code_changes="true"
@@ -68,7 +68,7 @@ fi
 # 3) if no shared code changes, then we only need to build the testsuites that had changes
 lang_dirs_needing_building=()
 for lang in $(cat "${supported_langs_filepath}"); do
-    if ! "${has_shared_code_changes}" && git --no-pager diff --exit-code origin/develop...HEAD -- "${lang}"; then
+    if ! "${has_shared_code_changes}" && git --no-pager diff --exit-code origin/develop...HEAD -- "${lang}" > /dev/null; then
         echo "Skipping adding ${lang} directory to list of testsuites to build as there are no shared code changes and the directory doesn't have any changes"
         continue
     fi
