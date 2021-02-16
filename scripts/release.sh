@@ -111,6 +111,8 @@ while [ -z "${new_version}" ]; do
     read -p "What version should we release with? (X.Y.Z) " new_version_candidate
     IFS='.' read -ra candidate_version_fragments < <(echo "${new_version_candidate}")
     num_candidate_version_fragments="${#candidate_version_fragments[@]}"
+
+    # Validate X.Y.Z format
     if [ "${num_candidate_version_fragments}" -ne "${EXPECTED_NUM_VERSION_FRAGMENTS}" ]; then
         echo "Error: Version must be in X.Y.Z format" >&2
         continue
@@ -126,6 +128,12 @@ while [ -z "${new_version}" ]; do
             continue 2 # The "2" tells Bash to continue on the outer loop
         fi
     done
+    # Validate the tag doesn't already exist
+    if git rev-parse "${new_version_candidate}" &> /dev/null; then
+        echo "Error: Tag '${new_version_candidate}' already exists" >&2
+        continue
+    fi
+
     new_version="${new_version_candidate}"
 done
 
