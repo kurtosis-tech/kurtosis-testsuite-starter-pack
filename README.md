@@ -6,7 +6,8 @@ This repo contains:
 1. Example implementations of testsuites in each langauge
 1. Infrastructure for bootstrapping a new testsuite, that you can use to create your own customized testsuite
 
-### Testsuite Quickstart
+Testsuite Quickstart
+--------------------
 Prerequisites:
 * A [Kurtosis user account](https://www.kurtosistech.com/sign-up)
 * `git` installed on your machine
@@ -21,7 +22,12 @@ If you see error messages after running your new testsuite, check out [the guide
 
 If all tests are passing, you can [proceed to customizing your testsuite](https://docs.kurtosistech.com/testsuite-customization.html).
 
-### Developing Libraries
+Developing On This Repo
+-----------------------
+### Cutting New Releases
+Run `scripts/release.sh`
+
+### Regenerating Protobuf Bindings
 Prerequisites:
 * `protoc` installed (can be installed on Mac with `brew install protobuf`)
 * The Golang extension to `protoc` installed (can be installed on Mac with `brew install protoc-gen-go`)

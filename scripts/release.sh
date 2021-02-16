@@ -30,7 +30,7 @@ CARGO_TOML_VERSION_LINE='^version = ".*$'
 # b) the gitflow-pp.sh script installed
 # c) gitflow-pp on the PATH
 # The longterm fix is to have a Kurtosis-internal tool that handles all our releases across all our repos, and which could have post-release processing hooks
-if ! type -P "${GITFLOW_PP_FILENAME}"; then
+if ! type -P "${GITFLOW_PP_FILENAME}" > /dev/null; then
     echo "Error: This release script requires gitflow-pp.sh to be installed *and* available on the PATH" >&2
     echo "To install gitflow-pp.sh, follow the instructions at the top of the file here: https://github.com/mieubrisse/dotfiles/blob/master/bash/utils/gitflow-pp.sh" >&2
     echo "You'll also need to install it on your PATH after installation" >&2
@@ -120,16 +120,14 @@ while [ -z "${new_version}" ]; do
     for i in $(seq 0 "${last_idx}"); do
         candidate_fragment="${candidate_version_fragments[${i}]}"
         # This is a neat cross-shell-compatible trick to verify that a variable is a number
-        if ! [ "${candidate_fragment}" -eq "${candidate_fragment}" ]; then
+        # See: https://stackoverflow.com/questions/806906/how-do-i-test-if-a-variable-is-a-number-in-bash/806923
+        if ! [ "${candidate_fragment}" -eq "${candidate_fragment}" ] > /dev/null 2>&1; then
             echo "Error: Version fragment #${i} was not a number" >&2
             continue 2 # The "2" tells Bash to continue on the outer loop
         fi
     done
     new_version="${new_version_candidate}"
 done
-
-# TODO Debugging
-exit 99
 
 if ! git checkout "${DEVELOP_BRANCH}"; then
     echo "Error: Could not check out branch '${DEVELOP_BRANCH}'" >&2
