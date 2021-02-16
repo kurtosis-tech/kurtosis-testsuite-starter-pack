@@ -60,7 +60,7 @@ func (initializer ApiContainerInitializer) GetFilesToGenerate() map[string]bool 
 	}
 }
 
-func (initializer ApiContainerInitializer) InitializeFilesToGenerate(mountedFiles map[string]*os.File) error {
+func (initializer ApiContainerInitializer) InitializeGeneratedFiles(mountedFiles map[string]*os.File) error {
 	logrus.Debugf("Datastore IP: %v , port: %v", initializer.datastore.GetIPAddress(), initializer.datastore.GetPort())
 	configObj := config{
 		DatastoreIp:   initializer.datastore.GetIPAddress(),

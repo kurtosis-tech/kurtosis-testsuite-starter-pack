@@ -1,6 +1,6 @@
 # TBD
 ### Changed
-* Renamed GetFilesToMount to GetFilesToGenerate, and InitializeMountedFiles to InitializeFilesToGenerate
+* Renamed `DockerContainerInitializer.GetFilesToMount` to `GetFilesToGenerate`, and `InitializeMountedFiles` to `InitializeGeneratedFiles`
 
 # 1.9.0
 ### Added

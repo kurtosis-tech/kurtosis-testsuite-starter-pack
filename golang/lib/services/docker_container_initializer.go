@@ -38,7 +38,7 @@ type DockerContainerInitializer interface {
 	/*
 		This method is used to declare that the service will need a set of files in order to run. To do this, the developer
 		declares a set of string keys that are meaningful to the developer, and Kurtosis will create one file per key. These newly-createed
-		file objects will then be passed in to the `InitializeFilesToGenerate` and `GetStartCommand` functions below keyed on the
+		file objects will then be passed in to the `InitializeGeneratedFiles` and `GetStartCommand` functions below keyed on the
 		strings that the developer passed in, so that the developer can initialize the contents of the files as they please.
 		Kurtosis then guarantees that these files will be made available to the service at startup time.
 
@@ -47,7 +47,7 @@ type DockerContainerInitializer interface {
 
 		Returns:
 			A "set" of user-defined key strings identifying the files that the service will need, which is how files will be
-				identified in `InitializeFilesToGenerate` and `GetStartCommand`
+				identified in `InitializeGeneratedFiles` and `GetStartCommand`
 	*/
 	GetFilesToGenerate() map[string]bool
 
@@ -59,7 +59,7 @@ type DockerContainerInitializer interface {
 			filesToGenerate: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in
 				`GetFilesToGenerate`
 	*/
-	InitializeFilesToGenerate(filesToGenerate map[string]*os.File) error
+	InitializeGeneratedFiles(generatedFiles map[string]*os.File) error
 
 	/*
 		Allows the mounting of external files into a service container by mapping files artifacts (defined in your
@@ -94,9 +94,9 @@ type DockerContainerInitializer interface {
 			actual IP.
 
 		Args:
-			mountedFileFilepaths: Mapping of developer_key -> initialized_file_filepath where developer_key corresponds to the keys returned
-				in the `GetFilesToGenerate` function, and initialized_file_filepath is the path *on the Docker container* of where the
-				file has been mounted. The files will have already been initialized via the `InitializeFilesToGenerate` function.
+			generatedFileFilepaths: Mapping of developer_key -> generated_file_filepath where developer_key corresponds to the keys returned
+				in the `GetFilesToGenerate` function, and generated_file_filepath is the path *on the Docker container* of where the
+				file has been mounted. The files will have already been initialized via the `InitializeGeneratedFiles` function.
 			ipAddr: The IP address of the service being started.
 
 		Returns:
@@ -104,5 +104,5 @@ type DockerContainerInitializer interface {
 				running the service. If this is nil, then no explicit command will be specified and whatever command the Dockerfile
 				specifies will be run instead.
 	*/
-	GetStartCommand(mountedFileFilepaths map[string]string, ipAddr string) ([]string, error)
+	GetStartCommand(generatedFileFilepaths map[string]string, ipAddr string) ([]string, error)
 }

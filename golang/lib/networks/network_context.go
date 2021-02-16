@@ -151,7 +151,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 
 	logrus.Trace("Initializing generated files...")
-	if err := initializer.InitializeFilesToGenerate(generatedFilesFps); err != nil {
+	if err := initializer.InitializeGeneratedFiles(generatedFilesFps); err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred initializing the generated files")
 	}
 	logrus.Trace("Successfully initialized generated files")

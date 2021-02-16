@@ -47,7 +47,7 @@ func (s NginxStaticContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{}
 }
 
-func (s NginxStaticContainerInitializer) InitializeFilesToGenerate(filesToGenerate map[string]*os.File) error {
+func (s NginxStaticContainerInitializer) InitializeGeneratedFiles(filesToGenerate map[string]*os.File) error {
 	// No generated files to initialize
 	return nil
 }

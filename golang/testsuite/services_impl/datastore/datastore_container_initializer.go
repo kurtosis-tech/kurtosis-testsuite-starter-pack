@@ -45,7 +45,7 @@ func (d DatastoreContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{}
 }
 
-func (d DatastoreContainerInitializer) InitializeFilesToGenerate(filesToGenerate map[string]*os.File) error {
+func (d DatastoreContainerInitializer) InitializeGeneratedFiles(filesToGenerate map[string]*os.File) error {
 	return nil
 }
 
