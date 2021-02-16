@@ -155,7 +155,7 @@ for pre_release_function in "${pre_release_functions[@]}"; do
     fi
 done
 
-git add "${root_dirpath}"
+git add -u "${root_dirpath}"
 git commit -m "Pre-release changes for version ${new_version}"
 
 finish_release_cmd="bash ${gitflow_pp_filepath} release finish"
