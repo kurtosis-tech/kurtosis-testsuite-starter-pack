@@ -4,6 +4,7 @@
 
 ### Changed
 * Refactored CircleCI config to support validating multiple testsuites & pushing multiple example testsuite Docker images
+* Modified CircleCI building to skip building a language's testsuite if a) no shared code has changed and b) the language's directory doesn't have any changes
 
 # 1.9.0
 ### Added
