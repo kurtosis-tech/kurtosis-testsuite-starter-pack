@@ -1,6 +1,7 @@
 # TBD
 ### Added
 * Rust example testsuite to the set of testsuites that get checked in the CircleCI config
+* A `release.sh` script which will run the process of cutting a new release for this repo (necessary because we have to update the `version` key in Rust's Cargo.toml files)
 
 ### Changed
 * Refactored CircleCI config to support validating multiple testsuites & pushing multiple example testsuite Docker images
