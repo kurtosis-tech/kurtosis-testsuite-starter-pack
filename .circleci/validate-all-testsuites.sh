@@ -55,17 +55,17 @@ if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md'; then
     exit 0
 fi
 # 2) if there are changes in the code shared across all langs, we always need to build all testsuites
+supported_langs_filepath="${root_dirpath}/supported-languages.txt"
 not_lang_dirs_filters=""
 for lang in $(cat "${supported_langs_filepath}"); do
     not_lang_dirs_filters="${not_lang_dirs_filters} :!${lang}"
 done
-if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' ${not_lang_dirs_filters}
+if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' ${not_lang_dirs_filters}; then
     has_shared_code_changes="false"
 else
     has_shared_code_changes="true"
 fi
 # 3) if no shared code changes, then we only need to build the testsuites that had changes
-supported_langs_filepath="${root_dirpath}/supported-languages.txt"
 lang_dirs_needing_building=()
 for lang in $(cat "${supported_langs_filepath}"); do
     if ! "${has_shared_code_changes}" && git --no-pager diff --exit-code origin/develop...HEAD -- "${lang}"; then
