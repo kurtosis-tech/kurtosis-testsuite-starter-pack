@@ -154,7 +154,8 @@ if ! ${finish_release_cmd}; then
     echo "Error: Could not finish release; you'll need to manually run '${finish_release_cmd}' to finish the release followed by '${push_release_cmd}' to push it to remote" >&2
     exit 1
 fi
-if ! ${push_release_cmd}; then
+# TODO DEBUGGING
+if ! echo ${push_release_cmd}; then
     echo "Error: Could not push release; you'll need to manually run '${push_release_cmd}' to push it to remote" >&2
     exit 1
 fi
