@@ -19,17 +19,17 @@ RUN cargo build --release --lib
 
 # Next copy the example testsuite code, so that if we make changes there we don't need to rebuild the lib
 COPY --chown=rust:rust testsuite testsuite
-RUN cargo test --release --bin kurtosis-rust-example
-RUN cargo build --release --bin kurtosis-rust-example
+RUN cargo test --release --bin testsuite
+RUN cargo build --release --bin testsuite
 
 # ============= Execution Stage ================
 FROM alpine:3.12 AS execution
 
 # Copy the code into the container
-COPY --from=builder /home/rust/target/x86_64-unknown-linux-musl/release/kurtosis-rust-example ./
+COPY --from=builder /home/rust/target/x86_64-unknown-linux-musl/release/testsuite ./
 
 # TODO Switch to exec command form, wrapping arguments with double-quote
-CMD RUST_BACKTRACE=1 ./kurtosis-rust-example \
+CMD RUST_BACKTRACE=1 ./testsuite \
     --custom-params-json="${CUSTOM_PARAMS_JSON}" \
     --kurtosis-api-socket="${KURTOSIS_API_SOCKET}" \
     --log-level="${LOG_LEVEL}"
