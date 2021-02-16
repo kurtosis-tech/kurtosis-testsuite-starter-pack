@@ -48,9 +48,35 @@ if ! docker login -u "${docker_username}" -p "${docker_password_DO_NOT_LOG}"; th
     exit 1
 fi
 
-echo "Building and running example testsuites..."
-supported_langs_filepath="${root_dirpath}/supported-languages.txt"
+# Building and running testsuites take a very long time, so we do some optimizations:
+# 1) skip building/running testsuites if only docs changes
+if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md'; then
+    echo "Skipping building and running testsuites as the only changes are in Markdown files"
+    exit 0
+fi
+# 2) if there are changes in the code shared across all langs, we always need to build all testsuites
+not_lang_dirs_filters=""
 for lang in $(cat "${supported_langs_filepath}"); do
+    not_lang_dirs_filters="${not_lang_dirs_filters} :!${lang}"
+done
+if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' ${not_lang_dirs_filters}
+    has_shared_code_changes="false"
+else
+    has_shared_code_changes="true"
+fi
+# 3) if no shared code changes, then we only need to build the testsuites that had changes
+supported_langs_filepath="${root_dirpath}/supported-languages.txt"
+lang_dirs_needing_building=()
+for lang in $(cat "${supported_langs_filepath}"); do
+    if ! "${has_shared_code_changes}" && git --no-pager diff --exit-code origin/develop...HEAD -- "${lang}"; then
+        echo "Skipping adding ${lang} directory to list of testsuites to build as there are no shared code changes and the directory doesn't have any changes"
+        continue
+    fi
+    lang_dirs_needing_building+=("${lang}")
+done
+
+echo "Building and running all example testsuites in need of validation..."
+for lang in "${lang_dirs_needing_building[@]}"; do
     echo "Building and running ${lang} testsuite..."
     buildscript_filepath="${root_dirpath}/${lang}/${LANG_SCRIPTS_DIRNAME}/${BUILD_AND_RUN_FILENAME}"
     output_filepath="$(mktemp)"
@@ -68,4 +94,4 @@ for lang in $(cat "${supported_langs_filepath}"); do
     fi
     echo "No instances of error log keyword found"
 done
-echo "Successfully built and ran all example testsuites"
+echo "Successfully built and ran all example testsuites in need of validation"
