@@ -137,6 +137,8 @@ while [ -z "${new_version}" ]; do
     new_version="${new_version_candidate}"
 done
 
+read -p "Verification: release new version '${new_version}'? (ENTER to continue, Ctrl-C to quit)"
+
 if ! git checkout "${DEVELOP_BRANCH}"; then
     echo "Error: Could not check out branch '${DEVELOP_BRANCH}'" >&2
     exit 1
