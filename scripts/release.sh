@@ -78,8 +78,7 @@ function make_shared_pre_release_modifications() {
 
     # Update changelog
     new_version_line="# ${new_version}"
-    total_replace="$(echo -e "${CHANGELOG_TBD_LINE}\n\n${new_version_line}")"
-    if ! sed -i '' "s/${CHANGELOG_TBD_LINE_PATTERN}/${total_replace}/" "${changelog_filepath}"; then
+    if ! sed -i '' "s/${CHANGELOG_TBD_LINE_PATTERN}/${CHANGELOG_TBD_LINE}\n\n${new_version_line}/" "${changelog_filepath}"; then
         echo "Error: Could not sed TBD line '${CHANGELOG_TBD_LINE_PATTERN}' -> '${new_version_line}' in changelog file '${changelog_filepath}'" >&2
         return 1
     fi
