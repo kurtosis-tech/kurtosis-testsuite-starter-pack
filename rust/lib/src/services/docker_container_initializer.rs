@@ -31,7 +31,7 @@ pub trait DockerContainerInitializer<T: Service> {
     /*
         This method is used to declare that the service will need a set of files in order to run. To do this, the developer
         declares a set of string keys that are meaningful to the developer, and Kurtosis will create one file per key. These newly-createed
-        file objects will then be passed in to the `InitializeMountedFiles` and `GetStartCommand` functions below keyed on the
+        file objects will then be passed in to the `InitializeGeneratedFiles` and `GetStartCommand` functions below keyed on the
         strings that the developer passed in, so that the developer can initialize the contents of the files as they please.
         Kurtosis then guarantees that these files will be made available to the service at startup time.
 
@@ -42,8 +42,7 @@ pub trait DockerContainerInitializer<T: Service> {
             A "set" of user-defined key strings identifying the files that the service will need, which is how files will be
                 identified in `InitializeMountedFiles` and `GetStartCommand`
     */
-    // TODO Rename "getFilesToGenerate"
-    fn get_files_to_mount(&self) -> HashSet<String>;
+    fn get_files_to_generate(&self) -> HashSet<String>;
 
     /*
         Initializes the contents of the files that the developer requested in `GetFilesToMount` with whatever
@@ -53,8 +52,7 @@ pub trait DockerContainerInitializer<T: Service> {
             mounted_files: A mapping of developer_key -> file_pointer, with developer_key corresponding to the keys declares in
                 `GetFilesToMount`
     */
-    // TODO Rename "initializeFilesToGenerate"
-    fn initialize_mounted_files(&self, mounted_files: HashMap<String, File>) -> Result<()>;
+    fn initialize_generated_files(&self, generated_files: HashMap<String, File>) -> Result<()>;
 
     /*
         Allows the mounting of external files into a service container by mapping files artifacts (defined in your
@@ -90,7 +88,7 @@ pub trait DockerContainerInitializer<T: Service> {
             actual IP.
 
         Args:
-            mounted_file_filepaths: Mapping of developer_key -> initialized_file_filepath where developer_key corresponds to the keys returned
+            generated_file_filepaths: Mapping of developer_key -> generated_file_filepath where developer_key corresponds to the keys returned
                 in the `GetFilesToMount` function, and initialized_file_filepath is the path *on the Docker container* of where the
                 file has been mounted. The files will have already been initialized via the `InitializeMountedFiles` function.
             ip_addr: The IP address of the service being started.
@@ -102,7 +100,7 @@ pub trait DockerContainerInitializer<T: Service> {
     */
     fn get_start_command(
         &self,
-        mounted_file_filepaths: HashMap<String, PathBuf>,
+        generated_file_filepaths: HashMap<String, PathBuf>,
         ip_addr: &str
     ) -> Result<Option<Vec<String>>>;
 }

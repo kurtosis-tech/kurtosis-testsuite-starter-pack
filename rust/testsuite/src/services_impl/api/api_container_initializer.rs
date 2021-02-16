@@ -58,13 +58,13 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
         return Box::new(ApiContainerInitializer::create_service);
     }
 
-    fn get_files_to_mount(&self) -> HashSet<String> {
+    fn get_files_to_generate(&self) -> HashSet<String> {
         let mut result = HashSet::new();
         result.insert(CONFIG_FILE_KEY.to_owned());
         return result;
     }
 
-    fn initialize_mounted_files(&self, mounted_files: HashMap<String, File>) -> Result<()> {
+    fn initialize_generated_files(&self, generated_files: HashMap<String, File>) -> Result<()> {
         debug!("Datastore IP: {} , port: {}", self.datastore.get_ip_address(), self.datastore.get_port());
         let config_obj = Config{
             datastore_ip: self.datastore.get_ip_address().to_owned(),
@@ -72,7 +72,7 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
         };
         debug!("Config obj: {:?}", config_obj);
 
-        let config_fp = mounted_files.get(CONFIG_FILE_KEY)
+        let config_fp = generated_files.get(CONFIG_FILE_KEY)
             .context(format!("No file found with key '{}'", CONFIG_FILE_KEY))?;
 
         serde_json::to_writer(config_fp, &config_obj)
@@ -91,11 +91,11 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
 
     fn get_start_command(
         &self,
-        mounted_file_filepaths: HashMap<String, PathBuf>,
+        generated_file_filepaths: HashMap<String, PathBuf>,
         _: &str
     ) -> Result<Option<Vec<String>>> {
         // TODO Replace this with a productized way to start a container using only environment variables
-        let config_filepath = mounted_file_filepaths.get(CONFIG_FILE_KEY)
+        let config_filepath = generated_file_filepaths.get(CONFIG_FILE_KEY)
             .context(format!("No filepath found for config file key '{}'", CONFIG_FILE_KEY))?;
         let config_filepath_str = config_filepath.to_str()
             .context("An error occurred converting the config filepath to a string")?;
