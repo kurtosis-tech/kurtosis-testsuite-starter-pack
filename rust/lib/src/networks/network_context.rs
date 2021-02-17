@@ -47,7 +47,7 @@ impl NetworkContext {
 
     pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
-		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_mount());
+		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
 		    service_id: service_id.to_owned(),
 		    partition_id: partition_id.to_owned(),
@@ -76,7 +76,7 @@ impl NetworkContext {
 		}
 
 		trace!("Initializing generated files...");
-		initializer.initialize_mounted_files(generated_files_fps)
+		initializer.initialize_generated_files(generated_files_fps)
 			.context("An error occurred initializing the generated files")?;
 		trace!("Successfully initialized generated files");
 

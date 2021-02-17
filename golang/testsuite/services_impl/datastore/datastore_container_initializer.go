@@ -41,11 +41,11 @@ func (d DatastoreContainerInitializer) GetServiceWrappingFunc() func (serviceId 
 	}
 }
 
-func (d DatastoreContainerInitializer) GetFilesToMount() map[string]bool {
+func (d DatastoreContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{}
 }
 
-func (d DatastoreContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
+func (d DatastoreContainerInitializer) InitializeGeneratedFiles(filesToGenerate map[string]*os.File) error {
 	return nil
 }
 

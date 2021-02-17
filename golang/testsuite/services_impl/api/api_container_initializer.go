@@ -54,13 +54,13 @@ func (initializer ApiContainerInitializer) GetServiceWrappingFunc() func(service
 	};
 }
 
-func (initializer ApiContainerInitializer) GetFilesToMount() map[string]bool {
+func (initializer ApiContainerInitializer) GetFilesToGenerate() map[string]bool {
 	return map[string]bool{
 		configFileKey: true,
 	}
 }
 
-func (initializer ApiContainerInitializer) InitializeMountedFiles(mountedFiles map[string]*os.File) error {
+func (initializer ApiContainerInitializer) InitializeGeneratedFiles(mountedFiles map[string]*os.File) error {
 	logrus.Debugf("Datastore IP: %v , port: %v", initializer.datastore.GetIPAddress(), initializer.datastore.GetPort())
 	configObj := config{
 		DatastoreIp:   initializer.datastore.GetIPAddress(),

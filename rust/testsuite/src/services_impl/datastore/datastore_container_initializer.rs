@@ -43,11 +43,11 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return Box::new(DatastoreContainerInitializer::create_service);
     }
 
-    fn get_files_to_mount(&self) -> HashSet<String> {
+    fn get_files_to_generate(&self) -> HashSet<String> {
         return HashSet::new();
     }
 
-    fn initialize_mounted_files(&self, _: HashMap<String, File>) -> Result<()> {
+    fn initialize_generated_files(&self, _: HashMap<String, File>) -> Result<()> {
         return Ok(());
     }
 

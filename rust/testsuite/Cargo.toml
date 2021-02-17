@@ -1,10 +1,10 @@
 [package]
 name = "kurtosis-rust-example"
 edition = "2018"
-version = "0.1.0"
+version = "1.10.0"  # Do not modify; gets automatically updated during release!
 
 [[bin]]
-name = "kurtosis-rust-example"
+name = "testsuite"
 path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
