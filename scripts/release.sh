@@ -161,13 +161,12 @@ git add -u "${root_dirpath}"
 git commit -m "Pre-release changes for version ${new_version}"
 
 finish_release_cmd="bash ${gitflow_pp_filepath} release finish"
-push_release_cmd="bash ${gitflow_pp_filepath} push"
 if ! ${finish_release_cmd}; then
-    echo "Error: Could not finish release; you'll need to manually run '${finish_release_cmd}' to finish the release followed by '${push_release_cmd}' to push it to remote" >&2
+    echo "Error: Could not finish release; you'll need to manually run '${finish_release_cmd}' to finish the release" >&2
     exit 1
 fi
-# TODO DEBUGGING
-if ! echo ${push_release_cmd}; then
-    echo "Error: Could not push release; you'll need to manually run '${push_release_cmd}' to push it to remote" >&2
-    exit 1
-fi
+
+push_release_cmd="bash ${gitflow_pp_filepath} push"
+echo ""
+echo "Successfully released version ${new_version}!"
+echo "Make sure the Git log graph looks sane, then push this version up to the remote with '${push_release_cmd}'"
