@@ -1,4 +1,6 @@
 # TBD
+
+# 1.10.2
 ### Changed
 * Fixed more `kurtosis-rust-lib` Cargo.toml errors preventing publishing
 
