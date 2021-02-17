@@ -1,4 +1,5 @@
-FROM ekidd/rust-musl-builder:stable AS builder
+# TODO sync up this version with the version of the CircleCI Rust image that publishes the lib!!
+FROM ekidd/rust-musl-builder:1.50.0 AS builder
 WORKDIR /home/rust
 
 # Rust doesn't yet have a way to cache build dependencies as Docker layers, so we use this hack so 
