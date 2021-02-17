@@ -1,4 +1,7 @@
 # TBD
+### Added
+* Rust testsuite bootstrapping
+
 ### Changed
 * Modified CircleCI config to _only_ push example testsuite Docker images for `X.Y.Z`-tagged commits (no longer Docker images with `develop` or `master` tags)
 
