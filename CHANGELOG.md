@@ -1,5 +1,9 @@
 # TBD
 
+# 1.10.1
+### Added
+* Extra metadata to `kurtosis-rust-lib`'s Cargo.toml
+
 # 1.10.0
 ### Added
 * Rust example testsuite to the set of testsuites that get checked in the CircleCI config

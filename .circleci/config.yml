@@ -33,6 +33,17 @@ jobs:
       - checkout
       - run: bash .circleci/build-and-push-example-images.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "<<pipeline.git.tag>>" "<<pipeline.git.branch>>"
 
+  push_rust_lib:
+    docker:
+      # TODO sync up this Rust version with the version of the ekidd/rust-musl-builder Docker image that builds the testsuite!!
+      - image: cimg/rust:1.50.0
+    steps:
+      - checkout
+      - run: cargo login "${CRATES_IO_ACCESS_TOKEN}"
+      - run: |
+          cd rust/lib  # Need to be inside the 'lib' directory to publish the lib
+          cargo publish
+
 workflows:
   build:
     jobs:
@@ -54,5 +65,11 @@ workflows:
               only:
                 - develop
                 - master
+            tags: 
+              only: /^[0-9]+\.[0-9]+\.[0-9]+$/
+      - push_rust_lib:
+          context:
+            - crates.io-user
+          filters:
             tags: 
               only: /^[0-9]+\.[0-9]+\.[0-9]+$/
