@@ -1,8 +1,11 @@
 [package]
+authors = ["Kurtosis Technologies LLC"]
 documentation = "docs.kurtosistech.com"
 edition = "2018"
+description = "The Rust bindings library for the Kurtosis testing framework"
 homepage = "kurtosistech.com"
 keywords = ["kurtosis", "testing"]
+license-file = "../../LICENSE"
 name = "kurtosis-rust-lib"
 repository = "https://github.com/kurtosis-tech/kurtosis-libs"
 version = "1.10.0"  # Do not modify; gets automatically updated during release!
