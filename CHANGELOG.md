@@ -1,4 +1,6 @@
 # TBD
+### Changed
+* Fixed `release.sh` so it doesn't require taking the version-to-release three times
 
 # 1.10.3
 ### Changed
