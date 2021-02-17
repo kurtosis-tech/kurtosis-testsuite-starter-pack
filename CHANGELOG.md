@@ -1,5 +1,9 @@
 # TBD
 
+# 1.10.2
+### Changed
+* Fixed more `kurtosis-rust-lib` Cargo.toml errors preventing publishing
+
 # 1.10.1
 ### Added
 * Extra metadata to `kurtosis-rust-lib`'s Cargo.toml
