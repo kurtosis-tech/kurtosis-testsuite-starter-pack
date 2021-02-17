@@ -1,4 +1,6 @@
 # TBD
+### Added
+* Extra metadata to `kurtosis-rust-lib`'s Cargo.toml
 
 # 1.10.0
 ### Added
