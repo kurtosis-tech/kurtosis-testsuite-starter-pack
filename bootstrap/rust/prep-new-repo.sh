@@ -3,14 +3,13 @@ set -euo pipefail
 # =============================================================================
 #                                    Constants
 # =============================================================================
-TESTSUITE_IMPL_DIRNAME="testsuite"
-
-CARGO_TOML_VERSION_PATTERN='^version = ".*"$'
+CARGO_TOML_VERSION_PATTERN='^version = ".*'
 CARGO_TOML_FILENAME="Cargo.toml"
 CARGO_LOCK_FILENAME="Cargo.lock"
 LIB_DIRNAME="lib"
 LIB_CRATE_NAME="kurtosis-rust-lib"
 TESTSUITE_DIRNAME="testsuite"
+DOCKERFILE_FILENAME="Dockerfile"
 
 
 # =============================================================================
@@ -55,7 +54,7 @@ cp -r "${input_dirpath}/${TESTSUITE_DIRNAME}" "${output_dirpath}/"
 # Delete the "lib" entry from the root Cargo.toml file
 root_cargo_toml_filepath="${output_dirpath}/${CARGO_TOML_FILENAME}"
 lib_line_pattern="\"${LIB_DIRNAME}\","
-num_lib_lines="$(grep -c "${lib_line_pattern}" "${root_cargo_toml_filepath}")"
+num_lib_lines="$(grep -c "${lib_line_pattern}" "${root_cargo_toml_filepath}" || true)"
 if [ "${num_lib_lines}" -ne 1 ]; then
     echo "Error: Expected exactly one line in '${root_cargo_toml_filepath}' matching pattern '${lib_line_pattern}', but got ${num_lib_lines}" >&2
     exit 1
@@ -67,12 +66,12 @@ fi
 
 # Grab the current version number of the lib, so that the bootstrapped repo can depend on it (since it won't have the "lib" directory inside it anymore)
 lib_cargo_toml_filepath="${input_dirpath}/${LIB_DIRNAME}/${CARGO_TOML_FILENAME}"
-num_lib_version_lines="$(grep -c "${CARGO_TOML_VERSION_PATTERN}" "${lib_cargo_toml_filepath}")"
+num_lib_version_lines="$(grep -c "${CARGO_TOML_VERSION_PATTERN}" "${lib_cargo_toml_filepath}" || true)"
 if [ "${num_lib_version_lines}" -ne 1 ]; then
-    echo "Error: Expected exactly one line in '${num_lib_version_lines}' matching pattern '${CARGO_TOML_VERSION_PATTERN}', but got ${num_lib_version_lines}" >&2
+    echo "Error: Expected exactly one line in '${lib_cargo_toml_filepath}' matching pattern '${CARGO_TOML_VERSION_PATTERN}', but got ${num_lib_version_lines}" >&2
     exit 1
 fi
-lib_version_line="$(grep -c "${CARGO_TOML_VERSION_PATTERN}" "${lib_cargo_toml_filepath}")"
+lib_version_line="$(grep "${CARGO_TOML_VERSION_PATTERN}" "${lib_cargo_toml_filepath}" || true)"
 lib_version_string="$(echo "${lib_version_line}" | awk '{print $3}')"
 if [ -z "${lib_version_string}" ]; then
     echo "Error: Could not extract lib version string from '${lib_cargo_toml_filepath}' by looking for pattern '${CARGO_TOML_VERSION_PATTERN}'" >&2
@@ -82,7 +81,7 @@ fi
 # Substitute the lib version in for the relative-path dependency, so that the bootstrapped repo uses the version from crates.io
 testsuite_cargo_toml_filepath="${output_dirpath}/${TESTSUITE_DIRNAME}/${CARGO_TOML_FILENAME}"
 crate_line_pattern="^${LIB_CRATE_NAME} = .*"
-num_crate_lines="$(grep -c "${crate_line_pattern}" "${testsuite_cargo_toml_filepath}")"
+num_crate_lines="$(grep -c "${crate_line_pattern}" "${testsuite_cargo_toml_filepath}" || true)"
 if [ "${num_crate_lines}" -ne 1 ]; then
     echo "Error: Expected exactly one line in '${testsuite_cargo_toml_filepath}' matching pattern '${lib_line_pattern}', but got ${num_crate_lines}" >&2
     exit 1
@@ -90,5 +89,15 @@ fi
 new_crate_line="${LIB_CRATE_NAME} = ${lib_version_string}"
 if ! sed -i '' "s/${crate_line_pattern}/${new_crate_line}/" "${testsuite_cargo_toml_filepath}"; then
     echo "Error: Could not substitute lib line '${crate_line_pattern}' -> '${new_crate_line}'" >&2
+    exit 1
+fi
+
+# Due to Rust's refusal to allow a "download dependencies only" command, we have special lines in the Dockerfile that deal with caching
+# However, when we bootstrap the testsuite, the 'lib' directory will go away so we need to remove all references to it from the Dockerfile
+# NOTE: This is a fairly aggressive removal, and one that could be prone to error!
+dockerfile_filepath="${output_dirpath}/${TESTSUITE_DIRNAME}/${DOCKERFILE_FILENAME}"
+pattern_to_remove="lib"
+if ! sed -i '' "/${pattern_to_remove}/d" "${dockerfile_filepath}"; then
+    echo "Error: Failed to remove all lines in '${dockerfile_filepath}' containing pattern '${pattern_to_remove}'" >&2
     exit 1
 fi
