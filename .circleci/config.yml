@@ -31,7 +31,7 @@ jobs:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: bash .circleci/build-and-push-example-images.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "<<pipeline.git.tag>>" "<<pipeline.git.branch>>"
+      - run: bash .circleci/build-and-push-example-images.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "<<pipeline.git.tag>>"
 
   push_rust_lib:
     docker:
@@ -62,9 +62,7 @@ workflows:
             - kurtosis-user
           filters:
             branches:
-              only:
-                - develop
-                - master
+              ignore: /.*/
             tags: 
               only: /^[0-9]+\.[0-9]+\.[0-9]+$/
       - push_rust_lib:

@@ -1,5 +1,9 @@
 # TBD
 
+# 1.10.3
+### Changed
+* Modified CircleCI config to _only_ push example testsuite Docker images for `X.Y.Z`-tagged commits (no longer Docker images with `develop` or `master` tags)
+
 # 1.10.2
 ### Changed
 * Fixed more `kurtosis-rust-lib` Cargo.toml errors preventing publishing
