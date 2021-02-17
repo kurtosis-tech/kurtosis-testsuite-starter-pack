@@ -145,7 +145,7 @@ if ! git checkout "${DEVELOP_BRANCH}"; then
     echo "Error: Could not check out branch '${DEVELOP_BRANCH}'" >&2
     exit 1
 fi
-if ! bash "${gitflow_pp_filepath}" release start; then
+if ! bash "${gitflow_pp_filepath}" release start "${new_version}"; then
     echo "Error: Could not start release" >&2
     exit 1
 fi
@@ -160,7 +160,7 @@ done
 git add -u "${root_dirpath}"
 git commit -m "Pre-release changes for version ${new_version}"
 
-finish_release_cmd="bash ${gitflow_pp_filepath} release finish"
+finish_release_cmd="bash ${gitflow_pp_filepath} release finish ${new_version}"
 if ! ${finish_release_cmd}; then
     echo "Error: Could not finish release; you'll need to manually run '${finish_release_cmd}' to finish the release" >&2
     exit 1
