@@ -1,9 +1,9 @@
 [package]
 authors = ["Kurtosis Technologies LLC"]
-documentation = "docs.kurtosistech.com"
+documentation = "https://docs.kurtosistech.com"
 edition = "2018"
 description = "The Rust bindings library for the Kurtosis testing framework"
-homepage = "kurtosistech.com"
+homepage = "https://kurtosistech.com"
 keywords = ["kurtosis", "testing"]
 license-file = "../../LICENSE"
 name = "kurtosis-rust-lib"
