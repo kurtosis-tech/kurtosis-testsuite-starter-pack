@@ -77,11 +77,9 @@ function make_shared_pre_release_modifications() {
     new_version="${1}"
 
     # Update changelog
+    newline_char=$'\n'
     new_version_line="# ${new_version}"
-    # NOTE: The weird indentation is because this was the most portable way I found to insert two newlines with sed :P
-    if ! sed -i '' "s/${CHANGELOG_TBD_LINE_PATTERN}/${CHANGELOG_TBD_LINE}\
-\
-${new_version_line}/" "${changelog_filepath}"; then
+    if ! sed -i '' "s/${CHANGELOG_TBD_LINE_PATTERN}/${CHANGELOG_TBD_LINE}\\${newline_char}\\${newline_char}${new_version_line}/" "${changelog_filepath}"; then
         echo "Error: Could not sed TBD line '${CHANGELOG_TBD_LINE_PATTERN}' -> '${new_version_line}' in changelog file '${changelog_filepath}'" >&2
         return 1
     fi
