@@ -43,7 +43,7 @@ if ! [ -f "${changelog_filepath}" ]; then
     echo "Error: No changelog file found at '${changelog_filepath}'" >&2
     exit 1
 fi
-num_tbd_lines="$(grep -c "${CHANGELOG_TBD_LINE_PATTERN}" "${changelog_filepath}")"
+num_tbd_lines="$(grep -c "${CHANGELOG_TBD_LINE_PATTERN}" "${changelog_filepath}" || true)"
 if [ "${num_tbd_lines}" -eq 0 ] || [ "${num_tbd_lines}" -gt 1 ]; then
     echo "Error: Expected exactly one line matching pattern '${CHANGELOG_TBD_LINE_PATTERN}' in '${changelog_filepath}' but found ${num_tbd_lines}" >&2
     exit 1
@@ -61,7 +61,7 @@ for filepath in "${rust_cargo_toml_filepaths[@]}"; do
         echo "Error: Missing expected ${CARGO_TOML_FILENAME} at '${lib_cargo_toml_filepath}'" >&2
         exit 1
     fi
-    num_version_lines="$(grep -c "${CARGO_TOML_VERSION_LINE_PATTERN}" "${filepath}")"
+    num_version_lines="$(grep -c "${CARGO_TOML_VERSION_LINE_PATTERN}" "${filepath}" || true)"
     if [ "${num_version_lines}" -eq 0 ] || [ "${num_version_lines}" -gt 1 ]; then
         echo "Error: Expected exactly one line matching pattern '${CARGO_TOML_VERSION_LINE_PATTERN}' in '${filepath}' but found ${num_version_lines}" >&2
         exit 1

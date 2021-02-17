@@ -1,4 +1,7 @@
 # TBD
+### Added
+* Rust testsuite bootstrapping
+
 ### Changed
 * Fixed `release.sh` so it doesn't require taking the version-to-release three times
 
