@@ -71,6 +71,7 @@ if ! sed -i '' "s,${existing_module_name}/${TESTSUITE_IMPL_DIRNAME},${new_module
     exit 1
 fi
 
+# TODO Just modify the go.mod file, so that we don't need 'go' installed on the machine
 # Lastly, depend on the actual Kurtosis library
 if ! ( cd "${output_dirpath}" && go get "${KURTOSIS_LIB_MODULE}" ); then
     echo "Error: Failed to pull Kurtosis Go lib dependency '${KURTOSIS_LIB_MODULE}'" >&2
