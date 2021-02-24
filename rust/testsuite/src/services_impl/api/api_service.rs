@@ -34,12 +34,11 @@ impl ApiService {
     }
 
 	pub fn add_person(&self, id: u32) -> Result<()> {
-		let client = reqwest::Client::new();
+		let client = reqwest::blocking::Client::new();
 		let url = self.get_person_url_for_id(id);
-        let future = client.post(&url)
+        let resp = client.post(&url)
             .header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
-            .send();
-		let resp = block_on(future)
+            .send()
 			.context(format!("An error occurred making the request to add person with ID '{}'", id))?;
 		let resp_status = resp.status();
         if !resp_status.is_success() {
@@ -53,7 +52,7 @@ impl ApiService {
 
 	pub fn get_person(&self, id: u32) -> Result<Person> {
 		let url = self.get_person_url_for_id(id);
-		let resp = block_on(reqwest::get(&url))
+		let resp = reqwest::blocking::get(&url)
 			.context(format!("An error occurred making the request to get person with ID '{}'", id))?;
 		let resp_status = resp.status();
         if !resp_status.is_success() {
@@ -62,7 +61,7 @@ impl ApiService {
                 resp_status.as_u16()
             ));
         }
-		let resp_body = block_on(resp.text())
+		let resp_body = resp.text()
 			.context("An error occurred reading the response body")?;
 		let person: Person = serde_json::from_str(&resp_body)
 			.context("An error occurred deserializing the Person JSON")?;
@@ -70,13 +69,12 @@ impl ApiService {
 	}
 
 	pub fn increment_books_read(&self, id: u32) -> Result<()> {
-		let client = reqwest::Client::new();
+		let client = reqwest::blocking::Client::new();
 		let url = format!("http://{}:{}/{}/{}", self.ip_addr, self.port, INCREMENT_BOOKS_READ_ENDPOINT, id);
-		let future = client.post(&url)
+		let resp = client.post(&url)
 			.header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
-			.send();
-		let resp = block_on(future)
-			.context(format!("An error occurred making the request to increment the books read of person with ID '{}'", id))?;
+			.send()			
+            .context(format!("An error occurred making the request to increment the books read of person with ID '{}'", id))?;
 		let resp_status = resp.status();
         if !resp_status.is_success() {
             return Err(anyhow!(
@@ -106,15 +104,14 @@ impl Service for ApiService {
     }
 
     fn is_available(&self) -> bool {
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
         let url = format!(
             "http://{}:{}/{}",
             self.ip_addr,
             self.port,
             HEALTHCHECK_URL_SLUG,
         );
-        let future = client.get(&url).send();
-        let resp_or_err = block_on(future);
+        let resp_or_err = client.get(&url).send();
         if resp_or_err.is_err() {
             debug!(
                 "An HTTP error occurred when polling the health endpoint: {}",
@@ -128,7 +125,7 @@ impl Service for ApiService {
             return false;
         }
 
-        let resp_body_or_err = block_on(resp.text());
+        let resp_body_or_err = resp.text();
         if resp_body_or_err.is_err() {
             debug!(
                 "An error occurred reading the response body: {}",

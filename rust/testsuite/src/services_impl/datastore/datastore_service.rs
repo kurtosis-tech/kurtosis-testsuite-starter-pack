@@ -36,8 +36,8 @@ impl DatastoreService {
         self.get_url_for_key(key);
 
         let url = self.get_url_for_key(key);
-        let future = reqwest::get(&url);
-        let resp = block_on(future)?;
+        let resp = reqwest::blocking::get(&url)
+            .context("An error occurred making the call to the server")?;
         let resp_status = resp.status();
         if resp_status.is_success() {
             return Ok(true);
@@ -53,9 +53,8 @@ impl DatastoreService {
 
     pub fn get(&self, key: &str) -> Result<String> {
         let url = self.get_url_for_key(key);
-        let future = reqwest::get(&url);
-        let resp = block_on(future)
-            .context("An error occurred getting the response after the GET request")?;
+        let resp = reqwest::blocking::get(&url)
+            .context("An error occurred making the call to the server")?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
             return Err(anyhow!(
@@ -63,19 +62,17 @@ impl DatastoreService {
                 resp_status.as_u16()
             ));
         }
-        let resp_body = block_on(resp.text())
-            .context("Could not read response body")?;
+        let resp_body = resp.text().context("Could not read response body")?;
         return Ok(resp_body)
     }
 
     pub fn upsert(&self, key: &str, value: &str) -> Result<()> {
         let url = self.get_url_for_key(key);
-        let client = reqwest::Client::new();
-        let future = client.post(&url)
+        let client = reqwest::blocking::Client::new();
+        let resp = client.post(&url)
             .header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
             .body(value.to_owned())
-            .send();
-        let resp = block_on(future)
+            .send()
             .context("An error occurred getting the response after the POST request")?;
         let resp_status = resp.status();
         if !resp_status.is_success() {
@@ -111,15 +108,14 @@ impl service::Service for DatastoreService {
     }
 
     fn is_available(&self) -> bool {
-        let client = reqwest::Client::new();
+        let client = reqwest::blocking::Client::new();
         let url = format!(
             "http://{}:{}/{}",
             self.ip_addr,
             self.port,
             HEALTHCHECK_URL_SLUG,
         );
-        let future = client.get(&url).send();
-        let resp_or_err = block_on(future);
+        let resp_or_err = client.get(&url).send();
         if resp_or_err.is_err() {
             debug!(
                 "An HTTP error occurred when polling the health endpoint: {}",
@@ -133,7 +129,7 @@ impl service::Service for DatastoreService {
             return false;
         }
 
-        let resp_body_or_err = block_on(resp.text());
+        let resp_body_or_err = resp.text();
         if resp_body_or_err.is_err() {
             debug!(
                 "An error occurred reading the response body: {}",

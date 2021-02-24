@@ -1,4 +1,6 @@
 # TBD
+### Changed
+* All the `reqwest` instances in the Rust example testsuite to synchronous, removing the `tokio` dependency
 
 # 1.10.4
 ### Added
