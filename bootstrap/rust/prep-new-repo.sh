@@ -10,6 +10,7 @@ LIB_DIRNAME="lib"
 LIB_CRATE_NAME="kurtosis-rust-lib"
 TESTSUITE_DIRNAME="testsuite"
 DOCKERFILE_FILENAME="Dockerfile"
+TESTSUITE_EXAMPLE_PACKAGE_NAME="kurtosis-rust-example"
 
 
 # =============================================================================
@@ -51,6 +52,11 @@ cp -r "${input_dirpath}/${TESTSUITE_DIRNAME}" "${output_dirpath}/"
 # =============================================================================
 #                         Post-Copy Modifications
 # =============================================================================
+new_package_name=""
+while [ -z "${new_package_name}" ]; do
+    read -p "Name for the Rust package that will contain your testsuite project (e.g. my-new-package): " new_package_name
+done
+
 # Delete the "lib" entry from the root Cargo.toml file
 root_cargo_toml_filepath="${output_dirpath}/${CARGO_TOML_FILENAME}"
 lib_line_pattern="\"${LIB_DIRNAME}\","
@@ -89,6 +95,17 @@ fi
 new_crate_line="${LIB_CRATE_NAME} = ${lib_version_string}"
 if ! sed -i '' "s/${crate_line_pattern}/${new_crate_line}/" "${testsuite_cargo_toml_filepath}"; then
     echo "Error: Could not substitute lib line '${crate_line_pattern}' -> '${new_crate_line}'" >&2
+    exit 1
+fi
+
+# Substitute the package name for the user's package name
+num_package_name_lines="$(grep -c "${TESTSUITE_EXAMPLE_PACKAGE_NAME}" "${testsuite_cargo_toml_filepath}" || true)"
+if [ "${num_package_name_lines}" -ne 1 ]; then
+    echo "Error: Expected exactly one line in '${testsuite_cargo_toml_filepath}' containing example package name '${TESTSUITE_EXAMPLE_PACKAGE_NAME}, but got ${num_package_name_lines}" >&2
+    exit 1
+fi
+if ! sed -i '' "s/${TESTSUITE_EXAMPLE_PACKAGE_NAME}/${new_package_name}/" "${testsuite_cargo_toml_filepath}"; then
+    echo "Error: Could not substitute example package name '${TESTSUITE_EXAMPLE_PACKAGE_NAME}' -> '${new_package_name}'" >&2
     exit 1
 fi
 
