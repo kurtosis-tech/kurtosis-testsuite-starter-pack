@@ -1,7 +1,12 @@
 # TBD
+### Added
+* Bootstrapping a Rust testsuite now slots in a user-provided package name to `testsuite/Cargo.toml`
+
+### Fixed
+* Removed an internal-only comment in Rust's `testsuite/Cargo.toml` that was getting incorrectly propagated to bootstrapped testsuites
 
 # 1.10.5
-### Changed
+### Fixed
 * Removed the Rust 30-second timeout on requests to the API container, which could get tripped on long requests (e.g. if the API container has to download a big Docker image). The test setup/execution timeouts serve as a backstop regardless, to prevent forever-hung requests from running forever.
 
 # 1.10.4
