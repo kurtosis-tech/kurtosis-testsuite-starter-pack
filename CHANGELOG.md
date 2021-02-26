@@ -1,4 +1,6 @@
 # TBD
+
+# 1.10.5
 ### Changed
 * Removed the Rust 30-second timeout on requests to the API container, which could get tripped on long requests (e.g. if the API container has to download a big Docker image). The test setup/execution timeouts serve as a backstop regardless, to prevent forever-hung requests from running forever.
 
