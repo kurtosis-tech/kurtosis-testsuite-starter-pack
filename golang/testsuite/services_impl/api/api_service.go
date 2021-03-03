@@ -30,28 +30,19 @@ type Person struct {
 }
 
 type ApiService struct {
-	serviceId services.ServiceID
-	ipAddr string
-	port int
+	serviceCtx *services.ServiceContext
+	port       int
 }
 
-func NewApiService(serviceId services.ServiceID, ipAddr string, port int) *ApiService {
-	return &ApiService{serviceId: serviceId, ipAddr: ipAddr, port: port}
+func NewApiService(serviceCtx *services.ServiceContext, port int) *ApiService {
+	return &ApiService{serviceCtx: serviceCtx, port: port}
 }
 
 // ===========================================================================================
 //                              Service interface methods
 // ===========================================================================================
-func (service ApiService) GetServiceID() services.ServiceID {
-	return service.serviceId
-}
-
-func (service ApiService) GetIPAddress() string {
-	return service.ipAddr
-}
-
 func (service ApiService) IsAvailable() bool {
-	url := fmt.Sprintf("http://%v:%v/%v", service.GetIPAddress(), service.port, healthcheckUrlSlug)
+	url := fmt.Sprintf("http://%v:%v/%v", service.serviceCtx.GetIPAddress(), service.port, healthcheckUrlSlug)
 	resp, err := http.Get(url)
 	if err != nil {
 		logrus.Debugf("An HTTP error occurred when polliong the health endpoint: %v", err)
@@ -79,7 +70,7 @@ func (service ApiService) IsAvailable() bool {
 //                         API service-specific methods
 // ===========================================================================================
 func (service ApiService) getPersonUrlForId(id int) string {
-	return fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, personEndpoint, id)
+	return fmt.Sprintf("http://%v:%v/%v/%v", service.serviceCtx.GetIPAddress(), service.port, personEndpoint, id)
 }
 
 func (service ApiService) AddPerson(id int) error {
@@ -118,7 +109,7 @@ func (service ApiService) GetPerson(id int) (Person, error) {
 }
 
 func (service ApiService) IncrementBooksRead(id int) error {
-	url := fmt.Sprintf("http://%v:%v/%v/%v", service.ipAddr, service.port, incrementBooksReadEndpoint, id)
+	url := fmt.Sprintf("http://%v:%v/%v/%v", service.serviceCtx.GetIPAddress(), service.port, incrementBooksReadEndpoint, id)
 	resp, err := http.Post(url, textContentType, nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred making the request to increment the books read of person with ID '%v'", id)

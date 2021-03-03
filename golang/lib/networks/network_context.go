@@ -29,8 +29,8 @@ const (
 )
 
 type serviceInfo struct {
-	ipAddr       string
-	wrappingFunc func(serviceId services.ServiceID, ipAddr string) services.Service
+	serviceContext *services.ServiceContext
+	wrappingFunc func(serviceCtx *services.ServiceContext) services.Service
 }
 
 type NetworkContext struct {
@@ -196,13 +196,14 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
 	logrus.Tracef("Creating service interface...")
+	serviceContext := services.NewServiceContext(networkCtx.client, serviceId, serviceIpAddr)
 	wrapWithInterface := initializer.GetServiceWrappingFunc();
-	service := wrapWithInterface(serviceId, serviceIpAddr);
+	service := wrapWithInterface(serviceContext);
 	logrus.Tracef("Successfully created service interface")
 
 	networkCtx.services[serviceId] = serviceInfo{
-		ipAddr:       serviceIpAddr,
-		wrappingFunc: wrapWithInterface,
+		serviceContext: serviceContext,
+		wrappingFunc:   wrapWithInterface,
 	}
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
@@ -221,10 +222,11 @@ func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (serv
 	if !found {
 		return nil, stacktrace.NewError("No service info found for ID '%v'", serviceId)
 	}
-	serviceIpAddr := serviceInfo.ipAddr
+	serviceContext := serviceInfo.serviceContext
 	wrapWithInterface := serviceInfo.wrappingFunc
-	service := wrapWithInterface(serviceId, serviceIpAddr);
+	service := wrapWithInterface(serviceContext);
 
+	// TODO Stop recreating the service every time!!
 	return service, nil
 }
 
