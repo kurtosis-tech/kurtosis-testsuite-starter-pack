@@ -1,9 +1,19 @@
 # TBD
-### Added
-* Bootstrapping a Rust testsuite now slots in a user-provided package name to `testsuite/Cargo.toml`
+_NOTE: This changelog entry abandons the old KeepAChangelog subheadings because they didn't do a good job highlighting the important bits - features, fixes, and breaking changes_
 
-### Fixed
+### Features
+* Bootstrapping a Rust testsuite now slots in a user-provided package name to `testsuite/Cargo.toml`
+* Encapsulated the logic for getting a service's ID and IP address in a new `ServiceContext` object
+* Added support to allow testsuites to `docker exec` commands inside their service containers via `ServiceContext`, to allow for things like assertions on the internal state of the container
+* Added an `ExecCommandTest` to the Go testsuite, for regression-testing the `ServiceContext` Docker exec
+
+### Fixes
 * Removed an internal-only comment in Rust's `testsuite/Cargo.toml` that was getting incorrectly propagated to bootstrapped testsuites
+
+### Breaking Changes
+* Added a `ServiceContext` object to represent a service container, with the intention that user implementations of the `Service` interface store the `ServiceContext`
+* `DockerContainerInitializer.getServiceWrappingFunction` now takes in a `ServiceContext` arg, rather than the IP address and service ID separately
+* Removed the `GetServiceID` and `GetIPAddress` functions from the `Service` interface (now handled by `ServiceContext`)
 
 # 1.10.5
 ### Fixed

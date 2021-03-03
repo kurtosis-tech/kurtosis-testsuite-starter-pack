@@ -26,13 +26,13 @@ type DockerContainerInitializer interface {
 
 	// GENERICS TOOD: When Go has generics, make this return type be parameterized
 	/*
-		Get the wrapping function that will be used to transform service ID & IP addr data into instances of the service interface
+		Get the wrapping function that will be used to transform a service context into instances of the service interface
 
 		NOTE: Because Go doesn't have generics, we can't properly parameterize the return type to be the actual service interface
 		that the developer has created; nonetheless, the developer should return an implementation of their interface (which itself
 		should extend Service).
 	*/
-	GetServiceWrappingFunc() func(serviceId ServiceID, ipAddr string) Service
+	GetServiceWrappingFunc() func(ctx *ServiceContext) Service
 
 	// GENERICS TOOD: If Go had generics, we could parameterize this entire class with an enum of the types of files this service consumes
 	/*

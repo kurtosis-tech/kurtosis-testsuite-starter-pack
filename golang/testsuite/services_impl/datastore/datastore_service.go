@@ -24,29 +24,20 @@ const (
 )
 
 type DatastoreService struct {
-	serviceId services.ServiceID
-	ipAddr string
+	serviceCtx *services.ServiceContext
 	port int
 }
 
-func NewDatastoreService(serviceId services.ServiceID, ipAddr string, port int) *DatastoreService {
-	return &DatastoreService{serviceId: serviceId, ipAddr: ipAddr, port: port}
+func NewDatastoreService(serviceCtx *services.ServiceContext, port int) *DatastoreService {
+	return &DatastoreService{serviceCtx: serviceCtx, port: port}
 }
 
 // ===========================================================================================
 //                              Service interface methods
 // ===========================================================================================
-func (service DatastoreService) GetServiceID() services.ServiceID {
-	return service.serviceId
-}
-
-func (service DatastoreService) GetIPAddress() string {
-	return service.ipAddr
-}
-
-
 func (service DatastoreService) IsAvailable() bool {
-	url := fmt.Sprintf("http://%v:%v/%v", service.GetIPAddress(), service.port, healthcheckUrlSlug)
+	service.serviceCtx.GetIPAddress()
+	url := fmt.Sprintf("http://%v:%v/%v", service.serviceCtx.GetIPAddress(), service.port, healthcheckUrlSlug)
 	resp, err := http.Get(url)
 	if err != nil {
 		logrus.Debugf("An HTTP error occurred when polliong the health endpoint: %v", err)
@@ -73,6 +64,10 @@ func (service DatastoreService) IsAvailable() bool {
 // ===========================================================================================
 //                         Datastore service-specific methods
 // ===========================================================================================
+func (service DatastoreService) GetIPAddress() string {
+	return service.serviceCtx.GetIPAddress()
+}
+
 func (service DatastoreService) GetPort() int {
 	return service.port
 }
@@ -124,7 +119,7 @@ func (service DatastoreService) Upsert(key string, value string) error {
 }
 
 func (service DatastoreService) getUrlForKey(key string) string {
-	return fmt.Sprintf("http://%v:%v/%v/%v", service.GetIPAddress(), service.port, keyEndpoint, key)
+	return fmt.Sprintf("http://%v:%v/%v/%v", service.serviceCtx.GetIPAddress(), service.port, keyEndpoint, key)
 }
 
 

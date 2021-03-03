@@ -1,4 +1,4 @@
-use kurtosis_rust_lib::services::{docker_container_initializer, service::Service};
+use kurtosis_rust_lib::services::{docker_container_initializer, service::Service, service_context::{ServiceContext}};
 use std::{collections::{HashSet, HashMap}, path::PathBuf};
 use crate::services_impl::datastore::datastore_service::DatastoreService;
 use std::fs::File;
@@ -19,10 +19,9 @@ impl DatastoreContainerInitializer {
         };
     }
 
-    fn create_service(service_id: &str, ip_addr: &str) -> Box<dyn Service> {
+    fn create_service(service_context: ServiceContext) -> Box<dyn Service> {
         let service = DatastoreService::new(
-            service_id,
-            ip_addr, 
+            service_context,
             PORT);
         return Box::new(service);
     }
@@ -39,7 +38,7 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return result;
     }
 
-    fn get_service_wrapping_func(&self) -> Box<dyn Fn(&str, &str) -> Box<dyn kurtosis_rust_lib::services::service::Service>> {
+    fn get_service_wrapping_func(&self) -> Box<dyn Fn(ServiceContext) -> Box<dyn kurtosis_rust_lib::services::service::Service>> {
         return Box::new(DatastoreContainerInitializer::create_service);
     }
 

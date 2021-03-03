@@ -1,7 +1,6 @@
 use anyhow::{Context, Result, anyhow};
 use reqwest;
-use kurtosis_rust_lib::services::service;
-use kurtosis_rust_lib::services::service::Service;
+use kurtosis_rust_lib::services::{service, service_context::ServiceContext};
 use reqwest::header::CONTENT_TYPE;
 use futures::executor::block_on;
 
@@ -12,19 +11,20 @@ const KEY_ENDPOINT: &str = "key";
 const NOT_FOUND_ERR_CODE: u16 = 404;
 
 pub struct DatastoreService {
-    // TODO switch to its own type
-    service_id: String,
-    ip_addr: String,
+    service_context: ServiceContext,
     port: u32,
 }
 
 impl DatastoreService {
-    pub fn new(service_id: &str, ip_addr: &str, port: u32) -> DatastoreService {
+    pub fn new(service_context: ServiceContext, port: u32) -> DatastoreService {
         return DatastoreService{
-            service_id: service_id.to_owned(),
-            ip_addr: ip_addr.to_owned(),
+            service_context,
             port,
         };
+    }
+
+    pub fn get_ip_address(&self) -> &str {
+        return self.service_context.get_ip_address();
     }
 
     pub fn get_port(&self) -> u32 {
@@ -102,19 +102,11 @@ impl DatastoreService {
 }
 
 impl service::Service for DatastoreService {
-    fn get_service_id(&self) -> &str {
-        return self.service_id.as_str();
-    }
-
-    fn get_ip_address(&self) -> &str {
-        return self.ip_addr.as_str();
-    }
-
     fn is_available(&self) -> bool {
         let client = reqwest::Client::new();
         let url = format!(
             "http://{}:{}/{}",
-            self.ip_addr,
+            self.service_context.get_ip_address(),
             self.port,
             HEALTHCHECK_URL_SLUG,
         );
