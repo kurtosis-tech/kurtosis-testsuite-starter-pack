@@ -1,5 +1,5 @@
 use futures::executor::block_on;
-use kurtosis_rust_lib::services::service::Service;
+use kurtosis_rust_lib::services::{service::Service, service_context::ServiceContext};
 use reqwest::header::CONTENT_TYPE;
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -19,16 +19,14 @@ pub struct Person {
 }
 
 pub struct ApiService {
-    service_id: String,
-    ip_addr: String,
+    service_context: ServiceContext,
     port: u32,
 }
 
 impl ApiService {
-    pub fn new(service_id: String, ip_addr: String, port: u32) -> ApiService {
+    pub fn new(service_context: ServiceContext, port: u32) -> ApiService {
         return ApiService{
-            service_id,
-            ip_addr,
+            service_context,
             port,
         }
     }
@@ -71,7 +69,7 @@ impl ApiService {
 
 	pub fn increment_books_read(&self, id: u32) -> Result<()> {
 		let client = reqwest::Client::new();
-		let url = format!("http://{}:{}/{}/{}", self.ip_addr, self.port, INCREMENT_BOOKS_READ_ENDPOINT, id);
+		let url = format!("http://{}:{}/{}/{}", self.service_context.get_ip_address(), self.port, INCREMENT_BOOKS_READ_ENDPOINT, id);
 		let future = client.post(&url)
 			.header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
 			.send();
@@ -88,7 +86,7 @@ impl ApiService {
 	}
 
 	fn get_person_url_for_id(&self, id: u32) -> String {
-		return format!("http://{}:{}/{}/{}", self.ip_addr, self.port, PERSON_ENDPOINT, id);
+		return format!("http://{}:{}/{}/{}", self.service_context.get_ip_address(), self.port, PERSON_ENDPOINT, id);
 	}
 }
 
@@ -97,19 +95,11 @@ impl ApiService {
 //                              Service interface methods
 // ===========================================================================================
 impl Service for ApiService {
-    fn get_service_id(&self) -> &str {
-		return &self.service_id;
-    }
-
-    fn get_ip_address(&self) -> &str {
-		return &self.ip_addr;
-    }
-
     fn is_available(&self) -> bool {
         let client = reqwest::Client::new();
         let url = format!(
             "http://{}:{}/{}",
-            self.ip_addr,
+            self.service_context.get_ip_address(),
             self.port,
             HEALTHCHECK_URL_SLUG,
         );

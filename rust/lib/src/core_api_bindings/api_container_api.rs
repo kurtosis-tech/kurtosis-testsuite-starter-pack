@@ -293,6 +293,22 @@ pub struct PartitionConnectionInfo {
     #[prost(bool, tag = "1")]
     pub is_blocked: bool,
 }
+/// ==============================================================================================
+///                                          Exec Command
+/// ==============================================================================================
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ExecCommandArgs {
+    /// The service ID of the container that the command should be executed in
+    #[prost(string, tag = "1")]
+    pub service_id: ::prost::alloc::string::String,
+    #[prost(string, repeated, tag = "2")]
+    pub command_args: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ExecCommandResponse {
+    #[prost(int32, tag = "1")]
+    pub exit_code: i32,
+}
 #[doc = r" Generated client implementations."]
 pub mod test_execution_service_client {
     #![allow(unused_variables, dead_code, missing_docs)]
@@ -464,6 +480,23 @@ pub mod test_execution_service_client {
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        #[doc = " Executes the given command inside a running container"]
+        pub async fn exec_command(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ExecCommandArgs>,
+        ) -> Result<tonic::Response<super::ExecCommandResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api_container_api.TestExecutionService/ExecCommand",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
     }
     impl<T: Clone> Clone for TestExecutionServiceClient<T> {
         fn clone(&self) -> Self {
@@ -527,6 +560,11 @@ pub mod test_execution_service_server {
             &self,
             request: tonic::Request<super::RepartitionArgs>,
         ) -> Result<tonic::Response<()>, tonic::Status>;
+        #[doc = " Executes the given command inside a running container"]
+        async fn exec_command(
+            &self,
+            request: tonic::Request<super::ExecCommandArgs>,
+        ) -> Result<tonic::Response<super::ExecCommandResponse>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct TestExecutionServiceServer<T: TestExecutionService> {
@@ -802,6 +840,39 @@ pub mod test_execution_service_server {
                         let interceptor = inner.1.clone();
                         let inner = inner.0;
                         let method = RepartitionSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/api_container_api.TestExecutionService/ExecCommand" => {
+                    #[allow(non_camel_case_types)]
+                    struct ExecCommandSvc<T: TestExecutionService>(pub Arc<T>);
+                    impl<T: TestExecutionService>
+                        tonic::server::UnaryService<super::ExecCommandArgs> for ExecCommandSvc<T>
+                    {
+                        type Response = super::ExecCommandResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::ExecCommandArgs>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).exec_command(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = ExecCommandSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = if let Some(interceptor) = interceptor {
                             tonic::server::Grpc::with_interceptor(codec, interceptor)

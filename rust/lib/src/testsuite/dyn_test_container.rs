@@ -47,8 +47,8 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         let files_artifact_urls = test_config.files_artifact_urls;
         // It's weird that we're cloning the channel, but this is how you're supposed to do it according to the
         // Channel documentation since it uses a &mut self
-        let network_ctx_client = TestExecutionServiceClient::new(channel.clone());
-        let network_ctx = NetworkContext::new(network_ctx_client, files_artifact_urls);
+        let client = TestExecutionServiceClient::new(channel.clone());
+        let network_ctx = NetworkContext::new(client, files_artifact_urls);
         let mut registration_client = TestExecutionServiceClient::new(channel.clone());
 
         info!("Setting up the test network...");
