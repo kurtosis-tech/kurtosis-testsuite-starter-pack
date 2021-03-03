@@ -25,25 +25,20 @@ const (
 An Nginx service that serves files mounted in the /static directory
  */
 type NginxStaticService struct {
-	serviceId services.ServiceID
-	ipAddr    string
+	serviceCtx *services.ServiceContext
 }
 
-func (n NginxStaticService) GetServiceID() services.ServiceID {
-	return n.serviceId;
+func NewNginxStaticService(serviceCtx *services.ServiceContext) *NginxStaticService {
+	return &NginxStaticService{serviceCtx: serviceCtx}
 }
 
-func (n NginxStaticService) GetIPAddress() string {
-	return n.ipAddr;
-}
-
-func (n NginxStaticService) IsAvailable() bool {
-	_, err := http.Get(fmt.Sprintf("%v:%v", n.ipAddr, listenPort))
+func (self NginxStaticService) IsAvailable() bool {
+	_, err := http.Get(fmt.Sprintf("%v:%v", self.serviceCtx.GetIPAddress(), listenPort))
 	return err != nil
 }
 
-func (n NginxStaticService) GetFileContents(filename string) (string, error) {
-	resp, err := http.Get(fmt.Sprintf("%v:%v/%v", n.ipAddr, listenPort, filename))
+func (self NginxStaticService) GetFileContents(filename string) (string, error) {
+	resp, err := http.Get(fmt.Sprintf("%v:%v/%v", self.serviceCtx.GetIPAddress(), listenPort, filename))
 	if err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred getting the contents of file '%v'", filename)
 	}

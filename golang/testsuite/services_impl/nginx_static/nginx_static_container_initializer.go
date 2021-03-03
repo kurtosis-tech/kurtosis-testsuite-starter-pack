@@ -33,12 +33,9 @@ func (s NginxStaticContainerInitializer) GetUsedPorts() map[string]bool {
 	}
 }
 
-func (s NginxStaticContainerInitializer) GetServiceWrappingFunc() func(serviceId services.ServiceID, ipAddr string) services.Service {
-	return func(serviceId services.ServiceID, ipAddr string) services.Service {
-		return &NginxStaticService{
-			serviceId: serviceId,
-			ipAddr:    ipAddr,
-		}
+func (s NginxStaticContainerInitializer) GetServiceWrappingFunc() func(serviceCtx *services.ServiceContext) services.Service {
+	return func(serviceCtx *services.ServiceContext) services.Service {
+		return NewNginxStaticService(serviceCtx)
 	}
 }
 

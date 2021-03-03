@@ -8,6 +8,8 @@ use crate::services::service::Service;
 use std::fs::File;
 use anyhow::Result;
 
+use super::service_context::ServiceContext;
+
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
 //  method every time a new feature comes out!
@@ -24,9 +26,9 @@ pub trait DockerContainerInitializer<T: Service> {
 		Get the wrapping function that will be used to transform service ID & IP addr data into instances of the service interface
 
         Returns:
-            A function with signature (service_id, service_ip_addr) -> service_interface
+            A function with signature (service_context) -> service_interface
     */
-    fn get_service_wrapping_func(&self) -> Box<dyn Fn(&str, &str) -> Box<dyn Service>>;
+    fn get_service_wrapping_func(&self) -> Box<dyn Fn(ServiceContext) -> Box<dyn Service>>;
 
     /*
         This method is used to declare that the service will need a set of files in order to run. To do this, the developer

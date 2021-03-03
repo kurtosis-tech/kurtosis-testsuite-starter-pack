@@ -7,7 +7,7 @@ use log::{debug, trace};
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_context::ServiceContext}};
 
 use super::network::Network;
 
@@ -19,8 +19,8 @@ const DEFAULT_PARTITION_ID: &str = "";
 const SUITE_EX_VOL_MOUNTPOINT: &str = "/suite-execution";
 
 struct ServiceInfo {
-	ip_addr: String,
-	service_interface_wrapper: Box<dyn Fn(&str, &str) -> Box<dyn Service>>,
+	service_context: ServiceContext,
+	service_interface_wrapper: Box<dyn Fn(ServiceContext) -> Box<dyn Service>>,
 }
 
 pub struct NetworkContext {
@@ -115,12 +115,14 @@ impl NetworkContext {
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");
 
+		let service_context_client = self.client.clone();
+		let service_context = ServiceContext::new(service_context_client, service_id.to_owned(), service_ip_addr);
+
 		trace!("Creating service interface...");
 		let service_interface_wrapper = initializer.get_service_wrapping_func();
 		let result_service_ptr = NetworkContext::call_service_interface_wrapping_func(
 			initializer.get_service_wrapping_func(), 
-			service_id, 
-			&service_ip_addr
+			service_context.clone(),
 		);
 		let casted_result_service_ptr_or_err = result_service_ptr.downcast::<S>();
 		let casted_result_service_ptr: Box<S>;
@@ -137,14 +139,13 @@ impl NetworkContext {
 		// it to the user??) ~ ktoday, 2021-02-12
 		let availability_checker_service_ptr = NetworkContext::call_service_interface_wrapping_func(
 			initializer.get_service_wrapping_func(), 
-			service_id, 
-			&service_ip_addr
+			service_context.clone(),
 		);
 		let availability_checker = AvailabilityChecker::new(service_id, availability_checker_service_ptr);
 		trace!("Successfully created service interface");
 
 		let new_service_info = ServiceInfo{
-		    ip_addr: service_ip_addr,
+			service_context: service_context,
 		    service_interface_wrapper: service_interface_wrapper,
 		};
 		self.all_service_info.insert(service_id.to_owned(), new_service_info);
@@ -156,10 +157,10 @@ impl NetworkContext {
 		let desired_service_info = self.all_service_info.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
 		let service_interface_wrapper_func = &desired_service_info.service_interface_wrapper;
+		let service_context = &desired_service_info.service_context;
 		let service_ptr = NetworkContext::call_service_interface_wrapping_func(
 			service_interface_wrapper_func, 
-			service_id, 
-			&desired_service_info.ip_addr,
+			service_context.clone(),
 		);
 		let casted_service_ptr_or_err = service_ptr.downcast::<S>();
 		let result: Box<S>;
@@ -244,10 +245,9 @@ impl NetworkContext {
 
 	fn call_service_interface_wrapping_func<F>(
 		func: F, 
-		service_id: &str, 
-		ip_addr: &str
-	) -> Box<dyn Service> where F: Fn(&str, &str) -> Box<dyn Service> {
-		return func(service_id, ip_addr);
+		service_context: ServiceContext,
+	) -> Box<dyn Service> where F: Fn(ServiceContext) -> Box<dyn Service> {
+		return func(service_context);
 	}
 }
 
