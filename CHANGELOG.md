@@ -1,4 +1,6 @@
 # TBD
+
+# 1.11.0
 _NOTE: This changelog entry abandons the old KeepAChangelog subheadings because they didn't do a good job highlighting the important bits - features, fixes, and breaking changes_
 
 ### Features
