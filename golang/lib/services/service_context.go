@@ -18,6 +18,10 @@ func NewServiceContext(client core_api_bindings.TestExecutionServiceClient, serv
 	return &ServiceContext{client: client, serviceId: serviceId, ipAddress: ipAddress}
 }
 
+func (self *ServiceContext) GetServiceID() ServiceID {
+	return self.serviceId
+}
+
 func (self *ServiceContext) GetIPAddress() string {
 	return self.ipAddress
 }
