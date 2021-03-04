@@ -95,8 +95,8 @@ impl NetworkContext {
 
 		trace!("Creating start command for service...");
 		let service_ip_addr = register_service_resp.ip_addr;
-		let start_cmd_args_opt = initializer.get_start_command(generated_files_abs_filepaths_on_service, &service_ip_addr)
-			.context("Failed to create start command")?;
+		let (entrypoint_args_opt, cmd_args_opt) = initializer.get_start_command_overrides(generated_files_abs_filepaths_on_service, &service_ip_addr)
+			.context("Failed to get start command overrides")?;
 		trace!("Successfully created start command for service");
 
 		trace!("Starting new service with Kurtosis API...");
@@ -104,7 +104,8 @@ impl NetworkContext {
 		    service_id: service_id.to_owned(),
 		    docker_image: initializer.get_docker_image().to_owned(),
 		    used_ports: NetworkContext::convert_hashset_to_hashmap(initializer.get_used_ports()),
-		    start_cmd_args: start_cmd_args_opt.unwrap_or(Vec::new()),  // Empty vector says "use default Docker CMD args"
+			entrypoint_args: entrypoint_args_opt.unwrap_or(Vec::new()), // Empty vector says "don't override anything"
+			cmd_args: cmd_args_opt.unwrap_or(Vec::new()), // Empty vector says "don't override anything"
 		    docker_env_vars: HashMap::new(),  // TODO actually support Docker env vars!
 		    suite_execution_vol_mnt_dirpath: initializer.get_test_volume_mountpoint().to_owned(),
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,

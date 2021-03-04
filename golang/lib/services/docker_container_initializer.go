@@ -87,7 +87,7 @@ type DockerContainerInitializer interface {
 	GetTestVolumeMountpoint() string
 
 	/*
-		Uses the given arguments to build the command that the Docker container running this service will be launched with.
+		Can optionally override the ENTRYPOINT and CMD Docker directives when starting the Docker container.
 
 		Args:
 			generatedFileFilepaths: Mapping of developer_key -> generated_file_filepath where developer_key corresponds to the keys returned

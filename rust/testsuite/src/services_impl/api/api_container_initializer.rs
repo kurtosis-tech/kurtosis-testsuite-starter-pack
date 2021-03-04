@@ -88,11 +88,11 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
         return TEST_VOLUME_MOUNTPOINT;
     }
 
-    fn get_start_command(
+    fn get_start_command_overrides(
         &self,
         generated_file_filepaths: HashMap<String, PathBuf>,
         _: &str
-    ) -> Result<Option<Vec<String>>> {
+    ) -> Result<(Option<Vec<String>>, Option<Vec<String>>)> {
         // TODO Replace this with a productized way to start a container using only environment variables
         let config_filepath = generated_file_filepaths.get(CONFIG_FILE_KEY)
             .context(format!("No filepath found for config file key '{}'", CONFIG_FILE_KEY))?;
@@ -104,6 +104,6 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
             String::from("--config"),
             config_filepath_str.to_owned(),
         ];
-        return Ok(Some(start_cmd));
+        return Ok((None, Some(start_cmd)));
     }
 }
