@@ -92,17 +92,19 @@ func (initializer ApiContainerInitializer) GetTestVolumeMountpoint() string {
 	return testVolumeMountpoint
 }
 
-func (initializer ApiContainerInitializer) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string) ([]string, error) {
+func (initializer ApiContainerInitializer) GetStartCommandOverrides(
+		mountedFileFilepaths map[string]string,
+		ipAddr string) (entrypointArgs []string, cmdArgs []string, resultErr error) {
 	// TODO Replace this with a productized way to start a container using only environment variables
 	configFilepath, found := mountedFileFilepaths[configFileKey]
 	if !found {
-		return nil, stacktrace.NewError("No filepath found for config file key '%v'", configFileKey);
+		return nil, nil, stacktrace.NewError("No filepath found for config file key '%v'", configFileKey);
 	}
 	startCmd := []string{
 		"./api.bin",
 		"--config",
 		configFilepath,
 	}
-	return startCmd, nil
+	return nil, startCmd, nil
 }
 

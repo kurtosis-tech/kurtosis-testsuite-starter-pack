@@ -49,11 +49,12 @@ func (self ExecCmdTestContainerInitializer) GetTestVolumeMountpoint() string {
 	return testVolumeMountpoint
 }
 
-func (self ExecCmdTestContainerInitializer) GetStartCommand(generatedFileFilepaths map[string]string, ipAddr string) ([]string, error) {
+func (self ExecCmdTestContainerInitializer) GetStartCommandOverrides(
+		generatedFileFilepaths map[string]string,
+		ipAddr string) (entrypointArgs []string, cmdArgs []string, resultErr error) {
 	// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
-	return []string{
-		"sleep",
-		"30",
-	}, nil
+	// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
+	// args), but this provides a nice little regression test of the ENTRYPOINT overriding
+	return []string{"sleep"}, []string{"30"}, nil
 }
 

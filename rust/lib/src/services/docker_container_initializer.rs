@@ -82,27 +82,24 @@ pub trait DockerContainerInitializer<T: Service> {
     */
     fn get_test_volume_mountpoint(&self) -> &'static str;
 
-    /*
-        Uses the given arguments to build the command that the Docker container running this service will be launched with.
+	/*
+		Can optionally override the ENTRYPOINT and CMD Docker directives when starting the Docker container.
 
-        NOTE: Because the IP address of the container is an implementation detail, any references to the IP address of the
-            container should use the placeholder "SERVICEIP" instead. This will get replaced at launch time with the service's
-            actual IP.
+		Args:
+			generated_file_filepaths: Mapping of developer_key -> generated_file_filepath where developer_key corresponds to the keys returned
+				in the `GetFilesToGenerate` function, and generated_file_filepath is the path *on the Docker container* of where the
+				file has been mounted. The files will have already been initialized via the `InitializeGeneratedFiles` function.
+			ipAddr: The IP address of the service being started.
 
-        Args:
-            generated_file_filepaths: Mapping of developer_key -> generated_file_filepath where developer_key corresponds to the keys returned
-                in the `GetFilesToMount` function, and initialized_file_filepath is the path *on the Docker container* of where the
-                file has been mounted. The files will have already been initialized via the `InitializeMountedFiles` function.
-            ip_addr: The IP address of the service being started.
-
-        Returns:
-            The command fragments which will be used to construct the run command which will be used to launch the Docker container
-                running the service. If this is None, then no explicit command will be specified and whatever command the Dockerfile
-                specifies will be run instead.
-    */
-    fn get_start_command(
+		Returns:
+			entrypoint_args: If non-None, overrides the ENTRYPOINT directive of the Docker image with the given strings. If nil,
+				the default ENTRYPOINT is used.
+			cmd_args: If non-None, overrides the CMD directive of the Docker image of the Docker image with the given strings. If nil,
+				the default CMD is used.
+	*/
+    fn get_start_command_overrides(
         &self,
         generated_file_filepaths: HashMap<String, PathBuf>,
         ip_addr: &str
-    ) -> Result<Option<Vec<String>>>;
+    ) -> Result<(Option<Vec<String>>, Option<Vec<String>>)>;
 }

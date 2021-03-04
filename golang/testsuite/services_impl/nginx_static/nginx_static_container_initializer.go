@@ -59,7 +59,9 @@ func (s NginxStaticContainerInitializer) GetTestVolumeMountpoint() string {
 	return "/test-volume"
 }
 
-func (s NginxStaticContainerInitializer) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string) ([]string, error) {
-	// Don't specify an explicit start command - default to using the baked-in command
-	return nil, nil
+func (s NginxStaticContainerInitializer) GetStartCommandOverrides(
+		mountedFileFilepaths map[string]string,
+		ipAddr string) (entrypointArgs []string, cmdArgs []string, resultErr error) {
+	// Don't need any ENTRYPOINT or CMD overrides - use the default ones
+	return nil, nil, nil
 }
