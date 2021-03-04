@@ -1,4 +1,10 @@
 # TBD
+### Features
+* Users can now optionally override a Docker image's `ENTRYPOINT` directive
+
+### Breaking Changes
+* Renamed `DockerContainerInitializer.getStartCommand` -> `getStartCommandOverrides` to better reflect that both `ENTRYPOINT` and `CMD` directives can be overridden
+* `DockerContainerInitializer.getStartCommandOverrides` now returns two string arrays - one for overriding a Docker image's `ENTRYPOINT`, and one for overriding its `CMD`
 
 # 1.11.0
 _NOTE: This changelog entry abandons the old KeepAChangelog subheadings because they didn't do a good job highlighting the important bits - features, fixes, and breaking changes_

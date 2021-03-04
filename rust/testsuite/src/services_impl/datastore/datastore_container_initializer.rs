@@ -59,13 +59,14 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return TEST_VOLUME_MOUNTPOINT;
     }
 
-    fn get_start_command(
+    fn get_start_command_overrides(
             &self,
             _: HashMap<String, PathBuf>, 
             _: &str
-    ) -> Result<Option<Vec<String>>> {
-        // TODO change return type???
-        return Ok(None)
+    ) -> Result<(Option<Vec<String>>, Option<Vec<String>>)> {
+        // We have a launch CMD specified in the Dockerfile the datastore service was built with and we don't need
+        // to specify an ENTRYPOINT, so we leave everything nil
+        return Ok((None, None))
     }
 
 }

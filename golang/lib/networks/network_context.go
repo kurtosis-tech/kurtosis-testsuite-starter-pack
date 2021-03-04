@@ -174,9 +174,9 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 
 	logrus.Tracef("Creating start command for service...")
 	serviceIpAddr := registerServiceResp.IpAddr
-	startCmdArgs, err := initializer.GetStartCommand(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
+	entrypointArgs, cmdArgs, err := initializer.GetStartCommandOverrides(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "Failed to create start command")
+		return nil, nil, stacktrace.Propagate(err, "Failed to get start command overrides")
 	}
 	logrus.Tracef("Successfully created start command for service")
 
@@ -185,7 +185,8 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		ServiceId:                   string(serviceId),
 		DockerImage:                 initializer.GetDockerImage(),
 		UsedPorts:                   initializer.GetUsedPorts(),
-		StartCmdArgs:                startCmdArgs,
+		EntrypointArgs:              entrypointArgs,
+		CmdArgs:                     cmdArgs,
 		DockerEnvVars:               map[string]string{}, // TODO actually support Docker env vars!
 		SuiteExecutionVolMntDirpath: initializer.GetTestVolumeMountpoint(),
 		FilesArtifactMountDirpaths:  artifactUrlToMountDirpath,

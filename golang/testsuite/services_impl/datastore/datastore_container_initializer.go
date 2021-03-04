@@ -57,9 +57,11 @@ func (d DatastoreContainerInitializer) GetTestVolumeMountpoint() string {
 	return testVolumeMountpoint
 }
 
-func (d DatastoreContainerInitializer) GetStartCommand(mountedFileFilepaths map[string]string, ipPlaceholder string) ([]string, error) {
-	// We have a launch command specified in the Dockerfile the datastore service was built with, so we
-	//  don't explicitly specify one
-	return nil, nil
+func (d DatastoreContainerInitializer) GetStartCommandOverrides(
+		mountedFileFilepaths map[string]string,
+		ipAddr string) (entrypointArgs []string, cmdArgs []string, resultErr error) {
+	// We have a launch CMD specified in the Dockerfile the datastore service was built with and we don't need
+	// to specify an ENTRYPOINT, so we leave everything nil
+	return nil, nil, nil
 }
 

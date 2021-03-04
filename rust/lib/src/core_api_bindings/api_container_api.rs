@@ -231,18 +231,21 @@ pub struct StartServiceArgs {
     /// This is a string because it's Docker port specification syntax, e.g. "80" (default TCP) or "80/udp"
     #[prost(map = "string, bool", tag = "3")]
     pub used_ports: ::std::collections::HashMap<::prost::alloc::string::String, bool>,
-    /// String array indicating the command that should be run inside the sevice's container on startup
+    /// Corresponds to a Dockerfile's ENTRYPOINT directive; leave blank to do no overriding
     #[prost(string, repeated, tag = "4")]
-    pub start_cmd_args: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    pub entrypoint_args: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Corresponds to a Dockerfile's CMD directive; leave blank to do no overriding
+    #[prost(string, repeated, tag = "5")]
+    pub cmd_args: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
     /// Docker environment variables that should be set in the service's container
-    #[prost(map = "string, string", tag = "5")]
+    #[prost(map = "string, string", tag = "6")]
     pub docker_env_vars:
         ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
     /// The full path where the API container should execute the suite execution volume on the service container
-    #[prost(string, tag = "6")]
+    #[prost(string, tag = "7")]
     pub suite_execution_vol_mnt_dirpath: ::prost::alloc::string::String,
     /// Mapping of artifact_url -> filepath_on_container_to_mount_artifact_contents
-    #[prost(map = "string, string", tag = "7")]
+    #[prost(map = "string, string", tag = "8")]
     pub files_artifact_mount_dirpaths:
         ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
 }
