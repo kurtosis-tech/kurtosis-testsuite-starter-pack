@@ -38,7 +38,7 @@ type DockerContainerInitializer interface {
 	/*
 		This method is used to declare that the service will need a set of files in order to run. To do this, the developer
 		declares a set of string keys that are meaningful to the developer, and Kurtosis will create one file per key. These newly-createed
-		file objects will then be passed in to the `InitializeGeneratedFiles` and `GetStartCommand` functions below keyed on the
+		file objects will then be passed in to the `InitializeGeneratedFiles` and `GetStartCommandOverrides` functions below keyed on the
 		strings that the developer passed in, so that the developer can initialize the contents of the files as they please.
 		Kurtosis then guarantees that these files will be made available to the service at startup time.
 
@@ -47,7 +47,7 @@ type DockerContainerInitializer interface {
 
 		Returns:
 			A "set" of user-defined key strings identifying the files that the service will need, which is how files will be
-				identified in `InitializeGeneratedFiles` and `GetStartCommand`
+				identified in `InitializeGeneratedFiles` and `GetStartCommandOverrides`
 	*/
 	GetFilesToGenerate() map[string]bool
 
@@ -96,9 +96,10 @@ type DockerContainerInitializer interface {
 			ipAddr: The IP address of the service being started.
 
 		Returns:
-			The command fragments which will be used to construct the run command which will be used to launch the Docker container
-				running the service. If this is nil, then no explicit command will be specified and whatever command the Dockerfile
-				specifies will be run instead.
+			entrypointArgs: If non-nil, overrides the ENTRYPOINT directive of the Docker image with the given strings. If nil,
+				the default ENTRYPOINT is used.
+			cmdArgs: If non-nil, overrides the CMD directive of the Docker image of the Docker image with the given strings. If nil,
+				the default CMD is used.
 	*/
-	GetStartCommand(generatedFileFilepaths map[string]string, ipAddr string) ([]string, error)
+	GetStartCommandOverrides(generatedFileFilepaths map[string]string, ipAddr string) (entrypointArgs []string, cmdArgs []string, err error)
 }
