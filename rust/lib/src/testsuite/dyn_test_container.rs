@@ -5,7 +5,7 @@ use crate::{core_api_bindings::api_container_api::{TestMetadata, test_execution_
 use super::{dyn_test::DynTest, test::Test, test_context::TestContext};
 use anyhow::{Context, Result};
 use futures::executor::block_on;
-use log::info;
+use log::{debug, info};
 use tonic::transport::Channel;
 
 // This struct exists to shield the genericized N parameter from the HashMap
@@ -53,12 +53,18 @@ impl<T: Test> DynTest for DynTestContainer<T> {
 
         info!("Setting up the test network...");
 		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
+        debug!("Registering test setup with API container...");
 		block_on(registration_client.register_test_setup(()))
 			.context("An error occurred registering the test setup with the API container")?;
+        debug!("Test setup registered with API container");
+        debug!("Executing setup logic...");
         let network = self.test.setup(network_ctx)
             .context("An error occurred setting up the test network")?;
+        debug!("Setup logic executed");
+        debug!("Registering test setup completion...");
 		block_on(registration_client.register_test_setup_completion(()))
 			.context("An error occurred registering the test setup completion with the API container")?;
+        debug!("Test setup completion registered");
         info!("Test network set up");
 
         let test_ctx = TestContext{};
