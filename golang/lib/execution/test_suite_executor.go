@@ -150,16 +150,22 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 
 	logrus.Info("Setting up the test network...")
 	// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
+	logrus.Debug("Registering test setup with API container...")
 	if _, err := executionClient.RegisterTestSetup(ctx, &emptypb.Empty{}); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test setup with the API container")
 	}
+	logrus.Debug("Test setup registered with API container")
+	logrus.Debug("Executing setup logic...")
 	untypedNetwork, err := test.Setup(networkCtx)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred setting up the test network")
 	}
+	logrus.Debug("Setup logic executed")
+	logrus.Debug("Registering test setup completion...")
 	if _, err := executionClient.RegisterTestSetupCompletion(ctx, &emptypb.Empty{}); err != nil {
 		return stacktrace.Propagate(err, "An error occurred registering the test setup completion with the API container")
 	}
+	logrus.Debug("Test setup completion registered")
 	logrus.Info("Test network set up")
 
 	logrus.Infof("Executing test '%v'...", testName)
