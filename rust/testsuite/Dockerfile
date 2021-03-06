@@ -2,9 +2,17 @@
 FROM ekidd/rust-musl-builder:1.50.0 AS builder
 WORKDIR /home/rust
 
-# Rust doesn't yet have a way to cache build dependencies as Docker layers, so we use this hack so 
-# that building doesn't take 5 minutes every time
+# Rust doesn't yet have a way to cache build dependencies as Docker layers
+# (see https://github.com/rust-lang/cargo/issues/2644), so we use this hack 
+# from https://blog.mgattozzi.dev/caching-rust-docker-builds/ so that we get
+# at least a little bit of caching. We'd like to use 'cargo-chef', but the rust-musl-builder
+# doens't play nicely with 'cargo-chef' (see https://github.com/LukeMathWalker/cargo-chef/issues/43)
 # The 'chown' is necessary due to https://github.com/emk/rust-musl-builder/issues/26
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
+# Unfortunately, Docker doesn't seem to handle this well - any time the Cargo.toml file is updated,
+# you must make at least one change to the code files else Docker will produce an empty image that
+# does nothing!!!!
+# WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 COPY --chown=rust:rust Cargo.toml ./
 COPY --chown=rust:rust Cargo.lock ./
 COPY --chown=rust:rust lib/Cargo.toml lib/
