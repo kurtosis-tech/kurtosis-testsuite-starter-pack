@@ -79,6 +79,8 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 	if shouldFailExitCode == successExitCode {
 		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should fail, but got successful exit code %v", shouldFailExitCode, successExitCode))
 	}
+
+	// TODO TODO TODO Implement test for exec command that should return logs
 	logrus.Info("Exec command returned error exit code as expected")
 }
 
