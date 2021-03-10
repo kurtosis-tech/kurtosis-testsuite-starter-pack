@@ -26,7 +26,8 @@ var execCommandThatShouldWork = []string{
 }
 
 var execCommandThatShouldHaveLogOutput = []string{
-	fmt.Sprintf("echo '%s'", expectedLogOutput),
+	"echo",
+	expectedLogOutput,
 }
 
 var execCommandThatShouldFail = []string{
@@ -91,7 +92,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldHaveLogOutput))
 	}
-	if shouldHaveLogOutputExitCode == successExitCode {
+	if shouldHaveLogOutputExitCode != successExitCode {
 		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldHaveLogOutput, shouldHaveLogOutputExitCode))
 	}
 	logOutputStr := fmt.Sprintf("%s", *logOutput)
