@@ -1,4 +1,6 @@
 # TBD
+
+# 1.13.0
 ### Features
 * Docker exec commands now have their log output available
 
