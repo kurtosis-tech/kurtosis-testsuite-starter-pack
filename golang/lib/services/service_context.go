@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/palantir/stacktrace"
-	"github.com/sirupsen/logrus"
 )
 
 // This struct represents a Docker container running a service, and exposes functions for manipulating
@@ -34,7 +33,6 @@ func (self *ServiceContext) ExecCommand(command []string) (int32, *[]byte, error
 		CommandArgs: command,
 	}
 	resp, err := self.client.ExecCommand(context.Background(), args)
-	logrus.Infof("Exec Command Response: %+v", resp)
 	if err != nil {
 		return 0, nil, stacktrace.Propagate(
 			err,
