@@ -1,6 +1,7 @@
 package exec_command_test
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/exec_cmd_test"
@@ -11,6 +12,7 @@ import (
 
 const (
 	execCmdTestImage = "alpine:3.12.4"
+	expectedLogOutput = "hello"
 	testServiceId = "test"
 
 	successExitCode int32 = 0
@@ -21,6 +23,10 @@ const (
 
 var execCommandThatShouldWork = []string{
 	"true",
+}
+
+var execCommandThatShouldHaveLogOutput = []string{
+	fmt.Sprintf("echo '%s'", expectedLogOutput),
 }
 
 var execCommandThatShouldFail = []string{
@@ -61,7 +67,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 	castedService := uncastedService.(*exec_cmd_test.ExecCmdTestService)
 
 	logrus.Infof("Running exec command '%v' that should return a successful exit code...", execCommandThatShouldWork)
-	shouldWorkExitCode, err := castedService.RunExecCmd(execCommandThatShouldWork)
+	shouldWorkExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldWork)
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldWork))
 	}
@@ -72,15 +78,27 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 
 
 	logrus.Infof("Running exec command '%v' that should return an error exit code...", execCommandThatShouldFail)
-	shouldFailExitCode, err := castedService.RunExecCmd(execCommandThatShouldFail)
+	shouldFailExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldFail)
 	if err != nil {
 		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail))
 	}
 	if shouldFailExitCode == successExitCode {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should fail, but got successful exit code %v", shouldFailExitCode, successExitCode))
+		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should fail, but got successful exit code %v", execCommandThatShouldFail, successExitCode))
 	}
 
-	// TODO TODO TODO Implement test for exec command that should return logs
+	logrus.Infof("Running exec command '%v' that should return log output...", execCommandThatShouldHaveLogOutput)
+	shouldHaveLogOutputExitCode, logOutput, err := castedService.RunExecCmd(execCommandThatShouldFail)
+	if err != nil {
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail))
+	}
+	if shouldHaveLogOutputExitCode == successExitCode {
+		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldWork, shouldWorkExitCode))
+	}
+	logOutputStr := fmt.Sprintf("%s", *logOutput)
+	if logOutputStr != expectedLogOutput {
+		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should return %v, but got %v", execCommandThatShouldHaveLogOutput, expectedLogOutput, logOutputStr))
+	}
+
 	logrus.Info("Exec command returned error exit code as expected")
 }
 
