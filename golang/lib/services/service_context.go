@@ -26,7 +26,7 @@ func (self *ServiceContext) GetIPAddress() string {
 	return self.ipAddress
 }
 
-func (self *ServiceContext) ExecCommand(command []string) (int32, error) {
+func (self *ServiceContext) ExecCommand(command []string) (int32, *[]byte, error) {
 	serviceId := self.serviceId
 	args := &core_api_bindings.ExecCommandArgs{
 		ServiceId: string(serviceId),
@@ -34,11 +34,11 @@ func (self *ServiceContext) ExecCommand(command []string) (int32, error) {
 	}
 	resp, err := self.client.ExecCommand(context.Background(), args)
 	if err != nil {
-		return 0, stacktrace.Propagate(
+		return 0, nil, stacktrace.Propagate(
 			err,
 			"An error occurred executing command '%v' on service '%v'",
 			command,
 			serviceId)
 	}
-	return resp.ExitCode, nil
+	return resp.ExitCode, &resp.LogOutput, nil
 }
