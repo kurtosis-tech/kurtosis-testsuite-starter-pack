@@ -1,6 +1,9 @@
 # TBD
+### Features
+* Docker exec commands now have their log output available
+
 ### Breaking Changes
-* Return log output as well as exit code from ExecCommand call to the Kurtosis API container
+* `ServiceContext.ExecCommand` now returns an extra argument, the bytes of the log output from the exec command
 
 # 1.12.1
 ### Features
