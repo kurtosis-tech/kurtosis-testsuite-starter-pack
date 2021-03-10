@@ -1,4 +1,6 @@
 # TBD
+### Breaking Changes
+* Return log output as well as exit code from ExecCommand call to the Kurtosis API container
 
 # 1.12.1
 ### Features
