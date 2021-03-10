@@ -87,12 +87,12 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 	}
 
 	logrus.Infof("Running exec command '%v' that should return log output...", execCommandThatShouldHaveLogOutput)
-	shouldHaveLogOutputExitCode, logOutput, err := castedService.RunExecCmd(execCommandThatShouldFail)
+	shouldHaveLogOutputExitCode, logOutput, err := castedService.RunExecCmd(execCommandThatShouldHaveLogOutput)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail))
+		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldHaveLogOutput))
 	}
 	if shouldHaveLogOutputExitCode == successExitCode {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldWork, shouldWorkExitCode))
+		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldHaveLogOutput, shouldHaveLogOutputExitCode))
 	}
 	logOutputStr := fmt.Sprintf("%s", *logOutput)
 	if logOutputStr != expectedLogOutput {
