@@ -17,12 +17,12 @@ func (self ExecCmdTestService) IsAvailable() bool {
 	return true;
 }
 
-func (self ExecCmdTestService) RunExecCmd(command []string) (int32, error) {
-	exitCode, err := self.serviceContext.ExecCommand(command)
+func (self ExecCmdTestService) RunExecCmd(command []string) (int32, *[]byte, error) {
+	exitCode, logOutput, err := self.serviceContext.ExecCommand(command)
 	if err != nil {
-		return 0, stacktrace.Propagate(
+		return 0, nil, stacktrace.Propagate(
 			err,
 			"An error occurred executing command '%v'", command)
 	}
-	return exitCode, nil
+	return exitCode, logOutput, nil
 }

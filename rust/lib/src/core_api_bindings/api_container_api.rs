@@ -311,6 +311,8 @@ pub struct ExecCommandArgs {
 pub struct ExecCommandResponse {
     #[prost(int32, tag = "1")]
     pub exit_code: i32,
+    #[prost(bytes = "vec", tag = "2")]
+    pub log_output: ::prost::alloc::vec::Vec<u8>,
 }
 #[doc = r" Generated client implementations."]
 pub mod test_execution_service_client {

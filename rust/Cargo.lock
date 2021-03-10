@@ -502,7 +502,7 @@ dependencies = [
 
 [[package]]
 name = "kurtosis-rust-example"
-version = "1.12.0"
+version = "1.12.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -519,7 +519,7 @@ dependencies = [
 
 [[package]]
 name = "kurtosis-rust-lib"
-version = "1.12.0"
+version = "1.12.1"
 dependencies = [
  "anyhow",
  "dashmap",

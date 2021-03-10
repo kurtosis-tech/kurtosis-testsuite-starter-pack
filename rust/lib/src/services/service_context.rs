@@ -29,7 +29,7 @@ impl ServiceContext {
         return &self.ip_address;
     }
 
-    pub fn exec_command(&mut self, command: Vec<String>) -> Result<i32> {
+    pub fn exec_command(&mut self, command: Vec<String>) -> Result<(i32, Vec<u8>)> {
         let args = ExecCommandArgs{
             service_id: self.service_id.clone(),
             command_args: command.clone(),
@@ -38,7 +38,7 @@ impl ServiceContext {
         let resp = block_on(self.client.exec_command(req))
             .context(format!("An error occurred executing command '{:?}' on service '{}'", &command, self.service_id))?
             .into_inner();
-        return Ok(resp.exit_code)
+        return Ok((resp.exit_code, resp.log_output));
     }
 }
 

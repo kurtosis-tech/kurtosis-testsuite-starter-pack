@@ -1,5 +1,12 @@
 # TBD
 
+# 1.13.0
+### Features
+* Docker exec commands now have their log output available
+
+### Breaking Changes
+* `ServiceContext.ExecCommand` now returns an extra argument, the bytes of the log output from the exec command
+
 # 1.12.1
 ### Features
 * Add extra debugging logic when going through the setup process during test execution flow
