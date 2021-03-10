@@ -11,9 +11,10 @@ import (
 )
 
 const (
-	execCmdTestImage = "alpine:3.12.4"
-	expectedLogOutput = "hello"
-	testServiceId = "test"
+	execCmdTestImage      = "alpine:3.12.4"
+	inputForLogOutputTest = "hello"
+	expectedLogOutput = "hello\n"
+	testServiceId         = "test"
 
 	successExitCode int32 = 0
 
@@ -27,7 +28,7 @@ var execCommandThatShouldWork = []string{
 
 var execCommandThatShouldHaveLogOutput = []string{
 	"echo",
-	expectedLogOutput,
+	inputForLogOutputTest,
 }
 
 var execCommandThatShouldFail = []string{
@@ -97,7 +98,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 	}
 	logOutputStr := fmt.Sprintf("%s", *logOutput)
 	if logOutputStr != expectedLogOutput {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should return %v, but got %v", execCommandThatShouldHaveLogOutput, expectedLogOutput, logOutputStr))
+		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should return %v, but got %v.", execCommandThatShouldHaveLogOutput, inputForLogOutputTest, logOutputStr))
 	}
 
 	logrus.Info("Exec command returned error exit code as expected")
