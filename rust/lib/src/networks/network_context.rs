@@ -2,7 +2,6 @@ use std::{collections::{HashMap, HashSet}, fs::File, path::{PathBuf}};
 use std::hash::Hash;
 
 use dashmap::DashMap;
-use futures::{executor::block_on};
 use log::{debug, trace};
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
@@ -39,13 +38,14 @@ impl NetworkContext {
         };
     }
 
-    pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
+    pub async fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
         let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
+			.await
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
-    pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
+    pub async fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
@@ -54,7 +54,8 @@ impl NetworkContext {
 		    files_to_generate,
 		};
 		let register_service_args = tonic::Request::new(args);
-		let register_service_resp = block_on(self.client.register_service(register_service_args))
+		let register_service_resp = self.client.register_service(register_service_args)
+			.await
 			.context(format!("An error occurred registering service with ID '{}' with the Kurtosis API", service_id))?
 			.into_inner();
 		
@@ -111,7 +112,8 @@ impl NetworkContext {
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};
 		let start_service_req = tonic::Request::new(start_service_args);
-		block_on(self.client.start_service(start_service_req))
+		self.client.start_service(start_service_req)
+			.await
 			.context("An error occurred starting the service with the Kurtosis API")?
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");
@@ -175,7 +177,7 @@ impl NetworkContext {
 		return Ok(result);
     }
 
-    pub fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
+    pub async fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
 		debug!("Removing service '{}'...", service_id);
 		let args = RemoveServiceArgs{
 		    service_id: service_id.to_owned(),
@@ -185,14 +187,15 @@ impl NetworkContext {
 		    container_stop_timeout_seconds,
 		};
 		let req = tonic::Request::new(args);
-		block_on(self.client.remove_service(req))
+		self.client.remove_service(req)
+			.await
 			.context(format!("An error occurred removing service '{}' from the network", service_id))?;
 		self.all_service_info.remove(service_id);
 		debug!("Successfully removed service ID '{}'", service_id);
 		return Ok(());
 	}
 
-    pub fn repartition_network(
+    pub async fn repartition_network(
 		&mut self, 
 		partition_services: HashMap<String, HashSet<String>>,
 		partition_connections: HashMap<String, HashMap<String, PartitionConnectionInfo>>,
@@ -229,7 +232,8 @@ impl NetworkContext {
 		};
 
 		let req = tonic::Request::new(args);
-		block_on(self.client.repartition(req))
+		self.client.repartition(req)
+			.await
 			.context("An error occurred repartitioning the test network")?;
 		return Ok(());
     }

@@ -1,6 +1,5 @@
 use std::{collections::{HashMap}, thread::sleep, time::Duration};
 use anyhow::{Context, Result, anyhow};
-use futures::executor::block_on;
 use log::debug;
 use tonic::{Request, transport::{Channel}};
 
@@ -28,7 +27,7 @@ impl TestSuiteExecutor {
         };
     }
 
-	pub fn run(&self) -> Result<()> {
+	pub async fn run(&self) -> Result<()> {
 		self.configurator.set_log_level(&self.log_level)
 			.context("An error occurred setting the loglevel before running the testsuite")?;
 
@@ -53,7 +52,8 @@ impl TestSuiteExecutor {
 					)
 				);
 			}
-			let channel_or_err = block_on(endpoint.connect());
+			let channel_or_err = endpoint.connect()
+				.await;
 			match channel_or_err {
 				Ok(returned_channel) => {
 					channel = returned_channel;
@@ -73,7 +73,8 @@ impl TestSuiteExecutor {
 
 		let suite_registration_channel = channel.clone(); // This *seems* weird to clone a channel, but this is apparently how Tonic wants it
 		let mut suite_registration_client = SuiteRegistrationServiceClient::new(suite_registration_channel);
-		let suite_registration_resp = block_on(suite_registration_client.register_suite(()))
+		let suite_registration_resp = suite_registration_client.register_suite(())
+			.await
 			.context("An error occurred registering the testsuite container with the API container")?
 			.into_inner();
 
@@ -83,10 +84,12 @@ impl TestSuiteExecutor {
 		match action {
 			SuiteAction::SerializeSuiteMetadata => {
 				TestSuiteExecutor::run_serialize_suite_metadata_flow(suite, channel.clone())
+					.await
 					.context("An error occurred running the suite metadata serialization flow")?;
 			}
 			SuiteAction::ExecuteTest => {
 				TestSuiteExecutor::run_test_execution_flow(suite, channel.clone())
+					.await
 					.context("An error occurred running the test execution flow")?;
 			}
 		}
@@ -94,7 +97,7 @@ impl TestSuiteExecutor {
 		return Ok(());
 	}
 
-	fn run_serialize_suite_metadata_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
+	async fn run_serialize_suite_metadata_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
 		let mut all_test_metadata: HashMap<String, TestMetadata> = HashMap::new();
 		for (test_name, test) in testsuite.get_tests() {
 			let test_metadata = test.get_test_metadata()
@@ -110,14 +113,16 @@ impl TestSuiteExecutor {
 
 		let mut client = SuiteMetadataSerializationServiceClient::new(channel);
 		let req = Request::new(testsuite_metadata);
-		block_on(client.serialize_suite_metadata(req))
+		client.serialize_suite_metadata(req)
+			.await
 			.context("An error occurred sending the suite metadata to the Kurtosis API server")?;
 		return Ok(());
 	}
 
-	fn run_test_execution_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
+	async fn run_test_execution_flow(testsuite: Box<dyn TestSuite>, channel: Channel) -> Result<()> {
 		let mut client = TestExecutionServiceClient::new(channel.clone());
-		let resp_or_err = block_on(client.get_test_execution_info(()));
+		let resp_or_err = client.get_test_execution_info(())
+			.await;
 		let test_ex_info = resp_or_err
 			.context("An error occurred getting the test execution info")?
 			.into_inner();
@@ -132,6 +137,7 @@ impl TestSuiteExecutor {
 
 		// TODO TODO TODO wrap this entire thing with panic-catching
 		test.setup_and_run(channel)
+			.await
 			.context(format!("An error occurred setting up & executing test '{}'", &test_name))?;
 
 		return Ok(());

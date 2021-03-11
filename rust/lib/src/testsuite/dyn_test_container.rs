@@ -2,19 +2,19 @@ use std::{collections::HashMap, convert::TryInto, u32};
 
 use crate::{core_api_bindings::api_container_api::{TestMetadata, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
 
+use async_trait::async_trait;
 use super::{dyn_test::DynTest, test::Test, test_context::TestContext};
 use anyhow::{Context, Result};
-use futures::executor::block_on;
 use log::{debug, info};
 use tonic::transport::Channel;
 
 // This struct exists to shield the genericized N parameter from the HashMap
 // See: https://discord.com/channels/442252698964721669/448238009733742612/809977090740977674
-pub struct DynTestContainer<T: Test> {
+pub struct DynTestContainer<T: Test + Send> {
     test: T,
 }
 
-impl<T: Test> DynTestContainer<T> {
+impl<T: Test + Send> DynTestContainer<T> {
     pub fn new(test: T) -> DynTestContainer<T> {
         return DynTestContainer{
             test,
@@ -22,7 +22,8 @@ impl<T: Test> DynTestContainer<T> {
     }
 }
 
-impl<T: Test> DynTest for DynTestContainer<T> {
+#[async_trait]
+impl<T: Test + Send> DynTest for DynTestContainer<T> {
     fn get_test_metadata(&self) -> Result<TestMetadata> {
 		let test_config = self.test.get_test_configuration();
 		let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
@@ -42,7 +43,7 @@ impl<T: Test> DynTest for DynTestContainer<T> {
 		return Ok(test_metadata);
     }
     
-    fn setup_and_run(&mut self, channel: Channel) -> Result<()> {
+    async fn setup_and_run(&mut self, channel: Channel) -> Result<()> {
         let test_config = self.test.get_test_configuration();
         let files_artifact_urls = test_config.files_artifact_urls;
         // It's weird that we're cloning the channel, but this is how you're supposed to do it according to the
@@ -54,7 +55,8 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         info!("Setting up the test network...");
 		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
         debug!("Registering test setup with API container...");
-		block_on(registration_client.register_test_setup(()))
+		registration_client.register_test_setup(())
+            .await
 			.context("An error occurred registering the test setup with the API container")?;
         debug!("Test setup registered with API container");
         debug!("Executing setup logic...");
@@ -62,7 +64,8 @@ impl<T: Test> DynTest for DynTestContainer<T> {
             .context("An error occurred setting up the test network")?;
         debug!("Setup logic executed");
         debug!("Registering test setup completion...");
-		block_on(registration_client.register_test_setup_completion(()))
+		registration_client.register_test_setup_completion(())
+            .await
 			.context("An error occurred registering the test setup completion with the API container")?;
         debug!("Test setup completion registered");
         info!("Test network set up");
@@ -70,7 +73,8 @@ impl<T: Test> DynTest for DynTestContainer<T> {
         let test_ctx = TestContext{};
 
         info!("Executing the test...");
-		block_on(registration_client.register_test_execution(()))
+		registration_client.register_test_execution(())
+            .await
 			.context("An error occurred registering the test execution with the API container")?;
         self.test.run(network, test_ctx)
             .context("An error occurred executing the test")?;

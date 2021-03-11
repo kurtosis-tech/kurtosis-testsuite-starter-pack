@@ -1,5 +1,4 @@
 use anyhow::{Context, Result};
-use futures::executor::block_on;
 use tonic::transport::Channel;
 
 use crate::core_api_bindings::api_container_api::{ExecCommandArgs, test_execution_service_client::TestExecutionServiceClient};
@@ -29,13 +28,14 @@ impl ServiceContext {
         return &self.ip_address;
     }
 
-    pub fn exec_command(&mut self, command: Vec<String>) -> Result<(i32, Vec<u8>)> {
+    pub async fn exec_command(&mut self, command: Vec<String>) -> Result<(i32, Vec<u8>)> {
         let args = ExecCommandArgs{
             service_id: self.service_id.clone(),
             command_args: command.clone(),
         };
         let req = tonic::Request::new(args);
-        let resp = block_on(self.client.exec_command(req))
+        let resp = self.client.exec_command(req)
+            .await
             .context(format!("An error occurred executing command '{:?}' on service '{}'", &command, self.service_id))?
             .into_inner();
         return Ok((resp.exit_code, resp.log_output));
