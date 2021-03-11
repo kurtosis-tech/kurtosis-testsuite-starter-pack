@@ -57,6 +57,10 @@ async fn main() -> Result<()> {
         custom_params_json,
         configurator_box
     );
-    executor.run().context("An error occurred running the test suite executor")?;
+    let testsuite_result = executor.run();
+    if testsuite_result.is_err() {
+        error!("An error occurred running the test suite executor:");
+        testsuite_result.context("An error occurred running the test suite executor")?;
+    }
     return Ok(());
 }
