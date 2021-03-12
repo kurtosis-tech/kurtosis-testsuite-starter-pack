@@ -1,6 +1,7 @@
 # TBD
 ### Fixes
 * Added an error log message when the Rust testsuite errors so the exact timestamp of the failure is visible, which brings it to parity with the Go testsuite
+* Removes the intermixing of `tokio` and `block_on`, which causes deadlocks, in favor of pure `tokio`
 
 # 1.13.0
 ### Features
