@@ -2,7 +2,6 @@ use std::{collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{PathBuf}
 use std::hash::Hash;
 
 use dashmap::DashMap;
-use downcast_rs::Downcast;
 use log::{debug, trace};
 use tokio::runtime::Runtime;
 use tonic::{transport::Channel};

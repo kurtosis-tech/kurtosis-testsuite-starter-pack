@@ -1,4 +1,4 @@
-use downcast_rs::{Downcast, DowncastSync, impl_downcast};
+use downcast_rs::{Downcast, impl_downcast};
 
 /*
 The developer should implement their own use-case-specific interface that extends this one
