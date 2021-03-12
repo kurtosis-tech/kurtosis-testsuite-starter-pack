@@ -1,4 +1,6 @@
 # TBD
+### Features
+* Switched the Rust library's `ServiceContext.exec_command` to use `&self` rather than `&mut self`
 
 # 1.14.0
 ### Fixes

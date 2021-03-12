@@ -33,13 +33,16 @@ impl ServiceContext {
         return &self.ip_address;
     }
 
-    pub fn exec_command(&mut self, command: Vec<String>) -> Result<(i32, Vec<u8>)> {
+    pub fn exec_command(&self, command: Vec<String>) -> Result<(i32, Vec<u8>)> {
         let args = ExecCommandArgs{
             service_id: self.service_id.clone(),
             command_args: command.clone(),
         };
         let req = tonic::Request::new(args);
-        let resp = self.async_runtime.block_on(self.client.exec_command(req))
+        // The client needs to be mutable, so the correct/supported way according to the `tonic` docs
+        // is to clone the client
+        let mut client = self.client.clone();
+        let resp = self.async_runtime.block_on(client.exec_command(req))
             .context(format!("An error occurred executing command '{:?}' on service '{}'", &command, self.service_id))?
             .into_inner();
         return Ok((resp.exit_code, resp.log_output));
