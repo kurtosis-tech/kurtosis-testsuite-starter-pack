@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::Arc, thread::sleep, time::Duration};
+use std::{sync::Arc, thread::sleep, time::Duration};
 use anyhow::{anyhow, Result};
 
 use super::service::Service;
