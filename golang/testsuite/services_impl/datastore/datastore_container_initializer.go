@@ -35,10 +35,8 @@ func (d DatastoreContainerInitializer) GetUsedPorts() map[string]bool {
 	}
 }
 
-func (d DatastoreContainerInitializer) GetServiceWrappingFunc() func (ctx *services.ServiceContext) services.Service {
-	return func(ctx *services.ServiceContext) services.Service {
-		return NewDatastoreService(ctx, port);
-	}
+func (d DatastoreContainerInitializer) GetService(serviceCtx *services.ServiceContext) services.Service {
+	return NewDatastoreService(serviceCtx, port)
 }
 
 func (d DatastoreContainerInitializer) GetFilesToGenerate() map[string]bool {

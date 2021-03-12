@@ -48,10 +48,8 @@ func (initializer ApiContainerInitializer) GetUsedPorts() map[string]bool {
 	}
 }
 
-func (initializer ApiContainerInitializer) GetServiceWrappingFunc() func(ctx *services.ServiceContext) services.Service {
-	return func(ctx *services.ServiceContext) services.Service {
-		return NewApiService(ctx, port);
-	};
+func (initializer ApiContainerInitializer) GetService(serviceCtx *services.ServiceContext) services.Service {
+	return NewApiService(serviceCtx, port)
 }
 
 func (initializer ApiContainerInitializer) GetFilesToGenerate() map[string]bool {
