@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use std::{collections::HashMap, time::Duration};
 
-use async_trait::async_trait;
 use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
 
 use crate::networks_impl::test_network::TestNetwork;
@@ -27,7 +26,6 @@ impl AdvancedNetworkTest {
     }
 }
 
-#[async_trait]
 impl Test for AdvancedNetworkTest {
     type N = TestNetwork;
 
@@ -38,27 +36,24 @@ impl Test for AdvancedNetworkTest {
         }
     }
 
-    async fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<TestNetwork>> {
+    fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<TestNetwork>> {
         let mut network = TestNetwork::new(network_ctx, self.datastore_service_image.clone(), self.api_service_image.clone());
 
         network.add_datastore()
-            .await
             .context("An error occurred adding the datastore")?;
 
         let person_modifying_api_service_id = network.add_api_service()
-            .await
             .context("An error occurred adding the person-modifying API service")?;
         self.person_modifying_api_service_id = Some(person_modifying_api_service_id);
 
         let person_retrieving_api_service_id = network.add_api_service()
-            .await
             .context("An error occurred adding the person-retrieving API service")?;
         self.person_retrieving_api_service_id = Some(person_retrieving_api_service_id);
 
         return Ok(Box::new(network));
     }
 
-    async fn run(&self, network: Box<TestNetwork>, test_ctx: TestContext) -> anyhow::Result<()> {
+    fn run(&self, network: Box<TestNetwork>, test_ctx: TestContext) -> anyhow::Result<()> {
         let person_modifying_service_id;
         match self.person_modifying_api_service_id {
             Some(ref service_id) => person_modifying_service_id = service_id,

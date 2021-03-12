@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::HashMap, sync::Arc, time::Duration};
+use std::{borrow::Borrow, collections::HashMap, rc::Rc, sync::Arc, time::Duration};
 use anyhow::{Context, Result, anyhow};
 
 use kurtosis_rust_lib::networks::{network::Network, network_context::NetworkContext};
@@ -15,8 +15,8 @@ pub struct TestNetwork {
 	network_ctx: NetworkContext,
 	datastore_service_image: String,
 	api_service_image: String,
-    datastore_service: Option<Arc<DatastoreService>>,
-    api_services: HashMap<String, Arc<ApiService>>,
+    datastore_service: Option<Rc<DatastoreService>>,
+    api_services: HashMap<String, Rc<ApiService>>,
     next_api_service_id: u32,
 }
 
@@ -32,7 +32,7 @@ impl TestNetwork {
         };
     }
 
-    pub async fn add_datastore(&mut self) -> Result<()> {
+    pub fn add_datastore(&mut self) -> Result<()> {
         if self.datastore_service.is_some() {
             return Err(anyhow!(
                 "Cannot add datastore service to network; datastore already exists!"
@@ -41,7 +41,6 @@ impl TestNetwork {
 
         let initializer = DatastoreContainerInitializer::new(&self.datastore_service_image);
         let (service, checker) = self.network_ctx.add_service(DATASTORE_SERVICE_ID, &initializer)
-            .await
             .context("An error occurred adding the datastore service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
@@ -49,11 +48,11 @@ impl TestNetwork {
         return Ok(());
     }
 
-    pub fn get_datastore(&self) -> &Option<Arc<DatastoreService>> {
+    pub fn get_datastore(&self) -> &Option<Rc<DatastoreService>> {
         return &self.datastore_service;
     }
 
-    pub async fn add_api_service(&mut self) -> Result<String> {
+    pub fn add_api_service(&mut self) -> Result<String> {
         let datastore;
         match &self.datastore_service {
             Some(service_box) => datastore = service_box,
@@ -68,7 +67,6 @@ impl TestNetwork {
         self.next_api_service_id += 1;
 
         let (api_service, checker) = self.network_ctx.add_service(&service_id, &initializer)
-            .await
             .context("An error occurred adding the API service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the API service to start")?;
