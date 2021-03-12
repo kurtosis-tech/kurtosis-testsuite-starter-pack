@@ -1,5 +1,9 @@
 # TBD
 
+# 1.14.1
+### Features
+* Switched the Rust library's `ServiceContext.exec_command` to use `&self` rather than `&mut self`
+
 # 1.14.0
 ### Fixes
 * Added an error log message when the Rust testsuite errors so the exact timestamp of the failure is visible, which brings it to parity with the Go testsuite
