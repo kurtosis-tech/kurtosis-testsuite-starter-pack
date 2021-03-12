@@ -39,7 +39,8 @@ impl Test for AdvancedNetworkTest {
     fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<TestNetwork>> {
         let mut network = TestNetwork::new(network_ctx, self.datastore_service_image.clone(), self.api_service_image.clone());
 
-        network.add_datastore().context("An error occurred adding the datastore")?;
+        network.add_datastore()
+            .context("An error occurred adding the datastore")?;
 
         let person_modifying_api_service_id = network.add_api_service()
             .context("An error occurred adding the person-modifying API service")?;

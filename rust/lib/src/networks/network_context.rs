@@ -1,9 +1,9 @@
-use std::{collections::{HashMap, HashSet}, fs::File, path::{PathBuf}};
+use std::{collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{PathBuf}, rc::Rc};
 use std::hash::Hash;
 
 use dashmap::DashMap;
-use futures::{executor::block_on};
 use log::{debug, trace};
+use tokio::runtime::Runtime;
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
@@ -18,34 +18,31 @@ const DEFAULT_PARTITION_ID: &str = "";
 //  hardcoded inside Kurtosis Core
 const SUITE_EX_VOL_MOUNTPOINT: &str = "/suite-execution";
 
-struct ServiceInfo {
-	service_context: ServiceContext,
-	service_interface_wrapper: Box<dyn Fn(ServiceContext) -> Box<dyn Service>>,
-}
-
 pub struct NetworkContext {
+	async_runtime: Rc<Runtime>,
     client: TestExecutionServiceClient<Channel>,
 	// TODO Make key a separate FilesArtifactID type
 	files_artifact_urls: HashMap<String, String>,
-    all_service_info: DashMap<String, ServiceInfo>,
+    all_services: DashMap<String, Rc<dyn Service>>,
 }
 
 impl NetworkContext {
-    pub fn new(client: TestExecutionServiceClient<Channel>, files_artifact_urls: HashMap<String, String>) -> NetworkContext {
+    pub fn new(async_runtime: Rc<Runtime>, client: TestExecutionServiceClient<Channel>, files_artifact_urls: HashMap<String, String>) -> NetworkContext {
         return NetworkContext {
+			async_runtime,
             client,
 			files_artifact_urls,
-            all_service_info: DashMap::new(),
+            all_services: DashMap::new(),
         };
     }
 
-    pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
-        let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
+    pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
-    pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Box<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
@@ -54,7 +51,7 @@ impl NetworkContext {
 		    files_to_generate,
 		};
 		let register_service_args = tonic::Request::new(args);
-		let register_service_resp = block_on(self.client.register_service(register_service_args))
+		let register_service_resp = self.async_runtime.block_on(self.client.register_service(register_service_args))
 			.context(format!("An error occurred registering service with ID '{}' with the Kurtosis API", service_id))?
 			.into_inner();
 		
@@ -111,20 +108,16 @@ impl NetworkContext {
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};
 		let start_service_req = tonic::Request::new(start_service_args);
-		block_on(self.client.start_service(start_service_req))
+		self.async_runtime.block_on(self.client.start_service(start_service_req))
 			.context("An error occurred starting the service with the Kurtosis API")?
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");
 
 		let service_context_client = self.client.clone();
-		let service_context = ServiceContext::new(service_context_client, service_id.to_owned(), service_ip_addr);
+		let service_context = ServiceContext::new(self.async_runtime.clone(), service_context_client, service_id.to_owned(), service_ip_addr);
 
 		trace!("Creating service interface...");
-		let service_interface_wrapper = initializer.get_service_wrapping_func();
-		let result_service_ptr = NetworkContext::call_service_interface_wrapping_func(
-			initializer.get_service_wrapping_func(), 
-			service_context.clone(),
-		);
+		let result_service_ptr = initializer.get_service(service_context);
 		let casted_result_service_ptr_or_err = result_service_ptr.downcast::<S>();
 		let casted_result_service_ptr: Box<S>;
 		match casted_result_service_ptr_or_err {
@@ -133,38 +126,22 @@ impl NetworkContext {
 				"An error occurred casting service to appropriate type"
 			)),
 		}
+		let casted_result_service_rc = Rc::new(*casted_result_service_ptr);
 
-		// Yes, this creates a second Service interfaces; yes, this is inefficient; yes, there's probably a better way to do this
-		// At this point though I'm *so* sick of fighting Rust's compiler and its un-Google-able, seemingly-draconian errors so
-		// I'm doing it this way (e.g. - how can I both store a value in a hashmap, use it in the AvailabilityChecker, and return
-		// it to the user??) ~ ktoday, 2021-02-12
-		let availability_checker_service_ptr = NetworkContext::call_service_interface_wrapping_func(
-			initializer.get_service_wrapping_func(), 
-			service_context.clone(),
-		);
-		let availability_checker = AvailabilityChecker::new(service_id, availability_checker_service_ptr);
+		let availability_checker = AvailabilityChecker::new(service_id, casted_result_service_rc.clone());
 		trace!("Successfully created service interface");
 
-		let new_service_info = ServiceInfo{
-			service_context: service_context,
-		    service_interface_wrapper: service_interface_wrapper,
-		};
-		self.all_service_info.insert(service_id.to_owned(), new_service_info);
+		self.all_services.insert(service_id.to_owned(), casted_result_service_rc.clone());
 
-		return Ok((casted_result_service_ptr, availability_checker));
+		return Ok((casted_result_service_rc, availability_checker));
     }
 
-    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Box<S>> {
-		let desired_service_info = self.all_service_info.get(service_id)
+    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Rc<S>> {
+		let service_ptr_ptr = self.all_services.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
-		let service_interface_wrapper_func = &desired_service_info.service_interface_wrapper;
-		let service_context = &desired_service_info.service_context;
-		let service_ptr = NetworkContext::call_service_interface_wrapping_func(
-			service_interface_wrapper_func, 
-			service_context.clone(),
-		);
-		let casted_service_ptr_or_err = service_ptr.downcast::<S>();
-		let result: Box<S>;
+		let service_ptr = service_ptr_ptr.deref().clone();
+		let casted_service_ptr_or_err = service_ptr.downcast_rc::<S>();
+		let result: Rc<S>;
 		match casted_service_ptr_or_err {
 			Ok(casted_ptr) => result = casted_ptr,
 			Err(_) => return Err(anyhow!(
@@ -185,9 +162,9 @@ impl NetworkContext {
 		    container_stop_timeout_seconds,
 		};
 		let req = tonic::Request::new(args);
-		block_on(self.client.remove_service(req))
+		self.async_runtime.block_on(self.client.remove_service(req))
 			.context(format!("An error occurred removing service '{}' from the network", service_id))?;
-		self.all_service_info.remove(service_id);
+		self.all_services.remove(service_id);
 		debug!("Successfully removed service ID '{}'", service_id);
 		return Ok(());
 	}
@@ -229,7 +206,7 @@ impl NetworkContext {
 		};
 
 		let req = tonic::Request::new(args);
-		block_on(self.client.repartition(req))
+		self.async_runtime.block_on(self.client.repartition(req))
 			.context("An error occurred repartitioning the test network")?;
 		return Ok(());
     }
@@ -242,13 +219,6 @@ impl NetworkContext {
 			result.insert(elem, true);
 		}
 		return result;
-	}
-
-	fn call_service_interface_wrapping_func<F>(
-		func: F, 
-		service_context: ServiceContext,
-	) -> Box<dyn Service> where F: Fn(ServiceContext) -> Box<dyn Service> {
-		return func(service_context);
 	}
 }
 

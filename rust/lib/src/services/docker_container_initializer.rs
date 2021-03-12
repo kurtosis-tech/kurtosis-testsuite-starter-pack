@@ -23,12 +23,12 @@ pub trait DockerContainerInitializer<T: Service> {
     fn get_used_ports(&self) -> HashSet<String>;
 
     /*
-		Get the wrapping function that will be used to transform service ID & IP addr data into instances of the service interface
+		Wrap the service context inside a user-defined service interface
 
         Returns:
-            A function with signature (service_context) -> service_interface
+            An instance of the user-defined service that this container initializer produces
     */
-    fn get_service_wrapping_func(&self) -> Box<dyn Fn(ServiceContext) -> Box<dyn Service>>;
+    fn get_service(&self, service_ctx: ServiceContext) -> Box<dyn Service>;
 
     /*
         This method is used to declare that the service will need a set of files in order to run. To do this, the developer

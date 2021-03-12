@@ -1,6 +1,5 @@
-use futures::executor::block_on;
 use kurtosis_rust_lib::services::{service::Service, service_context::ServiceContext};
-use reqwest::header::CONTENT_TYPE;
+use reqwest::{header::CONTENT_TYPE, blocking::Client};
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 
@@ -19,6 +18,7 @@ pub struct Person {
 }
 
 pub struct ApiService {
+    client: Client,
     service_context: ServiceContext,
     port: u32,
 }
@@ -26,18 +26,17 @@ pub struct ApiService {
 impl ApiService {
     pub fn new(service_context: ServiceContext, port: u32) -> ApiService {
         return ApiService{
+            client: Client::new(),
             service_context,
             port,
         }
     }
 
 	pub fn add_person(&self, id: u32) -> Result<()> {
-		let client = reqwest::Client::new();
 		let url = self.get_person_url_for_id(id);
-        let future = client.post(&url)
+        let resp = self.client.post(&url)
             .header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
-            .send();
-		let resp = block_on(future)
+            .send()
 			.context(format!("An error occurred making the request to add person with ID '{}'", id))?;
 		let resp_status = resp.status();
         if !resp_status.is_success() {
@@ -51,7 +50,8 @@ impl ApiService {
 
 	pub fn get_person(&self, id: u32) -> Result<Person> {
 		let url = self.get_person_url_for_id(id);
-		let resp = block_on(reqwest::get(&url))
+		let resp = self.client.get(&url)
+            .send()
 			.context(format!("An error occurred making the request to get person with ID '{}'", id))?;
 		let resp_status = resp.status();
         if !resp_status.is_success() {
@@ -60,7 +60,7 @@ impl ApiService {
                 resp_status.as_u16()
             ));
         }
-		let resp_body = block_on(resp.text())
+		let resp_body = resp.text()
 			.context("An error occurred reading the response body")?;
 		let person: Person = serde_json::from_str(&resp_body)
 			.context("An error occurred deserializing the Person JSON")?;
@@ -68,12 +68,10 @@ impl ApiService {
 	}
 
 	pub fn increment_books_read(&self, id: u32) -> Result<()> {
-		let client = reqwest::Client::new();
 		let url = format!("http://{}:{}/{}/{}", self.service_context.get_ip_address(), self.port, INCREMENT_BOOKS_READ_ENDPOINT, id);
-		let future = client.post(&url)
+		let resp = self.client.post(&url)
 			.header(CONTENT_TYPE, TEXT_CONTENT_TYPE)
-			.send();
-		let resp = block_on(future)
+			.send()
 			.context(format!("An error occurred making the request to increment the books read of person with ID '{}'", id))?;
 		let resp_status = resp.status();
         if !resp_status.is_success() {
@@ -96,15 +94,13 @@ impl ApiService {
 // ===========================================================================================
 impl Service for ApiService {
     fn is_available(&self) -> bool {
-        let client = reqwest::Client::new();
         let url = format!(
             "http://{}:{}/{}",
             self.service_context.get_ip_address(),
             self.port,
             HEALTHCHECK_URL_SLUG,
         );
-        let future = client.get(&url).send();
-        let resp_or_err = block_on(future);
+        let resp_or_err = self.client.get(&url).send();
         if resp_or_err.is_err() {
             debug!(
                 "An HTTP error occurred when polling the health endpoint: {}",
@@ -118,7 +114,7 @@ impl Service for ApiService {
             return false;
         }
 
-        let resp_body_or_err = block_on(resp.text());
+        let resp_body_or_err = resp.text();
         if resp_body_or_err.is_err() {
             debug!(
                 "An error occurred reading the response body: {}",

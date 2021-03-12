@@ -33,10 +33,8 @@ func (s NginxStaticContainerInitializer) GetUsedPorts() map[string]bool {
 	}
 }
 
-func (s NginxStaticContainerInitializer) GetServiceWrappingFunc() func(serviceCtx *services.ServiceContext) services.Service {
-	return func(serviceCtx *services.ServiceContext) services.Service {
-		return NewNginxStaticService(serviceCtx)
-	}
+func (s NginxStaticContainerInitializer) GetService(serviceCtx *services.ServiceContext) services.Service {
+	return NewNginxStaticService(serviceCtx)
 }
 
 func (s NginxStaticContainerInitializer) GetFilesToGenerate() map[string]bool {

@@ -15,8 +15,7 @@ const CUSTOM_PARAMS_JSON_FLAG: &str = "custom-params-json";
 const KURTOSIS_API_SOCKET_FLAG: &str  = "kurtosis-api-socket";
 const LOG_LEVEL_FLAG: &str = "log-level";
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     let matches = App::new("My Super Program")
         .arg(Arg::new(CUSTOM_PARAMS_JSON_FLAG)
             .long(CUSTOM_PARAMS_JSON_FLAG)
@@ -57,6 +56,10 @@ async fn main() -> Result<()> {
         custom_params_json,
         configurator_box
     );
-    executor.run().context("An error occurred running the test suite executor")?;
+    let testsuite_result = executor.run();
+    if testsuite_result.is_err() {
+        error!("An error occurred running the test suite executor:");
+        testsuite_result.context("An error occurred running the test suite executor")?;
+    }
     return Ok(());
 }

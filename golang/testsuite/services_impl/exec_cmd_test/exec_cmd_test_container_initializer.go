@@ -25,10 +25,8 @@ func (self ExecCmdTestContainerInitializer) GetUsedPorts() map[string]bool {
 	return map[string]bool{}
 }
 
-func (self ExecCmdTestContainerInitializer) GetServiceWrappingFunc() func(ctx *services.ServiceContext) services.Service {
-	return func(ctx *services.ServiceContext) services.Service {
-		return NewExecCmdTestService(ctx)
-	}
+func (self ExecCmdTestContainerInitializer) GetService(serviceCtx *services.ServiceContext) services.Service {
+	return NewExecCmdTestService(serviceCtx)
 }
 
 func (self ExecCmdTestContainerInitializer) GetFilesToGenerate() map[string]bool {
