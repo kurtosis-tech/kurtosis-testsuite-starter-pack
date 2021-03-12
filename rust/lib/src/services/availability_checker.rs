@@ -1,4 +1,4 @@
-use std::{sync::Arc, thread::sleep, time::Duration};
+use std::{rc::Rc, sync::Arc, thread::sleep, time::Duration};
 use anyhow::{anyhow, Result};
 
 use super::service::Service;
@@ -6,11 +6,11 @@ use super::service::Service;
 pub struct AvailabilityChecker {
     service_id: String,
 
-    to_check: Arc<dyn Service>,
+    to_check: Rc<dyn Service>,
 }
 
 impl AvailabilityChecker {
-    pub fn new(service_id: &str, to_check: Arc<dyn Service>) -> AvailabilityChecker {
+    pub fn new(service_id: &str, to_check: Rc<dyn Service>) -> AvailabilityChecker {
         return AvailabilityChecker{
             service_id: service_id.to_owned(),
             to_check,

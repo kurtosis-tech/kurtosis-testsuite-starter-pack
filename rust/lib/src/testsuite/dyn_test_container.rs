@@ -1,20 +1,20 @@
-use std::{collections::HashMap, convert::TryInto, u32};
+use std::{collections::HashMap, convert::TryInto, rc::Rc, u32};
 
 use crate::{core_api_bindings::api_container_api::{TestMetadata, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
 
-use async_trait::async_trait;
 use super::{dyn_test::DynTest, test::Test, test_context::TestContext};
 use anyhow::{Context, Result};
 use log::{debug, info};
+use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
 // This struct exists to shield the genericized N parameter from the HashMap
 // See: https://discord.com/channels/442252698964721669/448238009733742612/809977090740977674
-pub struct DynTestContainer<T: Test + Send> {
+pub struct DynTestContainer<T: Test> {
     test: T,
 }
 
-impl<T: Test + Send + Sync> DynTestContainer<T> {
+impl<T: Test> DynTestContainer<T> {
     pub fn new(test: T) -> DynTestContainer<T> {
         return DynTestContainer{
             test,
@@ -22,8 +22,7 @@ impl<T: Test + Send + Sync> DynTestContainer<T> {
     }
 }
 
-#[async_trait]
-impl<T: Test + Send + Sync> DynTest for DynTestContainer<T> {
+impl<T: Test> DynTest for DynTestContainer<T> {
     fn get_test_metadata(&self) -> Result<TestMetadata> {
 		let test_config = self.test.get_test_configuration();
 		let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
@@ -43,30 +42,28 @@ impl<T: Test + Send + Sync> DynTest for DynTestContainer<T> {
 		return Ok(test_metadata);
     }
     
-    async fn setup_and_run(&mut self, channel: Channel) -> Result<()> {
+    fn setup_and_run(&mut self, async_runtime: Runtime, channel: Channel) -> Result<()> {
         let test_config = self.test.get_test_configuration();
         let files_artifact_urls = test_config.files_artifact_urls;
         // It's weird that we're cloning the channel, but this is how you're supposed to do it according to the
         // Channel documentation since it uses a &mut self
+        let async_runtime_ptr = Rc::new(async_runtime);
         let client = TestExecutionServiceClient::new(channel.clone());
-        let network_ctx = NetworkContext::new(client, files_artifact_urls);
+        let network_ctx = NetworkContext::new(async_runtime_ptr.clone(), client, files_artifact_urls);
         let mut registration_client = TestExecutionServiceClient::new(channel.clone());
 
         info!("Setting up the test network...");
 		// Kick off a timer with the API in case there's an infinite loop in the user code that causes the test to hang forever
         debug!("Registering test setup with API container...");
-		registration_client.register_test_setup(())
-            .await
+		async_runtime_ptr.block_on(registration_client.register_test_setup(()))
 			.context("An error occurred registering the test setup with the API container")?;
         debug!("Test setup registered with API container");
         debug!("Executing setup logic...");
         let network = self.test.setup(network_ctx)
-            .await
             .context("An error occurred setting up the test network")?;
         debug!("Setup logic executed");
         debug!("Registering test setup completion...");
-		registration_client.register_test_setup_completion(())
-            .await
+		async_runtime_ptr.block_on(registration_client.register_test_setup_completion(()))
 			.context("An error occurred registering the test setup completion with the API container")?;
         debug!("Test setup completion registered");
         info!("Test network set up");
@@ -74,11 +71,9 @@ impl<T: Test + Send + Sync> DynTest for DynTestContainer<T> {
         let test_ctx = TestContext{};
 
         info!("Executing the test...");
-		registration_client.register_test_execution(())
-            .await
+		async_runtime_ptr.block_on(registration_client.register_test_execution(()))
 			.context("An error occurred registering the test execution with the API container")?;
         self.test.run(network, test_ctx)
-            .await
             .context("An error occurred executing the test")?;
         info!("Test execution completed");
 

@@ -1,10 +1,10 @@
-use downcast_rs::{DowncastSync, impl_downcast};
+use downcast_rs::{Downcast, DowncastSync, impl_downcast};
 
 /*
 The developer should implement their own use-case-specific interface that extends this one
  */
-pub trait Service: DowncastSync {
+pub trait Service: Downcast {
     // Returns true if the service is available
     fn is_available(&self) -> bool;
 }
-impl_downcast!(sync Service);
+impl_downcast!(Service);

@@ -1,8 +1,10 @@
-use std::{collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{PathBuf}, sync::Arc};
+use std::{collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{PathBuf}, rc::Rc};
 use std::hash::Hash;
 
 use dashmap::DashMap;
+use downcast_rs::Downcast;
 use log::{debug, trace};
+use tokio::runtime::Runtime;
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
@@ -18,29 +20,30 @@ const DEFAULT_PARTITION_ID: &str = "";
 const SUITE_EX_VOL_MOUNTPOINT: &str = "/suite-execution";
 
 pub struct NetworkContext {
+	async_runtime: Rc<Runtime>,
     client: TestExecutionServiceClient<Channel>,
 	// TODO Make key a separate FilesArtifactID type
 	files_artifact_urls: HashMap<String, String>,
-    all_services: DashMap<String, Arc<dyn Service>>,
+    all_services: DashMap<String, Rc<dyn Service>>,
 }
 
 impl NetworkContext {
-    pub fn new(client: TestExecutionServiceClient<Channel>, files_artifact_urls: HashMap<String, String>) -> NetworkContext {
+    pub fn new(async_runtime: Rc<Runtime>, client: TestExecutionServiceClient<Channel>, files_artifact_urls: HashMap<String, String>) -> NetworkContext {
         return NetworkContext {
+			async_runtime,
             client,
 			files_artifact_urls,
             all_services: DashMap::new(),
         };
     }
 
-    pub async fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Arc<S>, AvailabilityChecker)> {
-        let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
-			.await
+    pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
-    pub async fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Arc<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
@@ -49,8 +52,7 @@ impl NetworkContext {
 		    files_to_generate,
 		};
 		let register_service_args = tonic::Request::new(args);
-		let register_service_resp = self.client.register_service(register_service_args)
-			.await
+		let register_service_resp = self.async_runtime.block_on(self.client.register_service(register_service_args))
 			.context(format!("An error occurred registering service with ID '{}' with the Kurtosis API", service_id))?
 			.into_inner();
 		
@@ -107,17 +109,16 @@ impl NetworkContext {
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};
 		let start_service_req = tonic::Request::new(start_service_args);
-		self.client.start_service(start_service_req)
-			.await
+		self.async_runtime.block_on(self.client.start_service(start_service_req))
 			.context("An error occurred starting the service with the Kurtosis API")?
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");
 
 		let service_context_client = self.client.clone();
-		let service_context = ServiceContext::new(service_context_client, service_id.to_owned(), service_ip_addr);
+		let service_context = ServiceContext::new(self.async_runtime.clone(), service_context_client, service_id.to_owned(), service_ip_addr);
 
 		trace!("Creating service interface...");
-		let result_service_ptr = initializer.get_service(service_context.clone());
+		let result_service_ptr = initializer.get_service(service_context);
 		let casted_result_service_ptr_or_err = result_service_ptr.downcast::<S>();
 		let casted_result_service_ptr: Box<S>;
 		match casted_result_service_ptr_or_err {
@@ -126,7 +127,7 @@ impl NetworkContext {
 				"An error occurred casting service to appropriate type"
 			)),
 		}
-		let casted_result_service_rc = Arc::new(*casted_result_service_ptr);
+		let casted_result_service_rc = Rc::new(*casted_result_service_ptr);
 
 		let availability_checker = AvailabilityChecker::new(service_id, casted_result_service_rc.clone());
 		trace!("Successfully created service interface");
@@ -136,12 +137,12 @@ impl NetworkContext {
 		return Ok((casted_result_service_rc, availability_checker));
     }
 
-    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Arc<S>> {
+    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Rc<S>> {
 		let service_ptr_ptr = self.all_services.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
 		let service_ptr = service_ptr_ptr.deref().clone();
-		let casted_service_ptr_or_err = service_ptr.downcast_arc::<S>();
-		let result: Arc<S>;
+		let casted_service_ptr_or_err = service_ptr.downcast_rc::<S>();
+		let result: Rc<S>;
 		match casted_service_ptr_or_err {
 			Ok(casted_ptr) => result = casted_ptr,
 			Err(_) => return Err(anyhow!(
@@ -152,7 +153,7 @@ impl NetworkContext {
 		return Ok(result);
     }
 
-    pub async fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
+    pub fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
 		debug!("Removing service '{}'...", service_id);
 		let args = RemoveServiceArgs{
 		    service_id: service_id.to_owned(),
@@ -162,15 +163,14 @@ impl NetworkContext {
 		    container_stop_timeout_seconds,
 		};
 		let req = tonic::Request::new(args);
-		self.client.remove_service(req)
-			.await
+		self.async_runtime.block_on(self.client.remove_service(req))
 			.context(format!("An error occurred removing service '{}' from the network", service_id))?;
 		self.all_services.remove(service_id);
 		debug!("Successfully removed service ID '{}'", service_id);
 		return Ok(());
 	}
 
-    pub async fn repartition_network(
+    pub fn repartition_network(
 		&mut self, 
 		partition_services: HashMap<String, HashSet<String>>,
 		partition_connections: HashMap<String, HashMap<String, PartitionConnectionInfo>>,
@@ -207,8 +207,7 @@ impl NetworkContext {
 		};
 
 		let req = tonic::Request::new(args);
-		self.client.repartition(req)
-			.await
+		self.async_runtime.block_on(self.client.repartition(req))
 			.context("An error occurred repartitioning the test network")?;
 		return Ok(());
     }
