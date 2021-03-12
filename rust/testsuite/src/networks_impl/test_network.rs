@@ -32,7 +32,7 @@ impl TestNetwork {
         };
     }
 
-    pub fn add_datastore(&mut self) -> Result<()> {
+    pub async fn add_datastore(&mut self) -> Result<()> {
         if self.datastore_service.is_some() {
             return Err(anyhow!(
                 "Cannot add datastore service to network; datastore already exists!"
@@ -41,6 +41,7 @@ impl TestNetwork {
 
         let initializer = DatastoreContainerInitializer::new(&self.datastore_service_image);
         let (service, checker) = self.network_ctx.add_service(DATASTORE_SERVICE_ID, &initializer)
+            .await
             .context("An error occurred adding the datastore service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;

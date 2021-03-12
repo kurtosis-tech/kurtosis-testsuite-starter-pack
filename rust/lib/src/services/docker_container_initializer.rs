@@ -28,7 +28,7 @@ pub trait DockerContainerInitializer<T: Service> {
         Returns:
             A function with signature (service_context) -> service_interface
     */
-    fn get_service_wrapping_func(&self) -> Box<dyn Send + Fn(ServiceContext) -> Box<dyn Service>>;
+    fn get_service_wrapping_func(&self, service_ctx: ServiceContext) -> Box<dyn Service>;
 
     /*
         This method is used to declare that the service will need a set of files in order to run. To do this, the developer

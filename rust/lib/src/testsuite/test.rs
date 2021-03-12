@@ -9,7 +9,7 @@ use super::{test_configuration::TestConfiguration, test_context::TestContext};
 An interface encapsulating a test to run against a test network.
  */
 pub trait Test {
-	type N: Network;
+	type N: Network + Send;
 
 	/// Defines the configuration object that controls how the test will be executed. If you want to enable advanced
 	/// features like network partitioning, you can do so here.
