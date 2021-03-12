@@ -1,4 +1,4 @@
-use kurtosis_rust_lib::services::{docker_container_initializer, service::Service, service_context::{ServiceContext}};
+use kurtosis_rust_lib::services::{docker_container_initializer, service_context::{ServiceContext}};
 use std::{collections::{HashSet, HashMap}, path::PathBuf};
 use crate::services_impl::datastore::datastore_service::DatastoreService;
 use std::fs::File;
