@@ -13,7 +13,7 @@ use super::service_context::ServiceContext;
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
 //  method every time a new feature comes out!
-pub trait DockerContainerInitializer<T: Service> {
+pub trait DockerContainerInitializer<T: Service + Send + Sync> {
     // Gets the Docker image that will be used for instantiating the Docker container
     fn get_docker_image(&self) -> &str;
 

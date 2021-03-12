@@ -505,6 +505,7 @@ name = "kurtosis-rust-example"
 version = "1.13.0"
 dependencies = [
  "anyhow",
+ "async-trait",
  "clap",
  "futures",
  "kurtosis-rust-lib",

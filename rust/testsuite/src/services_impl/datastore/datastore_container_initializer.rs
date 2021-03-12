@@ -18,13 +18,6 @@ impl DatastoreContainerInitializer {
             docker_image: docker_image.to_owned(),
         };
     }
-
-    fn create_service(service_context: ServiceContext) -> Box<dyn Service> {
-        let service = DatastoreService::new(
-            service_context,
-            PORT);
-        return Box::new(service);
-    }
 }
 
 impl docker_container_initializer::DockerContainerInitializer<DatastoreService> for DatastoreContainerInitializer {
@@ -38,8 +31,11 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return result;
     }
 
-    fn get_service_wrapping_func(&self) -> Box<dyn Fn(ServiceContext) -> Box<dyn kurtosis_rust_lib::services::service::Service>> {
-        return Box::new(DatastoreContainerInitializer::create_service);
+    fn get_service(&self, service_context: ServiceContext) -> Box<dyn kurtosis_rust_lib::services::service::Service> {
+        let service = DatastoreService::new(
+            service_context,
+            PORT);
+        return Box::new(service);
     }
 
     fn get_files_to_generate(&self) -> HashSet<String> {

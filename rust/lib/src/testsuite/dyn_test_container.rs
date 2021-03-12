@@ -14,7 +14,7 @@ pub struct DynTestContainer<T: Test + Send> {
     test: T,
 }
 
-impl<T: Test + Send> DynTestContainer<T> {
+impl<T: Test + Send + Sync> DynTestContainer<T> {
     pub fn new(test: T) -> DynTestContainer<T> {
         return DynTestContainer{
             test,
@@ -23,7 +23,7 @@ impl<T: Test + Send> DynTestContainer<T> {
 }
 
 #[async_trait]
-impl<T: Test + Send> DynTest for DynTestContainer<T> {
+impl<T: Test + Send + Sync> DynTest for DynTestContainer<T> {
     fn get_test_metadata(&self) -> Result<TestMetadata> {
 		let test_config = self.test.get_test_configuration();
 		let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
@@ -61,6 +61,7 @@ impl<T: Test + Send> DynTest for DynTestContainer<T> {
         debug!("Test setup registered with API container");
         debug!("Executing setup logic...");
         let network = self.test.setup(network_ctx)
+            .await
             .context("An error occurred setting up the test network")?;
         debug!("Setup logic executed");
         debug!("Registering test setup completion...");
@@ -77,6 +78,7 @@ impl<T: Test + Send> DynTest for DynTestContainer<T> {
             .await
 			.context("An error occurred registering the test execution with the API container")?;
         self.test.run(network, test_ctx)
+            .await
             .context("An error occurred executing the test")?;
         info!("Test execution completed");
 
