@@ -28,11 +28,6 @@ const (
 	suiteExVolMountpoint = "/suite-execution"
 )
 
-type serviceInfo struct {
-	serviceContext *services.ServiceContext
-	wrappingFunc func(serviceCtx *services.ServiceContext) services.Service
-}
-
 type NetworkContext struct {
 	client core_api_bindings.TestExecutionServiceClient
 
@@ -41,7 +36,7 @@ type NetworkContext struct {
 	// Mutex protecting access to the services map
 	mutex *sync.Mutex
 
-	services map[services.ServiceID]serviceInfo
+	services map[services.ServiceID]services.Service
 }
 
 
@@ -59,7 +54,7 @@ func NewNetworkContext(
 		mutex: &sync.Mutex{},
 		client: client,
 		filesArtifactUrls: filesArtifactUrls,
-		services: map[services.ServiceID]serviceInfo{},
+		services: map[services.ServiceID]services.Service{},
 	}
 }
 
@@ -198,14 +193,10 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 
 	logrus.Tracef("Creating service interface...")
 	serviceContext := services.NewServiceContext(networkCtx.client, serviceId, serviceIpAddr)
-	wrapWithInterface := initializer.GetServiceWrappingFunc();
-	service := wrapWithInterface(serviceContext);
+	service := initializer.GetService(serviceContext)
 	logrus.Tracef("Successfully created service interface")
 
-	networkCtx.services[serviceId] = serviceInfo{
-		serviceContext: serviceContext,
-		wrappingFunc:   wrapWithInterface,
-	}
+	networkCtx.services[serviceId] = service
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
@@ -219,15 +210,10 @@ func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (serv
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
-	serviceInfo, found := networkCtx.services[serviceId]
+	service, found := networkCtx.services[serviceId]
 	if !found {
 		return nil, stacktrace.NewError("No service info found for ID '%v'", serviceId)
 	}
-	serviceContext := serviceInfo.serviceContext
-	wrapWithInterface := serviceInfo.wrappingFunc
-	service := wrapWithInterface(serviceContext);
-
-	// TODO Stop recreating the service every time!!
 	return service, nil
 }
 

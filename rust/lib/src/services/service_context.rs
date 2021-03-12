@@ -1,5 +1,7 @@
+use std::rc::Rc;
+
 use anyhow::{Context, Result};
-use futures::executor::block_on;
+use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
 use crate::core_api_bindings::api_container_api::{ExecCommandArgs, test_execution_service_client::TestExecutionServiceClient};
@@ -7,14 +9,16 @@ use crate::core_api_bindings::api_container_api::{ExecCommandArgs, test_executio
 // This struct represents a Docker container running a service, and exposes functions for manipulating
 // that container
 pub struct ServiceContext {
+    async_runtime: Rc<Runtime>,
     client: TestExecutionServiceClient<Channel>,
     service_id: String,
     ip_address: String,
 }
 
 impl ServiceContext {
-    pub fn new(client: TestExecutionServiceClient<Channel>, service_id: String, ip_address: String) -> ServiceContext {
+    pub fn new(async_runtime: Rc<Runtime>, client: TestExecutionServiceClient<Channel>, service_id: String, ip_address: String) -> ServiceContext {
         return ServiceContext{
+            async_runtime,
             client,
             service_id,
             ip_address,
@@ -35,19 +39,9 @@ impl ServiceContext {
             command_args: command.clone(),
         };
         let req = tonic::Request::new(args);
-        let resp = block_on(self.client.exec_command(req))
+        let resp = self.async_runtime.block_on(self.client.exec_command(req))
             .context(format!("An error occurred executing command '{:?}' on service '{}'", &command, self.service_id))?
             .into_inner();
         return Ok((resp.exit_code, resp.log_output));
-    }
-}
-
-impl Clone for ServiceContext {
-    fn clone(&self) -> Self {
-        return ServiceContext{
-            client: self.client.clone(),
-            service_id: self.service_id.clone(),
-            ip_address: self.ip_address.clone(),
-        }
     }
 }

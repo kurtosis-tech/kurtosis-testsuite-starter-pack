@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, collections::HashMap, time::Duration};
+use std::{borrow::BorrowMut, collections::HashMap, rc::Rc, time::Duration};
 use anyhow::{anyhow, Context, Result};
 
 use datastore_container_initializer::DatastoreContainerInitializer;
@@ -46,7 +46,7 @@ impl Test for BasicDatastoreTest {
 	}
 
     fn run(&self, network: Box<NetworkContext>, test_ctx: TestContext) -> Result<()> {
-		let service: Box<DatastoreService> = network.get_service(DATASTORE_SERVICE_ID)
+		let service: Rc<DatastoreService> = network.get_service(DATASTORE_SERVICE_ID)
 			.context("An error occurred getting the datastore service")?;
 		info!("Verifying that key '{}' doesn't already exist...", TEST_KEY);
 		let does_exist = service.exists(TEST_KEY)

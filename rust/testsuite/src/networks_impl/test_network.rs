@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, collections::HashMap, time::Duration};
+use std::{borrow::Borrow, collections::HashMap, rc::Rc, time::Duration};
 use anyhow::{Context, Result, anyhow};
 
 use kurtosis_rust_lib::networks::{network::Network, network_context::NetworkContext};
@@ -15,8 +15,8 @@ pub struct TestNetwork {
 	network_ctx: NetworkContext,
 	datastore_service_image: String,
 	api_service_image: String,
-    datastore_service: Option<Box<DatastoreService>>,
-    api_services: HashMap<String, ApiService>,
+    datastore_service: Option<Rc<DatastoreService>>,
+    api_services: HashMap<String, Rc<ApiService>>,
     next_api_service_id: u32,
 }
 
@@ -48,7 +48,7 @@ impl TestNetwork {
         return Ok(());
     }
 
-    pub fn get_datastore(&self) -> &Option<Box<DatastoreService>> {
+    pub fn get_datastore(&self) -> &Option<Rc<DatastoreService>> {
         return &self.datastore_service;
     }
 
@@ -70,7 +70,7 @@ impl TestNetwork {
             .context("An error occurred adding the API service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the API service to start")?;
-        self.api_services.insert(service_id.clone(), *api_service);
+        self.api_services.insert(service_id.clone(), api_service);
         return Ok(service_id.clone());
     }
 
