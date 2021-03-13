@@ -1,4 +1,6 @@
 # TBD
+### Changes
+* Replaced all docstring comments on all lib classes/methods with a link to https://docs.kurtosistech.com/kurtosis-libs/lib-documentation , to centralize documentation
 
 # 1.15.0
 ### Features
