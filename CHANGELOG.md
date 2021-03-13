@@ -1,4 +1,6 @@
 # TBD
+### Features
+* Add `docs` directory, for publishing with Github Pages
 
 # 1.14.2
 ### Fixes
