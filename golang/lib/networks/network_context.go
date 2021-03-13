@@ -28,6 +28,7 @@ const (
 	suiteExVolMountpoint = "/suite-execution"
 )
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type NetworkContext struct {
 	client core_api_bindings.TestExecutionServiceClient
 
@@ -58,19 +59,7 @@ func NewNetworkContext(
 	}
 }
 
-/*
-Adds a service to the network in the default partition with the given service ID
-
-NOTE: If the network has been repartitioned and the default partition hasn't been preserved, you should use
-	AddServiceToPartition instead.
-
-Args:
-	serviceId: The service ID that will be used to identify this node in the network.
-	initializer: The Docker container initializer that contains the logic for starting the service
-
-Return:
-	service: The new service
-*/
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) AddService(
 		serviceId services.ServiceID,
 		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
@@ -86,20 +75,7 @@ func (networkCtx *NetworkContext) AddService(
 	return service, availabilityChecker, nil
 }
 
-/*
-Adds a service to the network with the given service ID, created using the given configuration ID.
-
-NOTE: If the network hasn't been repartitioned yet, the PartitionID should be an empty string to add to the default
-	partition.
-
-Args:
-	serviceId: The service ID that will be used to identify this node in the network.
-	partitionId: The partition ID to add the service to
-	initializer: The Docker container initializer that contains the logic for starting the service
-
-Return:
-	service.Service: The new service
-*/
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) AddServiceToPartition(
 		serviceId services.ServiceID,
 		partitionId PartitionID,
@@ -203,9 +179,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	return service, availabilityChecker, nil
 }
 
-/*
-Gets an interface for interacting with the service with the given ID, or returns an error if no service with that ID exists.
- */
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (services.Service, error) {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
@@ -217,9 +191,7 @@ func (networkCtx *NetworkContext) GetService(serviceId services.ServiceID) (serv
 	return service, nil
 }
 
-/*
-Stops the container with the given service ID, and removes it from the network.
-*/
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, containerStopTimeoutSeconds uint64) error {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
@@ -240,9 +212,7 @@ func (networkCtx *NetworkContext) RemoveService(serviceId services.ServiceID, co
 	return nil
 }
 
-/*
-Repartitions the network to the given state
- */
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) RepartitionNetwork(
 		partitionServices map[PartitionID]map[services.ServiceID]bool,
 		partitionConnections map[PartitionID]map[PartitionID]*core_api_bindings.PartitionConnectionInfo,

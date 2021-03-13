@@ -18,6 +18,7 @@ const DEFAULT_PARTITION_ID: &str = "";
 //  hardcoded inside Kurtosis Core
 const SUITE_EX_VOL_MOUNTPOINT: &str = "/suite-execution";
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct NetworkContext {
 	async_runtime: Rc<Runtime>,
     client: TestExecutionServiceClient<Channel>,
@@ -36,12 +37,14 @@ impl NetworkContext {
         };
     }
 
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn add_service_to_partition<S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
@@ -127,6 +130,7 @@ impl NetworkContext {
 		return Ok((casted_result_service_rc, availability_checker));
     }
 
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Rc<S>> {
 		let service_ptr_ptr = self.all_services.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
@@ -143,6 +147,7 @@ impl NetworkContext {
 		return Ok(result);
     }
 
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
 		debug!("Removing service '{}'...", service_id);
 		let args = RemoveServiceArgs{
@@ -160,6 +165,7 @@ impl NetworkContext {
 		return Ok(());
 	}
 
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn repartition_network(
 		&mut self, 
 		partition_services: HashMap<String, HashSet<String>>,

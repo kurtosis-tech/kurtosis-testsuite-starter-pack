@@ -6,8 +6,7 @@ import (
 	"github.com/palantir/stacktrace"
 )
 
-// This struct represents a Docker container running a service, and exposes functions for manipulating
-// that container
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type ServiceContext struct {
 	client core_api_bindings.TestExecutionServiceClient
 	serviceId ServiceID
@@ -18,14 +17,17 @@ func NewServiceContext(client core_api_bindings.TestExecutionServiceClient, serv
 	return &ServiceContext{client: client, serviceId: serviceId, ipAddress: ipAddress}
 }
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (self *ServiceContext) GetServiceID() ServiceID {
 	return self.serviceId
 }
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (self *ServiceContext) GetIPAddress() string {
 	return self.ipAddress
 }
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (self *ServiceContext) ExecCommand(command []string) (int32, *[]byte, error) {
 	serviceId := self.serviceId
 	args := &core_api_bindings.ExecCommandArgs{
