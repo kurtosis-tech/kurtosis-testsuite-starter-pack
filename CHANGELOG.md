@@ -1,5 +1,9 @@
 # TBD
 
+# 1.14.3
+### Features
+* Add `docs` directory, for publishing with Github Pages
+
 # 1.14.2
 ### Fixes
 * Fixes the issue where the Rust testsuite would need to be built twice whenever Cargo.toml changed due to `cargo` not rebuilding the binary if the source code hasn't changed (see https://github.com/emk/rust-musl-builder/issues/101 )
