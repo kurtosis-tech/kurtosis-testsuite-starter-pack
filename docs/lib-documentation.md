@@ -93,7 +93,7 @@ Blocks until the timeout is reached or the checker's corresponding service becom
 * `timeBetweenPolls`: The time that the checker should wait before calls to [Service.isAvailable][service_isavailable].
 * `maxNumRetries`: The maximum number of failed calls to [Service.isAvailable][service_isavailable] that the checker will allow before returning an error.
 
-DockerContainerInitializer<S extends [Service][service]>
+DockerContainerInitializer\<S extends [Service][service]\>
 -----------------------------------------------------
 Interface that instructs Kurtosis how to create a Docker container that will be represented by an instance of your custom [Service][service] implementation. The generic type `S` defines the type of the [Service][service] implementation that the initializer will produce.
 
@@ -155,6 +155,11 @@ A filepath where Kurtosis can safely mount the test volume on your container.
 ### getStartCommandOverrides(Map\<String, String\> generatedFileFilepaths, String ipAddr) -\> (Option\<List\<String\>> entrypointArgs, Option\<List\<String\>> cmdArgs)
 You often won't control the Docker images that you'll be using in your testnet, and the `ENTRYPOINT` and `CMD` statements hardcoded in their Dockerfiles might not be suitable for what you need. This function allows you to override these statements to your needs. To use the Dockerfile versions without overriding, leave the option empty.
 
+**Args**
+
+* `generatedFileFilepaths`: Mapping of file ID (as declared in [DockerContainerInitializer.getFilesToGenerate][dockercontainerinitializer_getfilestogenerate]) to the filepath on the container's filesystem where the file exists.
+* `ipAddr`: The IP address of the container the service is running inside.
+
 **Returns**
 
 * `entrypointArgs`: If set, overrides the `ENTRYPOINT` statement in the image's Dockerfile with the given args.
@@ -202,7 +207,7 @@ Uses [Docker exec](https://docs.docker.com/engine/reference/commandline/exec/) f
 * `exitCode`: The exit code of the command.
 * `logs`: The bytes of the command logs. This isn't a string because Kurtosis can't know what text encoding scheme the container uses.
 
-Test<N extends [Network][network]>
+Test\<N extends [Network][network]\>
 -------------------------------
 This interface represents a test that will be executed against a test network. You should create one implementation per test that you want to run. The generic type `N` will be the type of the test network that the test will run against.
 
@@ -317,8 +322,8 @@ Determines the width (in bits) of the Docker network that Kurtosis will create f
 [network]: #network
 
 [networkcontext]: #networkcontext
-[networkcontext_addservice]: #addserviceserviceid-serviceid-dockercontainerinitializersinitializer---s-serviceavailabilitychecker-checker
-[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-dockercontainerinitializersinitializer---s-serviceavailabilitychecker-checker
+[networkcontext_addservice]: #addserviceserviceid-serviceid-dockercontainerinitializers-initializer---s-service-availabilitychecker-checker
+[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-dockercontainerinitializers-initializer---s-service-availabilitychecker-checker
 [networkcontext_repartitionnetwork]: #repartitionnetworkmappartitionid-setserviceid-partitionservices-mappartitionid-mappartitionid-partitionconnectioninfo-partitionconnections-partitionconnectioninfo-defaultconnection
 
 [partitionconnectioninfo]: #partitionconnectioninfo
