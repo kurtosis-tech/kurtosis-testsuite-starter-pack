@@ -1,4 +1,6 @@
 # TBD
+### Fixes
+* Fix several bugs with the lib documentation
 
 # 1.15.0
 ### Features
