@@ -33,13 +33,6 @@ impl<'obj> ApiContainerInitializer<'obj> {
             datastore,
         }
     }
-
-    fn create_service(service_context: ServiceContext) -> Box<dyn Service> {
-        let service = ApiService::new(
-            service_context,
-            PORT);
-        return Box::new(service);
-    }
 }
 
 impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'obj> {
@@ -53,8 +46,11 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
         return result;
     }
 
-    fn get_service_wrapping_func(&self) -> Box<dyn Fn(ServiceContext) -> Box<dyn Service>> {
-        return Box::new(ApiContainerInitializer::create_service);
+    fn get_service(&self, service_context: ServiceContext) -> Box<dyn Service> {
+        let service = ApiService::new(
+            service_context,
+            PORT);
+        return Box::new(service);
     }
 
     fn get_files_to_generate(&self) -> HashSet<String> {

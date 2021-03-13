@@ -2,6 +2,34 @@
 ### Features
 * Added language-agnostic documentation for each class & function, which gets published to TODO TODO TODO
 
+# 1.14.3
+### Features
+* Add `docs` directory, for publishing with Github Pages
+
+# 1.14.2
+### Fixes
+* Fixes the issue where the Rust testsuite would need to be built twice whenever Cargo.toml changed due to `cargo` not rebuilding the binary if the source code hasn't changed (see https://github.com/emk/rust-musl-builder/issues/101 )
+
+# 1.14.1
+### Features
+* Switched the Rust library's `ServiceContext.exec_command` to use `&self` rather than `&mut self`
+
+# 1.14.0
+### Fixes
+* Added an error log message when the Rust testsuite errors so the exact timestamp of the failure is visible, which brings it to parity with the Go testsuite
+* Simplified the way services are created, by making `DockerContainerInitializer`s construct `Service` instances directly, rather than via a service wrapping function
+* Removes the intermixing of `tokio` and `block_on`, which causes deadlocks, in favor of pure `tokio`
+
+### Breaking Changes
+* `DockerContainerInitializer.getServiceWrappingFunction` name & signature changed to `getService(ServiceContext) -> Service`
+
+# 1.13.0
+### Features
+* Docker exec commands now have their log output available
+
+### Breaking Changes
+* `ServiceContext.ExecCommand` now returns an extra argument, the bytes of the log output from the exec command
+
 # 1.12.1
 ### Features
 * Add extra debugging logic when going through the setup process during test execution flow
