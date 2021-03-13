@@ -13,7 +13,7 @@ use super::service_context::ServiceContext;
 
 // TODO Create a DockerContainerInitializerBuilder rather than forcing users to update their code with a new
 //  method every time a new feature comes out!
-pub trait DockerContainerInitializer<T: Service> {
+pub trait DockerContainerInitializer<S: Service> {
     // Gets the Docker image that will be used for instantiating the Docker container
     fn get_docker_image(&self) -> &str;
 
@@ -28,7 +28,7 @@ pub trait DockerContainerInitializer<T: Service> {
         Returns:
             An instance of the user-defined service that this container initializer produces
     */
-    fn get_service(&self, service_ctx: ServiceContext) -> Box<dyn Service>;
+    fn get_service(&self, service_ctx: ServiceContext) -> Box<S>;
 
     /*
         This method is used to declare that the service will need a set of files in order to run. To do this, the developer

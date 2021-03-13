@@ -1,3 +1,0 @@
-Kurtosis Libs
-=============
-Hello, world!
