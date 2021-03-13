@@ -8,7 +8,7 @@ use log::{debug, info};
 use tokio::runtime::Runtime;
 use tonic::transport::Channel;
 
-// This struct exists to shield the genericized N parameter from the HashMap
+// This Rust-specific struct exists to shield the genericized N parameter from the HashMap
 // See: https://discord.com/channels/442252698964721669/448238009733742612/809977090740977674
 pub struct DynTestContainer<T: Test> {
     test: T,

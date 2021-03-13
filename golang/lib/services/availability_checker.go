@@ -10,13 +10,11 @@ import (
 	"time"
 )
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type AvailabilityChecker interface {
 	WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int) error
 }
 
-/*
-Struct for polling a service until it's available, with configurable retry options
- */
 type DefaultAvailabilityChecker struct {
 	// ID of the service being monitored
 	serviceId ServiceID
@@ -29,10 +27,7 @@ func NewDefaultAvailabilityChecker(serviceId ServiceID, toCheck Service) *Defaul
 	return &DefaultAvailabilityChecker{serviceId: serviceId, toCheck: toCheck}
 }
 
-/*
-Waits for the service that was passed in at construction time to start up by making requests to the service until
-	the service is available or the maximum number of retries are reached
- */
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (checker DefaultAvailabilityChecker) WaitForStartup(timeBetweenPolls time.Duration, maxNumRetries int) error {
 	for i := 0; i < maxNumRetries; i++ {
 		if checker.toCheck.IsAvailable() {

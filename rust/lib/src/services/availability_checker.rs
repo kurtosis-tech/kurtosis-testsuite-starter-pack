@@ -3,6 +3,7 @@ use anyhow::{anyhow, Result};
 
 use super::service::Service;
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct AvailabilityChecker {
     service_id: String,
 
@@ -17,6 +18,7 @@ impl AvailabilityChecker {
         };
     }
 
+    // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn wait_for_startup(&self, time_between_polls: &Duration, max_num_retries: u32) -> Result<()> {
         for i in 0..max_num_retries {
             if self.to_check.is_available() {

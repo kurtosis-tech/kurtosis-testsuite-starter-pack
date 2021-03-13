@@ -6,8 +6,7 @@ use tonic::transport::Channel;
 
 use crate::core_api_bindings::api_container_api::{ExecCommandArgs, test_execution_service_client::TestExecutionServiceClient};
 
-// This struct represents a Docker container running a service, and exposes functions for manipulating
-// that container
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct ServiceContext {
     async_runtime: Rc<Runtime>,
     client: TestExecutionServiceClient<Channel>,
@@ -25,14 +24,17 @@ impl ServiceContext {
         }
     }
 
+    // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn get_service_id(&self) -> &str {
         return &self.service_id;
     }
 
+    // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn get_ip_address(&self) -> &str {
         return &self.ip_address;
     }
 
+    // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn exec_command(&self, command: Vec<String>) -> Result<(i32, Vec<u8>)> {
         let args = ExecCommandArgs{
             service_id: self.service_id.clone(),
