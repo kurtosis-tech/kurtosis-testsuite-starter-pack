@@ -31,7 +31,7 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return result;
     }
 
-    fn get_service(&self, service_context: ServiceContext) -> Box<dyn kurtosis_rust_lib::services::service::Service> {
+    fn get_service(&self, service_context: ServiceContext) -> Box<DatastoreService> {
         let service = DatastoreService::new(
             service_context,
             PORT);

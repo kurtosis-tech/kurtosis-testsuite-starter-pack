@@ -1,4 +1,12 @@
 # TBD
+### Features
+* Added language-agnostic documentation for each class & function, which gets published to https://docs.kurtosistech.com
+
+### Fixes
+* Fixed Rust's `DockerContainerInitializer` parameterized with `S: Service`, but `getService` was returning `Box<dyn Service>` (so an initializer could theoretically return a service not matching the initializer)
+
+### Breaking Changes
+* Rust `DockerContainerIniitalizer.getService` now returns `Box<S>` rather than `Box<dyn Service>`
 
 # 1.14.3
 ### Features

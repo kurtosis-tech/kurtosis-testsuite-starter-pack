@@ -42,7 +42,7 @@ impl NetworkContext {
 		return Ok((service_ptr, availability_checker));
 	}
 
-    pub fn add_service_to_partition<'a, S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
@@ -118,16 +118,7 @@ impl NetworkContext {
 
 		trace!("Creating service interface...");
 		let result_service_ptr = initializer.get_service(service_context);
-		let casted_result_service_ptr_or_err = result_service_ptr.downcast::<S>();
-		let casted_result_service_ptr: Box<S>;
-		match casted_result_service_ptr_or_err {
-			Ok(ptr) => casted_result_service_ptr = ptr,
-			Err(_) => return Err(anyhow!(
-				"An error occurred casting service to appropriate type"
-			)),
-		}
-		let casted_result_service_rc = Rc::new(*casted_result_service_ptr);
-
+		let casted_result_service_rc = Rc::new(*result_service_ptr);
 		let availability_checker = AvailabilityChecker::new(service_id, casted_result_service_rc.clone());
 		trace!("Successfully created service interface");
 

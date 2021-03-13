@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet}, fmt::Debug, fs::File, path::PathBuf};
 
 use anyhow::{Context, Result};
-use kurtosis_rust_lib::services::{docker_container_initializer::DockerContainerInitializer, service::Service, service_context::ServiceContext};
+use kurtosis_rust_lib::services::{docker_container_initializer::DockerContainerInitializer, service_context::ServiceContext};
 use serde::{Deserialize, Serialize};
 
 use crate::services_impl::datastore::datastore_service::DatastoreService;
@@ -46,7 +46,7 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
         return result;
     }
 
-    fn get_service(&self, service_context: ServiceContext) -> Box<dyn Service> {
+    fn get_service(&self, service_context: ServiceContext) -> Box<ApiService> {
         let service = ApiService::new(
             service_context,
             PORT);
