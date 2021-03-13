@@ -2,6 +2,9 @@
 ### Changes
 * Replaced all docstring comments on all lib classes/methods with a link to https://docs.kurtosistech.com/kurtosis-libs/lib-documentation , to centralize documentation
 
+### Fixes
+* Fix several bugs with the lib documentation
+
 # 1.15.0
 ### Features
 * Added language-agnostic documentation for each class & function, which gets published to https://docs.kurtosistech.com
