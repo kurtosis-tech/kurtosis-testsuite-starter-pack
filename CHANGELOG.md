@@ -1,4 +1,6 @@
 # TBD
+
+# 1.16.0
 ### Changes
 * Added type aliases `ServiceId` and `PartitionId` to Rust library and changed function signatures to match
 
