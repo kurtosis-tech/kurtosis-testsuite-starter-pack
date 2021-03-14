@@ -7,16 +7,18 @@ use tokio::runtime::Runtime;
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::Service, service_context::ServiceContext}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::{Service, ServiceId}, service_context::ServiceContext}};
 
 use super::network::Network;
 
 // TODO Make a type
-const DEFAULT_PARTITION_ID: &str = "";
+const DEFAULT_PARTITION_ID_STR: &str = "";
 
 // This value - where the suite execution volume will be mounted on the testsuite container - is
 //  hardcoded inside Kurtosis Core
 const SUITE_EX_VOL_MOUNTPOINT: &str = "/suite-execution";
+
+pub type PartitionId = String;
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct NetworkContext {
@@ -24,7 +26,7 @@ pub struct NetworkContext {
     client: TestExecutionServiceClient<Channel>,
 	// TODO Make key a separate FilesArtifactID type
 	files_artifact_urls: HashMap<String, String>,
-    all_services: DashMap<String, Rc<dyn Service>>,
+    all_services: DashMap<ServiceId, Rc<dyn Service>>,
 }
 
 impl NetworkContext {
@@ -38,14 +40,14 @@ impl NetworkContext {
     }
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn add_service<S: Service>(&mut self, service_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
-		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, DEFAULT_PARTITION_ID, initializer)
+    pub fn add_service<S: Service>(&mut self, service_id: &ServiceId, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, &DEFAULT_PARTITION_ID_STR.to_owned(), initializer)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &str, partition_id: &str, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &ServiceId, partition_id: &PartitionId, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
@@ -131,7 +133,7 @@ impl NetworkContext {
     }
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn get_service<S: Service>(&self, service_id: &str) -> Result<Rc<S>> {
+    pub fn get_service<S: Service>(&self, service_id: &ServiceId) -> Result<Rc<S>> {
 		let service_ptr_ptr = self.all_services.get(service_id)
 			.context(format!("No service found with ID '{}'", service_id))?;
 		let service_ptr = service_ptr_ptr.deref().clone();
@@ -148,7 +150,7 @@ impl NetworkContext {
     }
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn remove_service(&mut self, service_id: &str, container_stop_timeout_seconds: u64) -> Result<()> {
+    pub fn remove_service(&mut self, service_id: &ServiceId, container_stop_timeout_seconds: u64) -> Result<()> {
 		debug!("Removing service '{}'...", service_id);
 		let args = RemoveServiceArgs{
 		    service_id: service_id.to_owned(),
@@ -168,8 +170,8 @@ impl NetworkContext {
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn repartition_network(
 		&mut self, 
-		partition_services: HashMap<String, HashSet<String>>,
-		partition_connections: HashMap<String, HashMap<String, PartitionConnectionInfo>>,
+		partition_services: HashMap<PartitionId, HashSet<ServiceId>>,
+		partition_connections: HashMap<PartitionId, HashMap<PartitionId, PartitionConnectionInfo>>,
 		default_connection_info: PartitionConnectionInfo,
 	) -> Result<()> {
 		let mut req_partition_services: HashMap<String, PartitionServices> = HashMap::new();

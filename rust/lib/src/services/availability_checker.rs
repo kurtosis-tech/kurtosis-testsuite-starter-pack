@@ -1,17 +1,17 @@
 use std::{rc::Rc, thread::sleep, time::Duration};
 use anyhow::{anyhow, Result};
 
-use super::service::Service;
+use super::service::{Service, ServiceId};
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct AvailabilityChecker {
-    service_id: String,
+    service_id: ServiceId,
 
     to_check: Rc<dyn Service>,
 }
 
 impl AvailabilityChecker {
-    pub fn new(service_id: &str, to_check: Rc<dyn Service>) -> AvailabilityChecker {
+    pub fn new(service_id: &ServiceId, to_check: Rc<dyn Service>) -> AvailabilityChecker {
         return AvailabilityChecker{
             service_id: service_id.to_owned(),
             to_check,

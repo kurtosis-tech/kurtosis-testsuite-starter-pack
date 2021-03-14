@@ -1,5 +1,12 @@
 # TBD
 
+# 1.16.0
+### Changes
+* Added type aliases `ServiceId` and `PartitionId` to Rust library and changed function signatures to match
+
+### Breaking Changes
+* Modified several Rust functions slightly to take in `ServiceId` and `PartitionId` rather than `String`
+
 # 1.15.1
 ### Changes
 * Replaced all docstring comments on all lib classes/methods with a link to https://docs.kurtosistech.com/kurtosis-libs/lib-documentation , to centralize documentation

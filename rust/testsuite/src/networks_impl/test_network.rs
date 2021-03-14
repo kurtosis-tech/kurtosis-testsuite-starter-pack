@@ -1,11 +1,11 @@
 use std::{borrow::Borrow, collections::HashMap, rc::Rc, time::Duration};
 use anyhow::{Context, Result, anyhow};
 
-use kurtosis_rust_lib::networks::{network::Network, network_context::NetworkContext};
+use kurtosis_rust_lib::{networks::{network::Network, network_context::NetworkContext}, services::service::ServiceId};
 
 use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::{datastore_container_initializer::DatastoreContainerInitializer, datastore_service::DatastoreService}};
 
-const DATASTORE_SERVICE_ID: &str = "datastore";
+const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 const API_SERVICE_ID_PREFIX: &str = "api-";
 
 const WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS: Duration = Duration::from_secs(1);
@@ -40,7 +40,7 @@ impl TestNetwork {
         }
 
         let initializer = DatastoreContainerInitializer::new(&self.datastore_service_image);
-        let (service, checker) = self.network_ctx.add_service(DATASTORE_SERVICE_ID, &initializer)
+        let (service, checker) = self.network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
             .context("An error occurred adding the datastore service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
@@ -52,7 +52,7 @@ impl TestNetwork {
         return &self.datastore_service;
     }
 
-    pub fn add_api_service(&mut self) -> Result<String> {
+    pub fn add_api_service(&mut self) -> Result<ServiceId> {
         let datastore;
         match &self.datastore_service {
             Some(service_box) => datastore = service_box,
@@ -63,7 +63,7 @@ impl TestNetwork {
 
         let initializer = ApiContainerInitializer::new(self.api_service_image.clone(), datastore.borrow());
 
-        let service_id = format!("{}{}", API_SERVICE_ID_PREFIX, self.next_api_service_id);
+        let service_id: ServiceId = format!("{}{}", API_SERVICE_ID_PREFIX, self.next_api_service_id);
         self.next_api_service_id += 1;
 
         let (api_service, checker) = self.network_ctx.add_service(&service_id, &initializer)
@@ -74,7 +74,7 @@ impl TestNetwork {
         return Ok(service_id.clone());
     }
 
-    pub fn get_api_service(&self, service_id: &str) -> Result<&ApiService> {
+    pub fn get_api_service(&self, service_id: &ServiceId) -> Result<&ApiService> {
         let service = self.api_services.get(service_id)
             .context(format!("No API service with ID '{}' has been added", service_id))?;
         return Ok(service.borrow());
