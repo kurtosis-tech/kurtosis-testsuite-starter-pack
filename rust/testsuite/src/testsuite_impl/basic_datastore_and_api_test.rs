@@ -3,7 +3,7 @@ use std::{collections::HashMap, time::Duration};
 use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
 use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::datastore_container_initializer::DatastoreContainerInitializer};
 
-const DATASTORE_SERVICE_ID: &str = "datastore";
+const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 const API_SERVICE_ID: &str = "api";
 
 const WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS: Duration = Duration::from_secs(1);
@@ -38,13 +38,13 @@ impl Test for BasicDatastoreAndApiTest {
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
         let datastore_initializer = DatastoreContainerInitializer::new(&self.datastore_image);
-        let (datastore_service, datastore_checker) = network_ctx.add_service(DATASTORE_SERVICE_ID, &datastore_initializer)
+        let (datastore_service, datastore_checker) = network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &datastore_initializer)
             .context("An error occurred adding the datastore service")?;
         datastore_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
 
         let api_initializer = ApiContainerInitializer::new(self.api_image.clone(), &datastore_service);
-        let (_, api_checker) = network_ctx.add_service(API_SERVICE_ID, &api_initializer)
+        let (_, api_checker) = network_ctx.add_service(&API_SERVICE_ID.to_owned(), &api_initializer)
             .context("An error occurred adding the API service")?;
         api_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the API service to start")?;
@@ -52,7 +52,7 @@ impl Test for BasicDatastoreAndApiTest {
     }
 
     fn run(&self, network: Box<NetworkContext>, test_ctx: TestContext) -> Result<()> {
-        let api_service = network.get_service::<ApiService>(API_SERVICE_ID)
+        let api_service = network.get_service::<ApiService>(&API_SERVICE_ID.to_owned())
             .context("An error occurred getting the API service")?;
 
         info!("Verifying that person with test ID '{}' doesn't already exist...", TEST_PERSON_ID);
