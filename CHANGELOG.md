@@ -1,6 +1,9 @@
 # TBD
 ### Changes
-* Added type aliases `ServiceId` and `PartitionId` to Rust library, to match Go library
+* Added type aliases `ServiceId` and `PartitionId` to Rust library and changed function signatures to match
+
+### Breaking Changes
+* Modified several Rust functions slightly to take in `ServiceId` and `PartitionId` rather than `String`
 
 # 1.15.1
 ### Changes
