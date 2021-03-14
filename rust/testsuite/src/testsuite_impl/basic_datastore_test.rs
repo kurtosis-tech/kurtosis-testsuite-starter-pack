@@ -6,7 +6,7 @@ use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{t
 
 use crate::services_impl::datastore::{datastore_container_initializer, datastore_service::DatastoreService};
 
-const DATASTORE_SERVICE_ID: &str = "datastore";
+const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 
 const WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS: Duration = Duration::from_secs(1);
 const WAIT_FOR_STARTUP_MAX_POLLS: u32 = 15;
@@ -38,7 +38,7 @@ impl Test for BasicDatastoreTest {
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
 		let initializer = DatastoreContainerInitializer::new(&self.datastore_image);
-		let (_, availability_checker) = network_ctx.borrow_mut().add_service(DATASTORE_SERVICE_ID, &initializer)
+		let (_, availability_checker) = network_ctx.borrow_mut().add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
 			.context("An error occurred adding the datastore service")?;
 		availability_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_POLLS)
 			.context("An error occurred waiting for the datastore service to become available")?;
@@ -46,7 +46,7 @@ impl Test for BasicDatastoreTest {
 	}
 
     fn run(&self, network: Box<NetworkContext>, test_ctx: TestContext) -> Result<()> {
-		let service: Rc<DatastoreService> = network.get_service(DATASTORE_SERVICE_ID)
+		let service: Rc<DatastoreService> = network.get_service(&DATASTORE_SERVICE_ID_STR.to_owned())
 			.context("An error occurred getting the datastore service")?;
 		info!("Verifying that key '{}' doesn't already exist...", TEST_KEY);
 		let does_exist = service.exists(TEST_KEY)

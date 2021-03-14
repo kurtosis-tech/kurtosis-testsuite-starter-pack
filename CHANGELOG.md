@@ -1,4 +1,6 @@
 # TBD
+### Changes
+* Added type aliases `ServiceId` and `PartitionId` to Rust library, to match Go library
 
 # 1.15.1
 ### Changes

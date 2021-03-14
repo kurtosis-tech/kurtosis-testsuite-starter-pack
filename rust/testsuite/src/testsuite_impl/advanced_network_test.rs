@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use std::{collections::HashMap, time::Duration};
 
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
 
 use crate::networks_impl::test_network::TestNetwork;
 
@@ -11,8 +11,8 @@ pub struct AdvancedNetworkTest {
     datastore_service_image: String,
     api_service_image: String,
 
-    person_modifying_api_service_id: Option<String>,
-    person_retrieving_api_service_id: Option<String>,
+    person_modifying_api_service_id: Option<ServiceId>,
+    person_retrieving_api_service_id: Option<ServiceId>,
 }
 
 impl AdvancedNetworkTest {

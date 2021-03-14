@@ -6,16 +6,18 @@ use tonic::transport::Channel;
 
 use crate::core_api_bindings::api_container_api::{ExecCommandArgs, test_execution_service_client::TestExecutionServiceClient};
 
+use super::service::ServiceId;
+
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct ServiceContext {
     async_runtime: Rc<Runtime>,
     client: TestExecutionServiceClient<Channel>,
-    service_id: String,
+    service_id: ServiceId,
     ip_address: String,
 }
 
 impl ServiceContext {
-    pub fn new(async_runtime: Rc<Runtime>, client: TestExecutionServiceClient<Channel>, service_id: String, ip_address: String) -> ServiceContext {
+    pub fn new(async_runtime: Rc<Runtime>, client: TestExecutionServiceClient<Channel>, service_id: ServiceId, ip_address: String) -> ServiceContext {
         return ServiceContext{
             async_runtime,
             client,
@@ -25,8 +27,8 @@ impl ServiceContext {
     }
 
     // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn get_service_id(&self) -> &str {
-        return &self.service_id;
+    pub fn get_service_id(&self) -> ServiceId {
+        return self.service_id.clone();
     }
 
     // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
