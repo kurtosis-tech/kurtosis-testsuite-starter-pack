@@ -27,7 +27,7 @@ func (m MockDockerContainerInitializer) GetUsedPorts() map[string]bool {
 }
 
 func (m MockDockerContainerInitializer) GetService(serviceId ServiceID, ipAddr string) Service {
-	return NewMockService(serviceId, ipAddr, 1)
+	return NewMockService(1)
 }
 
 func (m MockDockerContainerInitializer) GetFilesToGenerate() map[string]bool {
