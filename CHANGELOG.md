@@ -1,4 +1,5 @@
 # TBD
+* Added unit test to Rust `AvailabilityChecker` (ported over from Go)
 
 # 1.16.0
 ### Changes
