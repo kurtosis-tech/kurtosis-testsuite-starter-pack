@@ -1,5 +1,7 @@
 # TBD
+### Features
 * Added unit test to Rust `AvailabilityChecker` (ported over from Go)
+* Allow lib users to define the Docker environment variables to start a service container with
 
 # 1.16.0
 ### Changes

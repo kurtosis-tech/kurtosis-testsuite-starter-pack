@@ -56,3 +56,8 @@ func (self ExecCmdTestContainerInitializer) GetStartCommandOverrides(
 	return []string{"sleep"}, []string{"30"}, nil
 }
 
+func (self ExecCmdTestContainerInitializer) GetEnvironmentVariableOverrides() (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+

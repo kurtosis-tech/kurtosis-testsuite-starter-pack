@@ -65,4 +65,7 @@ impl docker_container_initializer::DockerContainerInitializer<DatastoreService> 
         return Ok((None, None))
     }
 
+    fn get_environment_variable_overrides(&self) -> Result<HashMap<String, String>> {
+        return Ok(HashMap::new());
+    }
 }

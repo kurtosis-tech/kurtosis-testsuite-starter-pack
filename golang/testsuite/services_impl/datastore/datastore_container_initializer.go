@@ -63,3 +63,8 @@ func (d DatastoreContainerInitializer) GetStartCommandOverrides(
 	return nil, nil, nil
 }
 
+func (d DatastoreContainerInitializer) GetEnvironmentVariableOverrides() (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+

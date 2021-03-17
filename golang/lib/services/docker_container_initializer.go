@@ -42,4 +42,7 @@ type DockerContainerInitializer interface {
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 	GetStartCommandOverrides(generatedFileFilepaths map[string]string, ipAddr string) (entrypointArgs []string, cmdArgs []string, err error)
+
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
+	GetEnvironmentVariableOverrides() (map[string]string, error)
 }

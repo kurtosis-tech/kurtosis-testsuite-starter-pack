@@ -158,7 +158,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		UsedPorts:                   initializer.GetUsedPorts(),
 		EntrypointArgs:              entrypointArgs,
 		CmdArgs:                     cmdArgs,
-		DockerEnvVars:               map[string]string{}, // TODO actually support Docker env vars!
+		DockerEnvVars:               initializer.GetEnvironmentVariableOverrides(),
 		SuiteExecutionVolMntDirpath: initializer.GetTestVolumeMountpoint(),
 		FilesArtifactMountDirpaths:  artifactUrlToMountDirpath,
 	}

@@ -41,4 +41,7 @@ pub trait DockerContainerInitializer<S: Service> {
         generated_file_filepaths: HashMap<String, PathBuf>,
         ip_addr: &str
     ) -> Result<(Option<Vec<String>>, Option<Vec<String>>)>;
+
+    // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
+    fn get_environment_variable_overrides(&self) -> Result<HashMap<String, String>>;
 }
