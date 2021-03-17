@@ -165,6 +165,13 @@ You often won't control the Docker images that you'll be using in your testnet, 
 * `entrypointArgs`: If set, overrides the `ENTRYPOINT` statement in the image's Dockerfile with the given args.
 * `cmdArgs`: If set, overrides the `CMD` statement in the image's Dockerfile with the given args.
 
+### getEnvironmentVariableOverrides() -\> Map\<String, String\>
+Defines environment variables that should be set inside the Docker container running the service. This is often necessary for starting containers from Docker images you don't control, as they'll often be parameterized with environment variables.
+
+**Returns**
+
+A map of environmentVariableName -> environmentVariableValue that will be set inside the container during startup.
+
 Service
 -------
 This interface represents a service running in a Docker container inside the test network. Much like the [Network][network] interface is a developer-customizable abstraction layer around Kurtosis' [NetworkContext][networkcontext] representation of the testnet, this interface is a developer-customizable abstraction layer around Kurtosis' [ServiceContext][servicecontext] representation of a service running in a Docker container. For example, an Elasticsearch service running in a container might be represented by an `ElasticsearchService` class that implements this interface with methods like `updateDocument`, `getDocument` and `deleteDocument`.
