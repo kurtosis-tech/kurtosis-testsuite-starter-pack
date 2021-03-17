@@ -4,6 +4,7 @@ set -euo pipefail
 #                                    Constants
 # =============================================================================
 CARGO_TOML_VERSION_PATTERN='^version = ".*'
+BOOTSTRAPPED_SUITE_VERSION_STR='version = "0.1.0"' # The testsuite's version string after bootstrapping
 CARGO_TOML_FILENAME="Cargo.toml"
 CARGO_LOCK_FILENAME="Cargo.lock"
 LIB_DIRNAME="lib"
@@ -108,6 +109,18 @@ if ! sed -i '' "s/${TESTSUITE_EXAMPLE_PACKAGE_NAME}/${new_package_name}/" "${tes
     echo "Error: Could not substitute example package name '${TESTSUITE_EXAMPLE_PACKAGE_NAME}' -> '${new_package_name}'" >&2
     exit 1
 fi
+
+# Remove the Kurtosis Lib version in the Cargo.toml, replacing with a fresh version for the user
+num_testsuite_cargo_toml_version_lines="$(grep -c "${CARGO_TOML_VERSION_PATTERN}" "${testsuite_cargo_toml_filepath}" || true)"
+if [ "${num_testsuite_cargo_toml_version_lines}" -ne 1 ]; then
+    echo "Error: Expected exactly one line in '${testsuite_cargo_toml_filepath}' matching pattern '${CARGO_TOML_VERSION_PATTERN}', but got ${num_testsuite_cargo_toml_version_lines}" >&2
+    exit 1
+fi
+if ! sed -i '' "s/${CARGO_TOML_VERSION_PATTERN}/${BOOTSTRAPPED_SUITE_VERSION_STR}/" "${testsuite_cargo_toml_filepath}"; then
+    echo "Error: Could not substitute version string '${CARGO_TOML_VERSION_PATTERN}' -> '${BOOTSTRAPPED_SUITE_VERSION_STR}' in '${testsuite_cargo_toml_filepath}'" >&2
+    exit 1
+fi
+
 
 # Due to Rust's refusal to allow a "download dependencies only" command, we have special lines in the Dockerfile that deal with caching
 # However, when we bootstrap the testsuite, the 'lib' directory will go away so we need to remove all references to it from the Dockerfile

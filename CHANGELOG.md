@@ -1,4 +1,6 @@
 # TBD
+### Fixes
+* Bootstrapping a new Rust testsuite now no longer keeps the Kurtosis Lib version in Cargo.toml, and instead gets `version = "0.1.0"`
 
 # 1.17.0
 ### Features
