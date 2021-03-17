@@ -102,13 +102,15 @@ impl NetworkContext {
 		trace!("Successfully created start command for service");
 
 		trace!("Starting new service with Kurtosis API...");
+		let env_var_overrides = initializer.get_environment_variable_overrides()
+			.context("An error occurred getting the environment variable overrides")?;
 		let start_service_args = StartServiceArgs{
 		    service_id: service_id.to_owned(),
 		    docker_image: initializer.get_docker_image().to_owned(),
 		    used_ports: NetworkContext::convert_hashset_to_hashmap(initializer.get_used_ports()),
 			entrypoint_args: entrypoint_args_opt.unwrap_or(Vec::new()), // Empty vector says "don't override anything"
 			cmd_args: cmd_args_opt.unwrap_or(Vec::new()), // Empty vector says "don't override anything"
-		    docker_env_vars: HashMap::new(),  // TODO actually support Docker env vars!
+		    docker_env_vars: env_var_overrides,
 		    suite_execution_vol_mnt_dirpath: initializer.get_test_volume_mountpoint().to_owned(),
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};

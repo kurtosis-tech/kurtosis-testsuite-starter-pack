@@ -102,4 +102,8 @@ impl<'obj> DockerContainerInitializer<ApiService> for ApiContainerInitializer<'o
         ];
         return Ok((None, Some(start_cmd)));
     }
+
+    fn get_environment_variable_overrides(&self) -> Result<HashMap<String, String>> {
+        return Ok(HashMap::new());
+    }
 }

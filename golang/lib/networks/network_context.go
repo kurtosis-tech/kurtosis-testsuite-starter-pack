@@ -152,13 +152,17 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully created start command for service")
 
 	logrus.Tracef("Starting new service with Kurtosis API...")
+	envVarOverrides, err := initializer.GetEnvironmentVariableOverrides()
+	if err != nil {
+		return nil, nil, stacktrace.Propagate(err, "An error occurred getting the environment variable overrides");
+	}
 	startServiceArgs := &core_api_bindings.StartServiceArgs{
 		ServiceId:                   string(serviceId),
 		DockerImage:                 initializer.GetDockerImage(),
 		UsedPorts:                   initializer.GetUsedPorts(),
 		EntrypointArgs:              entrypointArgs,
 		CmdArgs:                     cmdArgs,
-		DockerEnvVars:               map[string]string{}, // TODO actually support Docker env vars!
+		DockerEnvVars:               envVarOverrides,
 		SuiteExecutionVolMntDirpath: initializer.GetTestVolumeMountpoint(),
 		FilesArtifactMountDirpaths:  artifactUrlToMountDirpath,
 	}

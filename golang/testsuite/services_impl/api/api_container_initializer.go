@@ -106,3 +106,7 @@ func (initializer ApiContainerInitializer) GetStartCommandOverrides(
 	return nil, startCmd, nil
 }
 
+func (initializer ApiContainerInitializer) GetEnvironmentVariableOverrides() (map[string]string, error) {
+	return map[string]string{}, nil
+}
+

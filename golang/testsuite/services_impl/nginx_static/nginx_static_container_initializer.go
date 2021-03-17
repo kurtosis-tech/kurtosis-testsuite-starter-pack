@@ -63,3 +63,8 @@ func (s NginxStaticContainerInitializer) GetStartCommandOverrides(
 	// Don't need any ENTRYPOINT or CMD overrides - use the default ones
 	return nil, nil, nil
 }
+
+func (s NginxStaticContainerInitializer) GetEnvironmentVariableOverrides() (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
