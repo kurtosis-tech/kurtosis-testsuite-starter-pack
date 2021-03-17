@@ -1,7 +1,10 @@
 # TBD
 ### Features
 * Added unit test to Rust `AvailabilityChecker` (ported over from Go)
-* Allow lib users to define the Docker environment variables to start a service container with
+* Allow lib users to set the Docker environment variables when starting a service
+
+### Breaking Changes
+* Addded `DockerContainerInitializer.getEnvironmentVariableOverrides` for setting environment variables when launching services
 
 # 1.16.0
 ### Changes
