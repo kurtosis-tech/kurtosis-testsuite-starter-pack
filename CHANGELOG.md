@@ -1,5 +1,13 @@
 # TBD
 
+# 1.17.0
+### Features
+* Added unit test to Rust `AvailabilityChecker` (ported over from Go)
+* Allow lib users to set the Docker environment variables when starting a service
+
+### Breaking Changes
+* Addded `DockerContainerInitializer.getEnvironmentVariableOverrides` for setting environment variables when launching services
+
 # 1.16.0
 ### Changes
 * Added type aliases `ServiceId` and `PartitionId` to Rust library and changed function signatures to match
