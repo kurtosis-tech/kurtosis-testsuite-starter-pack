@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use std::{collections::HashMap, time::Duration};
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration}};
 use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::datastore_container_initializer::DatastoreContainerInitializer};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";
@@ -51,7 +51,7 @@ impl Test for BasicDatastoreAndApiTest {
         return Ok(Box::new(network_ctx));
     }
 
-    fn run(&self, network: Box<NetworkContext>, test_ctx: TestContext) -> Result<()> {
+    fn run(&self, network: Box<NetworkContext>) -> Result<()> {
         let api_service = network.get_service::<ApiService>(&API_SERVICE_ID.to_owned())
             .context("An error occurred getting the API service")?;
 
@@ -81,14 +81,13 @@ impl Test for BasicDatastoreAndApiTest {
             .context("An error occurred getting the test person to verify the number of books read")?;
         info!("Retrieved test person");
 
-        test_ctx.assert_true(
-            person.books_read == TEST_NUM_BOOKS_READ,
-            anyhow!(
+        if person.books_read != TEST_NUM_BOOKS_READ {
+            return Err(anyhow!(
                 "Expected number of book read '{}' != actual number of books read '{}'",
                 TEST_NUM_BOOKS_READ,
                 person.books_read,
-            )
-        );
+            ));
+        }
         return Ok(());
     }
 

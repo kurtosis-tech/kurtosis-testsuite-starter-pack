@@ -2,7 +2,7 @@ use std::{borrow::BorrowMut, collections::HashMap, rc::Rc, time::Duration};
 use anyhow::{anyhow, Context, Result};
 
 use datastore_container_initializer::DatastoreContainerInitializer;
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration}};
 
 use crate::services_impl::datastore::{datastore_container_initializer, datastore_service::DatastoreService};
 
@@ -45,13 +45,15 @@ impl Test for BasicDatastoreTest {
 		return Ok(Box::new(network_ctx));
 	}
 
-    fn run(&self, network: Box<NetworkContext>, test_ctx: TestContext) -> Result<()> {
+    fn run(&self, network: Box<NetworkContext>) -> Result<()> {
 		let service: Rc<DatastoreService> = network.get_service(&DATASTORE_SERVICE_ID_STR.to_owned())
 			.context("An error occurred getting the datastore service")?;
 		info!("Verifying that key '{}' doesn't already exist...", TEST_KEY);
 		let does_exist = service.exists(TEST_KEY)
 			.context(format!("An error occurred checking if key '{}' exists", TEST_KEY))?;
-		test_ctx.assert_true(!does_exist, anyhow!("Test key should not exist yet"));
+		if does_exist {
+			return Err(anyhow!("Test key should not exist yet"));
+		}
 		info!("Confirmed that key '{}' doesn't already exist", TEST_KEY);
 
 		info!("Inserting value '{}' at key '{}'...", TEST_KEY, TEST_VALUE);
@@ -62,14 +64,13 @@ impl Test for BasicDatastoreTest {
 		info!("Getting the key we just inserted to verify the value...");
 		let value = service.get(TEST_KEY)
 			.context(format!("An error occurred getting value for key '{}'", TEST_KEY))?;
-		test_ctx.assert_true(
-			value == TEST_VALUE,
-			anyhow!(
+		if value != TEST_VALUE {
+			return Err(anyhow!(
 				"Returned value '{}' != test value '{}'",
 				value,
 				TEST_VALUE,
-			),
-		);
+			));
+		}
 		// TODO induce panic and ensure we recover from it!
 		info!("Value verified");
 		return Ok(());

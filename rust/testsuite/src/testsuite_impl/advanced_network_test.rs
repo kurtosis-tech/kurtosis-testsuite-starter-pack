@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use std::{collections::HashMap, time::Duration};
 
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test, test_configuration::TestConfiguration, test_context::TestContext}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test, test_configuration::TestConfiguration}};
 
 use crate::networks_impl::test_network::TestNetwork;
 
@@ -53,7 +53,7 @@ impl Test for AdvancedNetworkTest {
         return Ok(Box::new(network));
     }
 
-    fn run(&self, network: Box<TestNetwork>, test_ctx: TestContext) -> anyhow::Result<()> {
+    fn run(&self, network: Box<TestNetwork>) -> anyhow::Result<()> {
         let person_modifying_service_id;
         match self.person_modifying_api_service_id {
             Some(ref service_id) => person_modifying_service_id = service_id,
@@ -90,13 +90,12 @@ impl Test for AdvancedNetworkTest {
             .context("An error occurred getting the test person")?;
         info!("Retrieved test person");
 
-        test_ctx.assert_true(
-            person.books_read == 1,
-            anyhow!(
+        if person.books_read != 1 {
+            return Err(anyhow!(
                 "Expected number of books read to be incremented, but was '{}'",
                 person.books_read,
-            ),
-        );
+            ));
+        }
         return Ok(());
     }
 
