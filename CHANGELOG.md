@@ -8,6 +8,7 @@
 ### Breaking Changes
 * The `Test.run` method no longer takes in a `TestContext` argument
     * To fail the test, your tests should now simply return an error
+* The Go lib's `Test.Run` method now returns an `error` type for indicating that an error occurred while running the test
 
 # 1.17.0
 ### Features

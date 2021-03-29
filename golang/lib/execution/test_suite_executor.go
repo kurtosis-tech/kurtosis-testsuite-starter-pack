@@ -192,7 +192,9 @@ func runTest(test testsuite.Test, untypedNetwork interface{}) (resultErr error) 
 			resultErr = recoverResult.(error)
 		}
 	}()
-	test.Run(untypedNetwork, testsuite.TestContext{})
+	if err := test.Run(untypedNetwork); err != nil {
+		return stacktrace.Propagate(err, "The test returned an error")
+	}
 	logrus.Tracef("Test completed successfully")
 	return
 }
