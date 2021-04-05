@@ -59,22 +59,22 @@ func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Ne
 	return networkCtx, nil
 }
 
-func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite.TestContext) {
+func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	network := uncastedNetwork.(*networks.NetworkContext)
 
 	uncastedService, err := network.GetService(testServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting service with ID '%v'", testServiceId))
+		return stacktrace.Propagate(err, "An error occurred getting service with ID '%v'", testServiceId)
 	}
 	castedService := uncastedService.(*exec_cmd_test.ExecCmdTestService)
 
 	logrus.Infof("Running exec command '%v' that should return a successful exit code...", execCommandThatShouldWork)
 	shouldWorkExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldWork)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldWork))
+		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldWork)
 	}
 	if shouldWorkExitCode != successExitCode {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldWork, shouldWorkExitCode))
+		return stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldWork, shouldWorkExitCode)
 	}
 	logrus.Info("Exec command returned successful exit code as expected")
 
@@ -82,26 +82,27 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network, testCtx testsuite
 	logrus.Infof("Running exec command '%v' that should return an error exit code...", execCommandThatShouldFail)
 	shouldFailExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldFail)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail))
+		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail)
 	}
 	if shouldFailExitCode == successExitCode {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should fail, but got successful exit code %v", execCommandThatShouldFail, successExitCode))
+		return stacktrace.NewError("Exec command '%v' should fail, but got successful exit code %v", execCommandThatShouldFail, successExitCode)
 	}
 
 	logrus.Infof("Running exec command '%v' that should return log output...", execCommandThatShouldHaveLogOutput)
 	shouldHaveLogOutputExitCode, logOutput, err := castedService.RunExecCmd(execCommandThatShouldHaveLogOutput)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldHaveLogOutput))
+		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldHaveLogOutput)
 	}
 	if shouldHaveLogOutputExitCode != successExitCode {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldHaveLogOutput, shouldHaveLogOutputExitCode))
+		return stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldHaveLogOutput, shouldHaveLogOutputExitCode)
 	}
 	logOutputStr := fmt.Sprintf("%s", *logOutput)
 	if logOutputStr != expectedLogOutput {
-		testCtx.Fatal(stacktrace.NewError("Exec command '%v' should return %v, but got %v.", execCommandThatShouldHaveLogOutput, inputForLogOutputTest, logOutputStr))
+		return stacktrace.NewError("Exec command '%v' should return %v, but got %v.", execCommandThatShouldHaveLogOutput, inputForLogOutputTest, logOutputStr)
 	}
-
 	logrus.Info("Exec command returned error exit code as expected")
+
+	return nil
 }
 
 func (e ExecCommandTest) GetSetupTimeout() time.Duration {

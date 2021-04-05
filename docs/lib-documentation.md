@@ -246,14 +246,12 @@ return customNetwork;
 
 A [Network][network] implementation that will be passed to [Test.run][test_run]. If you don't have a custom implementation, you can return the [NetworkContext][networkcontext] (which implements [Network][network]).
 
-<!-- TODO get rid of TestContext -->
-### run(N network, [TestContext][testcontext] testContext)
-Executes test logic after [Test.setup][test_setup] has completed.
+### run(N network)
+Executes test logic after [Test.setup][test_setup] has completed. For languages that have explicit error return types (e.g. Go, Rust), returning an error from this function indicates a failure; for languages that don't (e.g. Java), throwing an exception indicates the same. These will be marked in the individual languages' APIs.
 
 **Args**
 
 * `network`: A [Network][network] implementation representing the test network that the test is executing against.
-* `testContext`: The test context that the test is running in, which can be used to make assertions and report failures.
 
 ### getSetupTimeout() -\> Duration
 Declares the timeframe in which [Test.setup][test_setup] must complete, to prevent infinite loop bugs from hanging Kurtosis indefinitely.
@@ -279,25 +277,6 @@ Setting this to true allows a test to make use of the [NetworkContext.repartitio
 <!-- TODO change key type to FilesArtifactID -->
 ### Map\<String, String\> filesArtifactUrls
 Mapping of a user-defined key -> URL of a gzipped TAR whose contents the test will mount on a service. This should be left empty if no files artifacts are needed. For more details on what files artifacts are, see [DockerContainerInitializer.getFilesArtifactMountpoints][dockercontainerinitializer_getfilesartifactmountpoints].
-
-TestContext
------------
-Context handle you can use for controlling the state of test execution (e.g. making assertions).
-
-### fatal(Error err)
-Fails the test with the given error.
-
-**Args**
-
-* `err`: Error to report, indicating why the test failed.
-
-### assertTrue(bool condition, Error err)
-Fails the test if the given condition isn't true.
-
-**Args**
-
-* `condition`: Predicate that must be true for the test to continue.
-* `err`: Error that will be thrown if the predicate is false.
 
 TestSuite
 ---------
@@ -342,11 +321,9 @@ Determines the width (in bits) of the Docker network that Kurtosis will create f
 
 [test]: #testn-extends-network
 [test_setup]: #setupnetworkcontext-networkcontext---n
-[test_run]: #runn-network-testcontext-testcontext
+[test_run]: #runn-network
 [test_gettestconfiguration]: #gettestconfiguration---testconfiguration
 
 [testconfiguration]: #testconfiguration
-
-[testcontext]: #testcontext
 
 [testsuite]: #testsuite

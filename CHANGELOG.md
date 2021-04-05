@@ -2,6 +2,14 @@
 ### Fixes
 * Bootstrapping a new Rust testsuite now no longer keeps the Kurtosis Lib version in Cargo.toml, and instead gets `version = "0.1.0"`
 
+### Changes
+* The `TestContext` interface was removed, as it duplicated functionality with the return type of the `Test.run` function
+
+### Breaking Changes
+* The `Test.run` method no longer takes in a `TestContext` argument
+    * To fail the test, your tests should now simply return an error
+* The Go lib's `Test.Run` method now returns an `error` type for indicating that an error occurred while running the test
+
 # 1.17.0
 ### Features
 * Added unit test to Rust `AvailabilityChecker` (ported over from Go)

@@ -3,7 +3,7 @@ use anyhow::Result;
 
 use crate::networks::{network::Network, network_context::NetworkContext};
 
-use super::{test_configuration::TestConfiguration, test_context::TestContext};
+use super::{test_configuration::TestConfiguration};
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub trait Test {
@@ -16,7 +16,7 @@ pub trait Test {
 	fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<Self::N>>;
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-	fn run(&self, network: Box<Self::N>, test_ctx: TestContext) -> Result<()>;
+	fn run(&self, network: Box<Self::N>) -> Result<()>;
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 	fn get_setup_timeout(&self) -> Duration;
