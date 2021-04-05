@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.18.0
 ### Features
 * Made this changelog available as an HTML webpage
 
