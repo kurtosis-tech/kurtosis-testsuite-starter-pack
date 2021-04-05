@@ -1,3 +1,5 @@
+_See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
+
 # TBD
 ### Features
 * Made this changelog available as an HTML webpage
