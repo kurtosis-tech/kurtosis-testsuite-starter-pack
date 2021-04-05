@@ -61,32 +61,32 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 }
 
 
-func (b BasicDatastoreAndApiTest) Run(network networks.Network, testCtx testsuite.TestContext) {
+func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
 
 	uncastedApiService, err := castedNetwork.GetService(apiServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the API service"))
+		return stacktrace.Propagate(err, "An error occurred getting the API service")
 	}
 	apiService := uncastedApiService.(*api.ApiService)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
 	if _, err = apiService.GetPerson(testPersonId); err == nil {
-		testCtx.Fatal(stacktrace.NewError("Expected an error trying to get a person who doesn't exist yet, but didn't receive one"))
+		return stacktrace.NewError("Expected an error trying to get a person who doesn't exist yet, but didn't receive one")
 	}
 	logrus.Infof("Verified that test person doesn't already exist")
 
 	logrus.Infof("Adding test person with ID '%v'...", testPersonId)
 	if err := apiService.AddPerson(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding person with test ID '%v'", testPersonId))
+		return stacktrace.Propagate(err, "An error occurred adding person with test ID '%v'", testPersonId)
 	}
 	logrus.Info("Test person added")
 
 	logrus.Infof("Incrementing test person's number of books read by %v...", testNumBooksRead)
 	for i := 0; i < testNumBooksRead; i++ {
 		if err := apiService.IncrementBooksRead(testPersonId); err != nil {
-			testCtx.Fatal(stacktrace.Propagate(err, "An error occurred incrementing the number of books read"))
+			return stacktrace.Propagate(err, "An error occurred incrementing the number of books read")
 		}
 	}
 	logrus.Info("Incremented number of books read")
@@ -94,18 +94,18 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network, testCtx testsuit
 	logrus.Info("Retrieving test person to verify number of books read...")
 	person, err := apiService.GetPerson(testPersonId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test person to verify the number of books read"))
+		return stacktrace.Propagate(err, "An error occurred getting the test person to verify the number of books read")
 	}
 	logrus.Info("Retrieved test person")
 
-	testCtx.AssertTrue(
-		person.BooksRead == testNumBooksRead,
-		stacktrace.NewError(
+	if person.BooksRead != testNumBooksRead {
+		return stacktrace.NewError(
 			"Expected number of book read '%v' != actual number of books read '%v'",
 			testNumBooksRead,
 			person.BooksRead,
-		),
-	)
+		)
+	}
+	return nil
 }
 
 func (test *BasicDatastoreAndApiTest) GetTestConfiguration() testsuite.TestConfiguration {

@@ -53,44 +53,43 @@ func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (n
 	return networkCtx, nil
 }
 
-func (f FilesArtifactMountingTest) Run(network networks.Network, testCtx testsuite.TestContext) {
+func (f FilesArtifactMountingTest) Run(network networks.Network) error {
 	// Only necessary because Go doesn't have generics
 	castedNetwork := network.(*networks.NetworkContext)
 
 	uncastedService, err := castedNetwork.GetService(fileServerServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred retrieving the fileserver service"))
+		return stacktrace.Propagate(err, "An error occurred retrieving the fileserver service")
 	}
 
 	// Only necessary because Go doesn't have generics
 	castedService, castErrOccurred := uncastedService.(*nginx_static.NginxStaticService)
 	if castErrOccurred {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred casting the file server service API"))
+		return stacktrace.Propagate(err, "An error occurred casting the file server service API")
 	}
 
 	file1Contents, err := castedService.GetFileContents(file1Filename)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting file 1's contents"))
+		return stacktrace.Propagate(err, "An error occurred getting file 1's contents")
 	}
-	testCtx.AssertTrue(
-		file1Contents == expectedFile1Contents,
-		stacktrace.NewError("Actual file 1 contents '%v' != expected file 1 contents '%v'",
+	if file1Contents != expectedFile1Contents {
+		return stacktrace.NewError("Actual file 1 contents '%v' != expected file 1 contents '%v'",
 			file1Contents,
 			expectedFile1Contents,
-		),
-	)
+		)
+	}
 
 	file2Contents, err := castedService.GetFileContents(file2Filename)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting file 2's contents"))
+		return stacktrace.Propagate(err, "An error occurred getting file 2's contents")
 	}
-	testCtx.AssertTrue(
-		file2Contents == expectedFile2Contents,
-		stacktrace.NewError("Actual file 2 contents '%v' != expected file 2 contents '%v'",
+	if file2Contents != expectedFile2Contents {
+		return stacktrace.NewError("Actual file 2 contents '%v' != expected file 2 contents '%v'",
 			file2Contents,
 			expectedFile2Contents,
-		),
-	)
+		)
+	}
+	return nil
 }
 
 func (test FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
