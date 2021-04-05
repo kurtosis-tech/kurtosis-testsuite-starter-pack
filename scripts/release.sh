@@ -9,7 +9,8 @@ root_dirpath="$(dirname "${script_dirpath}")"
 # ==========================================================================================
 DEVELOP_BRANCH="develop"
 GITFLOW_PP_FILENAME="gitflow-pp.sh"
-CHANGELOG_FILENAME="CHANGELOG.md"
+DOCS_DIRNAME="docs"
+CHANGELOG_FILENAME="changelog.md"
 CHANGELOG_TBD_LINE="# TBD"
 CHANGELOG_TBD_LINE_PATTERN="^${CHANGELOG_TBD_LINE}$"
 EXPECTED_NUM_VERSION_FRAGMENTS=3   # We expected X.Y.Z versions
@@ -38,7 +39,7 @@ if ! type -P "${GITFLOW_PP_FILENAME}" > /dev/null; then
     exit 1
 fi
 gitflow_pp_filepath="$(type -P "${GITFLOW_PP_FILENAME}")"
-changelog_filepath="${root_dirpath}/${CHANGELOG_FILENAME}"
+changelog_filepath="${root_dirpath}/${DOCS_DIRNAME}/${CHANGELOG_FILENAME}"
 if ! [ -f "${changelog_filepath}" ]; then
     echo "Error: No changelog file found at '${changelog_filepath}'" >&2
     exit 1
