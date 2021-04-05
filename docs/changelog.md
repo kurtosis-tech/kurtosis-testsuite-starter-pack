@@ -1,4 +1,9 @@
+_See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
+
 # TBD
+### Features
+* Made this changelog available as an HTML webpage
+
 ### Fixes
 * Bootstrapping a new Rust testsuite now no longer keeps the Kurtosis Lib version in Cargo.toml, and instead gets `version = "0.1.0"`
 
