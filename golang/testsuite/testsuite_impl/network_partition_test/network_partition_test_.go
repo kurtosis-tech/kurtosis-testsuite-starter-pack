@@ -72,26 +72,26 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 }
 
 
-func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite.TestContext) {
+func (test NetworkPartitionTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
 
 
 	logrus.Info("Partitioning API and datastore services off from each other...")
 	if err := repartitionNetwork(castedNetwork, true, false); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred repartitioning the network to block access between API <-> datastore"))
+		return stacktrace.Propagate(err, "An error occurred repartitioning the network to block access between API <-> datastore")
 	}
 	logrus.Info("Repartition complete")
 
 	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
 	uncastedApi1Service, err := castedNetwork.GetService(api1ServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the API 1 service interface"))
+		return stacktrace.Propagate(err, "An error occurred getting the API 1 service interface")
 	}
 	api1Service := uncastedApi1Service.(*api.ApiService) // Necessary because Go doesn't have generics
 	if err := api1Service.IncrementBooksRead(testPersonId); err == nil {
-		testCtx.Fatal(stacktrace.NewError("Expected the book increment call via API 1 to fail due to the network " +
-			"partition between API and datastore services, but no error was thrown"))
+		return stacktrace.NewError("Expected the book increment call via API 1 to fail due to the network " +
+			"partition between API and datastore services, but no error was thrown")
 	} else {
 		logrus.Infof("Incrementing books read via API 1 threw the following error as expected due to network partition: %v", err)
 	}
@@ -100,7 +100,7 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 	logrus.Info("Adding second API container, to ensure adding a network under partition works...")
 	uncastedDatastoreSvc, err := castedNetwork.GetService(datastoreServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the datastore service interface"))
+		return stacktrace.Propagate(err, "An error occurred getting the datastore service interface")
 	}
 	api2Service, err := test.addApiService(
 		castedNetwork,
@@ -108,14 +108,14 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 		apiPartitionId,
 		uncastedDatastoreSvc.(*datastore.DatastoreService))
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding the second API service to the network"))
+		return stacktrace.Propagate(err, "An error occurred adding the second API service to the network")
 	}
 	logrus.Info("Second API container added successfully")
 
 	logrus.Info("Incrementing books read via API 2 while partition is in place, to verify no comms are possible...")
 	if err := api2Service.IncrementBooksRead(testPersonId); err == nil {
-		testCtx.Fatal(stacktrace.NewError("Expected the book increment call via API 2 to fail due to the network " +
-			"partition between API and datastore services, but no error was thrown"))
+		return stacktrace.NewError("Expected the book increment call via API 2 to fail due to the network " +
+			"partition between API and datastore services, but no error was thrown")
 	} else {
 		logrus.Infof("Incrementing books read via API 2 threw the following error as expected due to network partition: %v", err)
 	}
@@ -123,31 +123,32 @@ func (test NetworkPartitionTest) Run(network networks.Network, testCtx testsuite
 	// Now, open the network back up
 	logrus.Info("Repartitioning to heal partition between API and datastore...")
 	if err := repartitionNetwork(castedNetwork, false, true); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred healing the partition"))
+		return stacktrace.Propagate(err, "An error occurred healing the partition")
 	}
 	logrus.Info("Partition healed successfully")
 
 	logrus.Info("Making another call via API 1 to increment books read, to ensure the partition is open...")
 	// Use infinite timeout because we expect the partition healing to fix the issue
 	if err := api1Service.IncrementBooksRead(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(
+		return stacktrace.Propagate(
 			err,
 			"An error occurred incrementing the number of books read via API 1, even though the partition should have been " +
 				"healed by the goroutine",
-		))
+		)
 	}
 	logrus.Info("Successfully incremented books read via API 1, indicating that the partition has healed successfully!")
 
 	logrus.Info("Making another call via API 2 to increment books read, to ensure the partition is open...")
 	// Use infinite timeout because we expect the partition healing to fix the issue
 	if err := api2Service.IncrementBooksRead(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(
+		return stacktrace.Propagate(
 			err,
 			"An error occurred incrementing the number of books read via API 2, even though the partition should have been " +
 				"healed by the goroutine",
-		))
+		)
 	}
 	logrus.Info("Successfully incremented books read via API 2, indicating that the partition has healed successfully!")
+	return nil
 }
 
 

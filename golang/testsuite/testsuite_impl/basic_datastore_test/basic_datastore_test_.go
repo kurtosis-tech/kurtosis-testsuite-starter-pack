@@ -45,13 +45,13 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 	return networkCtx, nil
 }
 
-func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.TestContext) {
+func (test BasicDatastoreTest) Run(network networks.Network) error {
 	// Necessary because Go doesn't have generics
 	castedNetwork := network.(*networks.NetworkContext)
 
 	uncastedService, err := castedNetwork.GetService(datastoreServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the datastore service"))
+		return stacktrace.Propagate(err, "An error occurred getting the datastore service")
 	}
 
 	// Necessary again due to no Go generics
@@ -60,26 +60,29 @@ func (test BasicDatastoreTest) Run(network networks.Network, testCtx testsuite.T
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := castedService.Exists(testKey)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred checking if the test key exists"))
+		return stacktrace.Propagate(err, "An error occurred checking if the test key exists")
 	}
-	testCtx.AssertTrue(!exists, stacktrace.NewError("Test key should not exist yet"))
+	if exists {
+		return stacktrace.NewError("Test key should not exist yet")
+	}
 	logrus.Infof("Confirmed that key '%v' doesn't already exist", testKey)
 
 	logrus.Infof("Inserting value '%v' at key '%v'...", testKey, testValue)
 	if err := castedService.Upsert(testKey, testValue); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred upserting the test key"))
+		return stacktrace.Propagate(err, "An error occurred upserting the test key")
 	}
 	logrus.Infof("Inserted value successfully")
 
 	logrus.Infof("Getting the key we just inserted to verify the value...")
 	value, err := castedService.Get(testKey)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test key after upload"))
+		return stacktrace.Propagate(err, "An error occurred getting the test key after upload")
 	}
-	testCtx.AssertTrue(
-		value == testValue,
-		stacktrace.NewError("Returned value '%v' != test value '%v'", value, testValue))
+	if value != testValue {
+		return stacktrace.NewError("Returned value '%v' != test value '%v'", value, testValue)
+	}
 	logrus.Info("Value verified")
+	return nil
 }
 
 

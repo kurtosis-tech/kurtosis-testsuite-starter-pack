@@ -53,43 +53,43 @@ func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (net
 	return network, nil
 }
 
-func (test *AdvancedNetworkTest) Run(network networks.Network, testCtx testsuite.TestContext) {
+func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	castedNetwork := network.(*networks_impl.TestNetwork)
 	personModifier, err := castedNetwork.GetApiService(test.personModifyingApiServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the person-modifying API service"))
+		return stacktrace.Propagate(err, "An error occurred getting the person-modifying API service")
 	}
 	personRetriever, err := castedNetwork.GetApiService(test.personRetrievingApiServiceId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service"))
+		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service")
 	}
 
 	logrus.Infof("Adding test person via person-modifying API service...")
 	if err := personModifier.AddPerson(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred adding test person"))
+		return stacktrace.Propagate(err, "An error occurred adding test person")
 	}
 	logrus.Info("Test person added")
 
 	logrus.Infof("Incrementing test person's number of books read through person-modifying API service ...")
 	if err := personModifier.IncrementBooksRead(testPersonId); err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred incrementing the number of books read"))
+		return stacktrace.Propagate(err, "An error occurred incrementing the number of books read")
 	}
 	logrus.Info("Incremented number of books read")
 
 	logrus.Info("Retrieving test person to verify number of books read person-retrieving API service...")
 	person, err := personRetriever.GetPerson(testPersonId)
 	if err != nil {
-		testCtx.Fatal(stacktrace.Propagate(err, "An error occurred getting the test person"))
+		return stacktrace.Propagate(err, "An error occurred getting the test person")
 	}
 	logrus.Info("Retrieved test person")
 
-	testCtx.AssertTrue(
-		person.BooksRead == 1,
-		stacktrace.NewError(
+	if person.BooksRead != 1 {
+		return stacktrace.NewError(
 			"Expected number of books read to be incremented, but was '%v'",
 			person.BooksRead,
-		),
-	)
+		)
+	}
+	return nil
 }
 
 func (test *AdvancedNetworkTest) GetTestConfiguration() testsuite.TestConfiguration {
