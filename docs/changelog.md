@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.19.0
 ### Changes
 * Made test configuration easier to define via a `Test.configure` method that allows users to set test configuration using a `TestConfigurationBuilder` object
     * This has the added benefit that test configurations which get added in the future won't cause breaking changes
