@@ -12,7 +12,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
@@ -29,6 +28,10 @@ type AdvancedNetworkTest struct {
 
 func NewAdvancedNetworkTest(datastoreServiceImage string, apiServiceImage string) *AdvancedNetworkTest {
 	return &AdvancedNetworkTest{datastoreServiceImage: datastoreServiceImage, apiServiceImage: apiServiceImage}
+}
+
+func (test *AdvancedNetworkTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
 }
 
 func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
@@ -90,17 +93,4 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 		)
 	}
 	return nil
-}
-
-func (test *AdvancedNetworkTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{}
-}
-
-
-func (test *AdvancedNetworkTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (test *AdvancedNetworkTest) GetSetupTimeout() time.Duration {
-	return 60 * time.Second
 }

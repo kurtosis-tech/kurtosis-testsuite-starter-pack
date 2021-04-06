@@ -42,6 +42,14 @@ func NewNetworkPartitionTest(datstoreImage string, apiImage string) *NetworkPart
 	return &NetworkPartitionTest{datstoreImage: datstoreImage, apiImage: apiImage}
 }
 
+func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+	builder.WithSetupTimeoutSeconds(
+		60,
+	).WithRunTimeoutSeconds(
+		60,
+	).WithPartitioningEnabled(true)
+}
+
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreInitializer := datastore.NewDatastoreContainerInitializer(test.datstoreImage)
@@ -151,13 +159,6 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	return nil
 }
 
-
-func (test *NetworkPartitionTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{
-		IsPartitioningEnabled:         true,
-	}
-}
-
 // ========================================================================================================
 //                                     Private helper functions
 // ========================================================================================================
@@ -214,14 +215,6 @@ func repartitionNetwork(
 			isConnectionBlocked)
 	}
 	return nil
-}
-
-func (test *NetworkPartitionTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (test *NetworkPartitionTest) GetSetupTimeout() time.Duration {
-	return 60 * time.Second
 }
 
 

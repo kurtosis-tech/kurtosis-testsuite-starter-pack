@@ -92,10 +92,12 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 	}
 }
 
-func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
+func runSerializeSuiteMetadataFlow(ctx context.Context, suite testsuite.TestSuite, conn *grpc.ClientConn) error {
 	allTestMetadata := map[string]*core_api_bindings.TestMetadata{}
-	for testName, test := range testsuite.GetTests() {
-		testConfig := test.GetTestConfiguration()
+	for testName, test := range suite.GetTests() {
+		testConfigBuilder := testsuite.NewTestConfigurationBuilder()
+		test.Configure(testConfigBuilder)
+		testConfig := testConfigBuilder.Build()
 		usedArtifactUrls := map[string]bool{}
 		for _, artifactUrl := range testConfig.FilesArtifactUrls {
 			usedArtifactUrls[artifactUrl] = true
@@ -103,13 +105,13 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 		testMetadata := &core_api_bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
-			TestSetupTimeoutInSeconds: uint32(test.GetSetupTimeout().Seconds()),
-			TestExecutionTimeoutInSeconds: uint32(test.GetExecutionTimeout().Seconds()),
+			TestSetupTimeoutInSeconds: testConfig.SetupTimeoutSeconds,
+			TestExecutionTimeoutInSeconds: testConfig.RunTimeoutSeconds,
 		}
 		allTestMetadata[testName] = testMetadata
 	}
 
-	networkWidthBits := testsuite.GetNetworkWidthBits()
+	networkWidthBits := suite.GetNetworkWidthBits()
 	testSuiteMetadata := &core_api_bindings.TestSuiteMetadata{
 		TestMetadata:     allTestMetadata,
 		NetworkWidthBits: networkWidthBits,
@@ -123,7 +125,7 @@ func runSerializeSuiteMetadataFlow(ctx context.Context, testsuite testsuite.Test
 	return nil
 }
 
-func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, conn *grpc.ClientConn) error {
+func runTestExecutionFlow(ctx context.Context, suite testsuite.TestSuite, conn *grpc.ClientConn) error {
 	executionClient := core_api_bindings.NewTestExecutionServiceClient(conn)
 	testExecutionInfo, err := executionClient.GetTestExecutionInfo(ctx, &emptypb.Empty{})
 	if err != nil {
@@ -131,7 +133,7 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 	}
 	testName := testExecutionInfo.TestName
 
-	allTests := testsuite.GetTests()
+	allTests := suite.GetTests()
 	test, found := allTests[testName]
 	if !found {
 		return stacktrace.NewError(
@@ -140,8 +142,9 @@ func runTestExecutionFlow(ctx context.Context, testsuite testsuite.TestSuite, co
 			testName)
 	}
 
-
-	testConfig := test.GetTestConfiguration()
+	testConfigBuilder := testsuite.NewTestConfigurationBuilder()
+	test.Configure(testConfigBuilder)
+	testConfig := testConfigBuilder.Build()
 	filesArtifactUrls := testConfig.FilesArtifactUrls
 
 	networkCtx := networks.NewNetworkContext(

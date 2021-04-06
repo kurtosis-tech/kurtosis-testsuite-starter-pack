@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Context, Result};
-use std::{collections::HashMap, time::Duration};
 
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test, test_configuration::TestConfiguration}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test}};
 
 use crate::networks_impl::test_network::TestNetwork;
 
@@ -29,11 +28,9 @@ impl AdvancedNetworkTest {
 impl Test for AdvancedNetworkTest {
     type N = TestNetwork;
 
-    fn get_test_configuration(&self) -> TestConfiguration {
-        return TestConfiguration{
-            is_partitioning_enabled: false,
-            files_artifact_urls: HashMap::new(),
-        }
+    fn configure(&self, builder: &mut kurtosis_rust_lib::testsuite::test_configuration_builder::TestConfigurationBuilder) {
+        builder.with_setup_timeout_seconds(60)
+            .with_run_timeout_seconds(60);
     }
 
     fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<TestNetwork>> {
@@ -97,13 +94,5 @@ impl Test for AdvancedNetworkTest {
             ));
         }
         return Ok(());
-    }
-
-    fn get_execution_timeout(&self) -> std::time::Duration {
-        return Duration::new(60, 0);
-    }
-
-    fn get_setup_timeout(&self) -> std::time::Duration {
-        return Duration::new(60, 0);
     }
 }

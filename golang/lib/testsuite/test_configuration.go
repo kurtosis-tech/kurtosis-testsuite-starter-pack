@@ -10,6 +10,12 @@ import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type TestConfiguration struct {
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
+	SetupTimeoutSeconds uint32
+
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
+	RunTimeoutSeconds uint32
+
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 	IsPartitioningEnabled bool
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation

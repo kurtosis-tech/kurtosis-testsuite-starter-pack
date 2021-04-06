@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
-use std::{collections::HashMap, time::Duration};
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration}};
+use std::{time::Duration};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test}};
 use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::datastore_container_initializer::DatastoreContainerInitializer};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";
@@ -29,11 +29,9 @@ impl BasicDatastoreAndApiTest {
 impl Test for BasicDatastoreAndApiTest {
     type N = NetworkContext;
 
-    fn get_test_configuration(&self) -> kurtosis_rust_lib::testsuite::test_configuration::TestConfiguration {
-        return TestConfiguration{
-            is_partitioning_enabled: false,
-            files_artifact_urls: HashMap::new(),
-        };
+    fn configure(&self, builder: &mut kurtosis_rust_lib::testsuite::test_configuration_builder::TestConfigurationBuilder) {
+        builder.with_setup_timeout_seconds(60)
+            .with_run_timeout_seconds(60);
     }
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
@@ -89,13 +87,5 @@ impl Test for BasicDatastoreAndApiTest {
             ));
         }
         return Ok(());
-    }
-
-    fn get_execution_timeout(&self) -> std::time::Duration {
-        return Duration::new(60, 0);
-    }
-
-    fn get_setup_timeout(&self) -> std::time::Duration {
-        return Duration::new(60, 0);
     }
 }
