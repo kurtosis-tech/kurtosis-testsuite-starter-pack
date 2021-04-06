@@ -335,7 +335,7 @@ Determines the width (in bits) of the Docker network that Kurtosis will create f
 [servicecontext]: #servicecontext
 
 [test]: #testn-extends-network
-[test_configure]: #TODO
+[test_configure]: #configuretestconfigurationbuilder-builder
 [test_setup]: #setupnetworkcontext-networkcontext---n
 [test_run]: #runn-network
 [test_gettestconfiguration]: #gettestconfiguration---testconfiguration
