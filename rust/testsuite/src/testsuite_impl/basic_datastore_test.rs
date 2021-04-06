@@ -29,11 +29,9 @@ impl BasicDatastoreTest {
 impl Test for BasicDatastoreTest {
 	type N = NetworkContext;
 
-    fn get_test_configuration(&self) -> TestConfiguration {
-		return TestConfiguration{
-		    is_partitioning_enabled: false,
-		    files_artifact_urls: HashMap::new(),
-		};
+    fn configure(&self, builder: &mut kurtosis_rust_lib::testsuite::test_configuration_builder::TestConfigurationBuilder) {
+		builder.with_setup_timeout_seconds(60)
+			.with_run_timeout_seconds(60);
     }
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
@@ -74,13 +72,5 @@ impl Test for BasicDatastoreTest {
 		// TODO induce panic and ensure we recover from it!
 		info!("Value verified");
 		return Ok(());
-    }
-
-    fn get_execution_timeout(&self) -> std::time::Duration {
-		return Duration::new(60, 0);
-    }
-
-    fn get_setup_timeout(&self) -> std::time::Duration {
-		return Duration::new(60, 0);
     }
 }

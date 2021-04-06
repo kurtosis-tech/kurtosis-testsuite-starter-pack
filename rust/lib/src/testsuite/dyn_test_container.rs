@@ -1,8 +1,8 @@
-use std::{collections::HashMap, convert::TryInto, rc::Rc, u32};
+use std::{borrow::BorrowMut, collections::HashMap, convert::TryInto, rc::Rc, u32};
 
 use crate::{core_api_bindings::api_container_api::{TestMetadata, test_execution_service_client::TestExecutionServiceClient}, networks::network_context::NetworkContext};
 
-use super::{dyn_test::DynTest, test::Test};
+use super::{dyn_test::DynTest, test::Test, test_configuration_builder::TestConfigurationBuilder};
 use anyhow::{Context, Result};
 use log::{debug, info};
 use tokio::runtime::Runtime;
@@ -24,26 +24,26 @@ impl<T: Test> DynTestContainer<T> {
 
 impl<T: Test> DynTest for DynTestContainer<T> {
     fn get_test_metadata(&self) -> Result<TestMetadata> {
-		let test_config = self.test.get_test_configuration();
+        let mut test_config_builder = TestConfigurationBuilder::new_test_configuration_builder();
+		self.test.configure(test_config_builder.borrow_mut());
+        let test_config = test_config_builder.build();
 		let mut used_artifact_urls: HashMap<String, bool> = HashMap::new();
 		for (_, artifact_url) in test_config.files_artifact_urls {
 			used_artifact_urls.insert(artifact_url, true);
 		}
-		let test_setup_timeout_seconds: u32 = self.test.get_setup_timeout().as_secs().try_into()
-			.context("Could not convert execution timeout duration to u32")?;
-		let test_execution_timeout_seconds: u32 = self.test.get_execution_timeout().as_secs().try_into()
-			.context("Could not convert execution timeout duration to u32")?;
 		let test_metadata = TestMetadata{
 			is_partitioning_enabled: test_config.is_partitioning_enabled,
 			used_artifact_urls: used_artifact_urls,
-			test_setup_timeout_in_seconds: test_setup_timeout_seconds,
-		    test_execution_timeout_in_seconds: test_execution_timeout_seconds,
+			test_setup_timeout_in_seconds: test_config.test_setup_timeout_seconds,
+		    test_execution_timeout_in_seconds: test_config.test_run_timeout_seconds,
 		};
 		return Ok(test_metadata);
     }
     
     fn setup_and_run(&mut self, async_runtime: Runtime, channel: Channel) -> Result<()> {
-        let test_config = self.test.get_test_configuration();
+        let mut test_config_builder = TestConfigurationBuilder::new_test_configuration_builder();
+        self.test.configure(test_config_builder.borrow_mut());
+        let test_config = test_config_builder.build();
         let files_artifact_urls = test_config.files_artifact_urls;
         // It's weird that we're cloning the channel, but this is how you're supposed to do it according to the
         // Channel documentation since it uses a &mut self
