@@ -36,6 +36,10 @@ func NewBasicDatastoreAndApiTest(datstoreImage string, apiImage string) *BasicDa
 	return &BasicDatastoreAndApiTest{datstoreImage: datstoreImage, apiImage: apiImage}
 }
 
+func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
+}
+
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreInitializer := datastore.NewDatastoreContainerInitializer(b.datstoreImage)
 	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreInitializer)
@@ -106,16 +110,4 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 		)
 	}
 	return nil
-}
-
-func (test *BasicDatastoreAndApiTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{}
-}
-
-func (test *BasicDatastoreAndApiTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (test *BasicDatastoreAndApiTest) GetSetupTimeout() time.Duration {
-	return 60 * time.Second
 }

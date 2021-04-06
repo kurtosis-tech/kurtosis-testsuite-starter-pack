@@ -36,7 +36,7 @@ impl TestConfigurationBuilder {
         return self;
     }
 
-    pub fn with_partitioning(&mut self, is_partitioning_enabled: bool) -> &mut TestConfigurationBuilder {
+    pub fn with_partitioning_enabled(&mut self, is_partitioning_enabled: bool) -> &mut TestConfigurationBuilder {
         self.is_partitioning_enabled = is_partitioning_enabled;
         return self
     }

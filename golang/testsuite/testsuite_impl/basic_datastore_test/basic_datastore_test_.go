@@ -33,6 +33,10 @@ func NewBasicDatastoreTest(datastoreImage string) *BasicDatastoreTest {
 	return &BasicDatastoreTest{datastoreImage: datastoreImage}
 }
 
+func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
+}
+
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreContainerInitializer := datastore.NewDatastoreContainerInitializer(test.datastoreImage)
 	_, availabilityChecker, err := networkCtx.AddService(datastoreServiceId, datastoreContainerInitializer)
@@ -83,17 +87,4 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Value verified")
 	return nil
-}
-
-
-func (test *BasicDatastoreTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{}
-}
-
-func (test *BasicDatastoreTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (test *BasicDatastoreTest) GetSetupTimeout() time.Duration {
-	return 60 * time.Second
 }
