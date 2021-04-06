@@ -2,6 +2,17 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.19.0
+### Changes
+* Made test configuration easier to define via a `Test.configure` method that allows users to set test configuration using a `TestConfigurationBuilder` object
+    * This has the added benefit that test configurations which get added in the future won't cause breaking changes
+* Centralized the test setup & run timeouts to be configured via `TestConfigurationBuilder` in the `Test.configure` method
+
+### Breaking Changes
+* `Test.getTestConfiguration` was removed, and replaced with `Test.configure` which consumes a `TestConfigurationBuilder` and is how all test configuration will be defined going forward
+* `Test.getSetupTimeout` was removed, replaced with `TestConfigurationBuilder.withSetupTimeoutSeconds`, set in `Test.configure`
+* `Test.getExecutionTimeout` was removed, replaced with `TestConfigurationBuilder.withRunTimeoutSeconds`, set in `Test.configure`
+
 # 1.18.0
 ### Features
 * Made this changelog available as an HTML webpage

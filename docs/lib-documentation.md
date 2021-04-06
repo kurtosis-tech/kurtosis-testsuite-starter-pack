@@ -218,12 +218,12 @@ Test\<N extends [Network][network]\>
 -------------------------------
 This interface represents a test that will be executed against a test network. You should create one implementation per test that you want to run. The generic type `N` will be the type of the test network that the test will run against.
 
-### getTestConfiguration() -\> [TestConfiguration][testconfiguration]
-Returns a configuration object that modifies how the test will be executed. Advanced features like network partitioning can be enabled here.
+### configure([TestConfigurationBuilder][testconfigurationbuilder] builder)
+Sets configuration values that will affect the test's execution.
 
-**Returns**
+**Args**
 
-A [TestConfiguration][testconfiguration] object defining how the test should be executed.
+* `builder`: The builder that will be used to produce the [TestConfiguration][testconfiguration] defining how the test will behave. You should call the methods on this builder to configure your test.
 
 ### setup([NetworkContext][networkcontext] networkContext) -\> N
 Performs tasks necessary to initializing the test network before test execution, and returns a [Network][network] implementation that will be fed in as an argument to [Test.run][test_run]. 
@@ -269,7 +269,13 @@ The time in which test execution must complete.
 
 TestConfiguration
 -----------------
-Class that defines various configuration parameters that can modify how a test behaves.
+Object that contains various configuration parameters controlling how a test behaves, which will be configured by the [TestConfigurationBuilder][testconfigurationbuilder] in the [Test.configure][test_configure] method.
+
+### uint32 testSetupTimeoutSeconds
+The amount of time a test has to finish the [Test.setup][test_setup] phase. If the phase doesn't complete in the allotted time, an error will be thrown.
+
+### uint32 testRunTimeoutSeconds
+The amount of time a test has to finish the [Test.run][test_run] phase. If the phase doesn't complete in the allotted time, an error will be thrown.
 
 ### bool isPartitioningEnabled
 Setting this to true allows a test to make use of the [NetworkContext.repartitionNetwork][networkcontext_repartitionnetwork] method. This is a configuration flag (rather than enabled by default) because enabling repartitioning requires spinning up extra sidecar Docker containers, and thus an extra load on the system running Kurtosis.
@@ -277,6 +283,15 @@ Setting this to true allows a test to make use of the [NetworkContext.repartitio
 <!-- TODO change key type to FilesArtifactID -->
 ### Map\<String, String\> filesArtifactUrls
 Mapping of a user-defined key -> URL of a gzipped TAR whose contents the test will mount on a service. This should be left empty if no files artifacts are needed. For more details on what files artifacts are, see [DockerContainerInitializer.getFilesArtifactMountpoints][dockercontainerinitializer_getfilesartifactmountpoints].
+
+TestConfigurationBuilder
+------------------------
+Builder for creating a [TestConfiguration][testconfiguration] object, which you should manipulate in your test's [Test.configure][test_configure] function. The functions on this builder will correspond to the properties on the [TestConfiguration][testconfiguration] object, in the form `withProperyName` (e.g. `withSetupTimeoutSeconds` sets the test timeout in seconds). If not set, the default values for the properties are as follows:
+
+* **Test setup timeout seconds:** 60
+* **Test run timeout seconds:** 60
+* **Partioning enabled:** false
+* **Files artifact URLS:** none
 
 TestSuite
 ---------
@@ -320,10 +335,13 @@ Determines the width (in bits) of the Docker network that Kurtosis will create f
 [servicecontext]: #servicecontext
 
 [test]: #testn-extends-network
+[test_configure]: #configuretestconfigurationbuilder-builder
 [test_setup]: #setupnetworkcontext-networkcontext---n
 [test_run]: #runn-network
 [test_gettestconfiguration]: #gettestconfiguration---testconfiguration
 
 [testconfiguration]: #testconfiguration
+
+[testconfigurationbuilder]: #testconfigurationbuilder
 
 [testsuite]: #testsuite

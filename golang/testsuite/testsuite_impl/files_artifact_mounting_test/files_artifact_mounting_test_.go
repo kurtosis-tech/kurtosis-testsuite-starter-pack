@@ -33,12 +33,16 @@ const (
 
 type FilesArtifactMountingTest struct {}
 
-func (f FilesArtifactMountingTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{
-		FilesArtifactUrls: map[services.FilesArtifactID]string{
+func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+	builder.WithSetupTimeoutSeconds(
+		60,
+	).WithRunTimeoutSeconds(
+		60,
+	).WithFilesArtifactUrls(
+		map[services.FilesArtifactID]string{
 			testFilesArtifactId: testFilesArtifactUrl,
 		},
-	}
+	)
 }
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
@@ -90,12 +94,4 @@ func (f FilesArtifactMountingTest) Run(network networks.Network) error {
 		)
 	}
 	return nil
-}
-
-func (test FilesArtifactMountingTest) GetExecutionTimeout() time.Duration {
-	return 60 * time.Second
-}
-
-func (test FilesArtifactMountingTest) GetSetupTimeout() time.Duration {
-	return 30 * time.Second
 }

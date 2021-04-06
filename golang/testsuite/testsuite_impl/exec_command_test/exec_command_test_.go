@@ -37,8 +37,8 @@ var execCommandThatShouldFail = []string{
 
 type ExecCommandTest struct {}
 
-func (e ExecCommandTest) GetTestConfiguration() testsuite.TestConfiguration {
-	return testsuite.TestConfiguration{}
+func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+	builder.WithSetupTimeoutSeconds(30).WithRunTimeoutSeconds(30)
 }
 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
@@ -104,13 +104,3 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 
 	return nil
 }
-
-func (e ExecCommandTest) GetSetupTimeout() time.Duration {
-	return 30 * time.Second
-}
-
-func (e ExecCommandTest) GetExecutionTimeout() time.Duration {
-	return 30 * time.Second
-}
-
-

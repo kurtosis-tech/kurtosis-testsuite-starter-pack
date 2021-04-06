@@ -48,10 +48,6 @@ impl TestNetwork {
         return Ok(());
     }
 
-    pub fn get_datastore(&self) -> &Option<Rc<DatastoreService>> {
-        return &self.datastore_service;
-    }
-
     pub fn add_api_service(&mut self) -> Result<ServiceId> {
         let datastore;
         match &self.datastore_service {
