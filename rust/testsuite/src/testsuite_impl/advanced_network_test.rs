@@ -1,7 +1,6 @@
 use anyhow::{anyhow, Context, Result};
-use std::{collections::HashMap, time::Duration};
 
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test, test_configuration::TestConfiguration}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test}};
 
 use crate::networks_impl::test_network::TestNetwork;
 

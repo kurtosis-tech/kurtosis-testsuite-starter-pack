@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
-use std::{collections::HashMap, time::Duration};
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration}};
+use std::{time::Duration};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test}};
 use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::datastore_container_initializer::DatastoreContainerInitializer};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";

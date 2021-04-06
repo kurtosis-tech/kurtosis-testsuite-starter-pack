@@ -1,9 +1,8 @@
-use std::time::Duration;
 use anyhow::Result;
 
 use crate::networks::{network::Network, network_context::NetworkContext};
 
-use super::{test_configuration::TestConfiguration, test_configuration_builder::TestConfigurationBuilder};
+use super::{test_configuration_builder::TestConfigurationBuilder};
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub trait Test {

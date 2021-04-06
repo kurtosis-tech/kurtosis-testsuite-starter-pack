@@ -1,8 +1,8 @@
-use std::{borrow::BorrowMut, collections::HashMap, rc::Rc, time::Duration};
+use std::{borrow::BorrowMut, rc::Rc, time::Duration};
 use anyhow::{anyhow, Context, Result};
 
 use datastore_container_initializer::DatastoreContainerInitializer;
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test, test_configuration::TestConfiguration}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test}};
 
 use crate::services_impl::datastore::{datastore_container_initializer, datastore_service::DatastoreService};
 
