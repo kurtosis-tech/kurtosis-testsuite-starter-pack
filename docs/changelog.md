@@ -2,6 +2,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.19.4
+### Fixes
+* Fixed issue with bootstrap validation failing due to Git not being initialized
+
 # 1.19.3
 ### Fixes
 * Fix issue where bootstrap scripts would fail on Linux

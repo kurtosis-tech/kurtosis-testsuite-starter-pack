@@ -59,6 +59,9 @@ if ! docker login -u "${docker_username}" -p "${docker_password_DO_NOT_LOG}"; th
     exit 1
 fi
 
+# Git needs to be initialized, since the bootstrap will create a new Git repo and commit to it
+git config --global user.email "bootstrap-tester@test.com"
+git config --global user.name "Bootstrap Tester"
 
 bootstrap_script_filepath="${root_dirpath}/${BOOTSTRAP_SCRIPTS_DIRNAME}/${BOOTSTRAP_SCRIPT_FILENAME}"
 echo "Bootstrapping and running new testsuites for all languages..."
