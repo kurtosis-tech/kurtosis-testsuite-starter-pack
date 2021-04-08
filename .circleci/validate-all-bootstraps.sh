@@ -77,7 +77,7 @@ for lang in $(cat "${root_dirpath}/${SUPPORTED_LANGS_FILENAME}"); do
     fi
 
     build_and_run_filepath="${output_dirpath}/${SCRIPTS_DIRNAME_INSIDE_TESTSUITE}/${BUILD_AND_RUN_FILENAME}"
-    if ! "${build_and_run_filepath}" "${BUILD_AND_RUN_ALL_CMD}"; then
+    if ! "${build_and_run_filepath}" "${BUILD_AND_RUN_ALL_CMD}" --client-id "${kurtosis_client_id}" --client-secret "${kurtosis_client_secret_DO_NOT_LOG}"; then
         echo "Error: The bootstrapped ${lang} testsuite failed" >&2
         exit 1
     fi
