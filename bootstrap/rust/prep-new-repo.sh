@@ -1,3 +1,5 @@
+# TODO DEBUGGING
+set -x
 set -euo pipefail
 
 # =============================================================================
@@ -53,7 +55,8 @@ cp -r "${input_dirpath}/${TESTSUITE_DIRNAME}" "${output_dirpath}/"
 # =============================================================================
 #                         Post-Copy Modifications
 # =============================================================================
-new_package_name=""
+# Allows setting this variable programmatically, for testing in CI
+new_package_name="${RUST_NEW_PACKAGE_NAME:-}"
 while [ -z "${new_package_name}" ]; do
     read -p "Name for the Rust package that will contain your testsuite project (e.g. my-new-package): " new_package_name
 done

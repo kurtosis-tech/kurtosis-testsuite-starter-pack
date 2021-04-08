@@ -6,7 +6,7 @@ repo_root_dirpath="$(dirname "${script_dirpath}")"
 #                                 Constants
 # =============================================================================
 # A sed regex that will be used to determine if the user-supplied image name matches the regex
-ALLOWD_IMAGE_NAME_REGEX='a-z0-9._/-'
+ALLOWED_IMAGE_NAME_CHARS='a-z0-9._/-'
 
 SUPPORTED_LANGS_FILENAME="supported-languages.txt"
 INPUT_KURTOSIS_CORE_DIRNAME=".kurtosis"
@@ -50,8 +50,9 @@ show_help_and_exit() {
     echo ""
     echo "Usage: $(basename "${0}") lang new_repo_dirpath"
     echo ""
-    echo "  lang                Language that the new testsuite repo should be in ($(paste -d '|' "${supported_langs_filepath}"))"
-    echo "  new_repo_dirpath    Path to the new directory to create to contain the testsuite repo"
+    echo "  lang                  Language that the new testsuite repo should be in ($(paste -sd '|' "${supported_langs_filepath}"))"
+    echo "  new_repo_dirpath      Path to new dirpath where the testsuite repo should be created"
+    echo "  testsuite_image_name  Name of the Docker image that will be built to contain the testsuite (must match regex [${ALLOWED_IMAGE_NAME_CHARS}]+, e.g. 'my-test-image')"
     echo ""
     exit 1  # Exit with an error so CI fails if this was accidentally called
 }
@@ -61,6 +62,7 @@ show_help_and_exit() {
 # =============================================================================
 lang="${1:-}"
 output_dirpath="${2:-}"
+testsuite_image="${3:-}"
 
 if [ -z "${lang}" ]; then
     echo "Error: Lang cannot be empty" >&2
@@ -78,23 +80,18 @@ if [ -d "${output_dirpath}" ] && [ "$(ls -A "${output_dirpath}")" ]; then
     echo "Error: Output directory '${output_dirpath}' exists, but is not empty"
     exit 1
 fi
+if [ -z "${testsuite_image}" ]; then
+    echo "Error: Testsuite image cannot be empty" >&2
+    exit 1
+fi
+sanitized_image="$(echo "${testsuite_image}" | sed "s|[^${ALLOWED_IMAGE_NAME_CHARS}]||g")"
+if [ "${sanitized_image}" != "${testsuite_image}" ]; then
+    echo "Error: Testsuite image name '${testsuite_image}' doesn't match regex [${ALLOWED_IMAGE_NAME_CHARS}]+" >&2
+fi
 
 # =============================================================================
 #                                 Main Code
 # =============================================================================
-testsuite_image=""
-while [ -z "${testsuite_image}" ]; do
-    read -p "Name for Docker image that will be built to contain testsuite (must match regex [${ALLOWD_IMAGE_NAME_REGEX}]+): " candidate_testsuite_image
-
-    sanitized_image="$(echo "${candidate_testsuite_image}" | sed "s|[^${ALLOWD_IMAGE_NAME_REGEX}]||g")"
-    if [ "${sanitized_image}" != "${candidate_testsuite_image}" ]; then
-        echo "Error: Image name '${candidate_testsuite_image}' doesn't match regex [${ALLOWD_IMAGE_NAME_REGEX}]+" >&2
-    else
-        testsuite_image="${candidate_testsuite_image}"
-    fi
-done
-
-
 # Use language-specific prep script to populate contents of output directory
 if ! mkdir -p "${output_dirpath}"; then
     echo "Error: Could not create output directory '${output_dirpath}'" >&2

@@ -2,6 +2,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.19.1
+### Features
+* Added a CI check on merge-to-master that validates that all language bootstraps work
+
 # 1.19.0
 ### Changes
 * Made test configuration easier to define via a `Test.configure` method that allows users to set test configuration using a `TestConfigurationBuilder` object
