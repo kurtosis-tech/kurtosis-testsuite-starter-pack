@@ -65,7 +65,7 @@ workflows:
                 - master
 
       # ============== Jobs that run upon release ==================
-      - validate_all_bootstraps:
+      - validate_bootstraps:
           context:
             - docker-user
             - kurtosis-user
