@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Added `set -x` to Go `prep-new-repo` script to debug why it's failing the bootstrap check
 
 # 1.19.1
 ### Features
