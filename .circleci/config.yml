@@ -31,7 +31,7 @@ jobs:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: bash .circleci/validate-all-bootstraps.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${KURTOSIS_INTERNAL_CLIENT_ID}" "${KURTOSIS_INTERNAL_CLIENT_SECRET}"
+      - run: bash .circleci/validate-all-bootstraps.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${SIMULATED_TRIAL_USER_CLIENT_ID}" "${SIMULATED_TRIAL_USER_CLIENT_SECRET}"
 
   push_docker_image:
     executor: ubuntu_vm
@@ -68,7 +68,7 @@ workflows:
       - validate_bootstraps:
           context:
             - docker-user
-            - kurtosis-user
+            - simulated-trial-user
           filters:
             branches:
               ignore: /.*/

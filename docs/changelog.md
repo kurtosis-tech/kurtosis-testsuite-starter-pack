@@ -2,6 +2,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.19.6
+### Features
+* Run the `validate-all-bootstraps` CI script using simulated trial user creds, to simulate a new user bootstrapping as closely as possible
+
 # 1.19.5
 ### Fixes
 * Fixed issue with bootstrap validation failing due to Kurtosis client ID & secret not being used
