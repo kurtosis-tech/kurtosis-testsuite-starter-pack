@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added a CI check on merge-to-master that validates that all language bootstraps work
 
 # 1.19.0
 ### Changes
