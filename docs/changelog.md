@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Fixes
+* Fixed issue with bootstrap validation failing due to Kurtosis client ID & secret not being used
 
 # 1.19.4
 ### Fixes
