@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.19.6
 ### Features
 * Run the `validate-all-bootstraps` CI script using simulated trial user creds, to simulate a new user bootstrapping as closely as possible
 
