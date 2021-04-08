@@ -47,7 +47,8 @@ cp -r "${input_dirpath}/${TESTSUITE_IMPL_DIRNAME}" "${output_dirpath}/"
 # =============================================================================
 #                         Post-Copy Modifications
 # =============================================================================
-new_module_name=""
+# Allow setting the module name programatically, for testing in CI
+new_module_name="${GO_NEW_MODULE_NAME:-}"
 while [ -z "${new_module_name}" ]; do
     read -p "Name for the Go module that will contain your testsuite project (e.g. github.com/my-org/my-repo): " new_module_name
 done

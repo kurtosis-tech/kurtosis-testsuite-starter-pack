@@ -11,6 +11,8 @@ BUILD_AND_RUN_FILENAME="build-and-run.sh"
 
 ERROR_LOG_KEYWORD="ERRO"
 
+SUPPORTED_LANGS_FILENAME="supported-languages.txt"
+
 # ==========================================================================================
 #                                        Arg-parsing
 # ==========================================================================================
@@ -55,7 +57,7 @@ if git --no-pager diff --exit-code origin/develop...HEAD -- . ':!*.md' > /dev/nu
     exit 0
 fi
 # 2) if there are changes in the code shared across all langs, we always need to build all testsuites
-supported_langs_filepath="${root_dirpath}/supported-languages.txt"
+supported_langs_filepath="${root_dirpath}/${SUPPORTED_LANGS_FILENAME}"
 not_lang_dirs_filters=""
 for lang in $(cat "${supported_langs_filepath}"); do
     not_lang_dirs_filters="${not_lang_dirs_filters} :!${lang}"
