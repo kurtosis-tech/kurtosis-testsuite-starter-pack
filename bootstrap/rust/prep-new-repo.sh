@@ -15,6 +15,9 @@ TESTSUITE_DIRNAME="testsuite"
 DOCKERFILE_FILENAME="Dockerfile"
 TESTSUITE_EXAMPLE_PACKAGE_NAME="kurtosis-rust-example"
 
+# Frustratingly, there's no way to say "do in-place replacement" in sed that's compatible on both Mac and Linux
+# Instead, we add this suffix and delete the backup files after
+SED_INPLACE_FILE_SUFFIX=".sedreplace"
 
 # =============================================================================
 #                             Arg-Parsing & Validation
@@ -69,7 +72,7 @@ if [ "${num_lib_lines}" -ne 1 ]; then
     echo "Error: Expected exactly one line in '${root_cargo_toml_filepath}' matching pattern '${lib_line_pattern}', but got ${num_lib_lines}" >&2
     exit 1
 fi
-if ! sed -i '' "/${lib_line_pattern}/d" "${root_cargo_toml_filepath}"; then
+if ! sed -i"${SED_INPLACE_FILE_SUFFIX}" "/${lib_line_pattern}/d" "${root_cargo_toml_filepath}"; then
     echo "Error: Could not delete line matching pattern '${lib_line_pattern}' from file '${root_cargo_toml_filepath}'" >&2
     exit 1
 fi
@@ -97,7 +100,7 @@ if [ "${num_crate_lines}" -ne 1 ]; then
     exit 1
 fi
 new_crate_line="${LIB_CRATE_NAME} = ${lib_version_string}"
-if ! sed -i '' "s/${crate_line_pattern}/${new_crate_line}/" "${testsuite_cargo_toml_filepath}"; then
+if ! sed -i"${SED_INPLACE_FILE_SUFFIX}" "s/${crate_line_pattern}/${new_crate_line}/" "${testsuite_cargo_toml_filepath}"; then
     echo "Error: Could not substitute lib line '${crate_line_pattern}' -> '${new_crate_line}'" >&2
     exit 1
 fi
@@ -108,7 +111,7 @@ if [ "${num_package_name_lines}" -ne 1 ]; then
     echo "Error: Expected exactly one line in '${testsuite_cargo_toml_filepath}' containing example package name '${TESTSUITE_EXAMPLE_PACKAGE_NAME}, but got ${num_package_name_lines}" >&2
     exit 1
 fi
-if ! sed -i '' "s/${TESTSUITE_EXAMPLE_PACKAGE_NAME}/${new_package_name}/" "${testsuite_cargo_toml_filepath}"; then
+if ! sed -i"${SED_INPLACE_FILE_SUFFIX}" "s/${TESTSUITE_EXAMPLE_PACKAGE_NAME}/${new_package_name}/" "${testsuite_cargo_toml_filepath}"; then
     echo "Error: Could not substitute example package name '${TESTSUITE_EXAMPLE_PACKAGE_NAME}' -> '${new_package_name}'" >&2
     exit 1
 fi
@@ -119,7 +122,7 @@ if [ "${num_testsuite_cargo_toml_version_lines}" -ne 1 ]; then
     echo "Error: Expected exactly one line in '${testsuite_cargo_toml_filepath}' matching pattern '${CARGO_TOML_VERSION_PATTERN}', but got ${num_testsuite_cargo_toml_version_lines}" >&2
     exit 1
 fi
-if ! sed -i '' "s/${CARGO_TOML_VERSION_PATTERN}/${BOOTSTRAPPED_SUITE_VERSION_STR}/" "${testsuite_cargo_toml_filepath}"; then
+if ! sed -i"${SED_INPLACE_FILE_SUFFIX}" "s/${CARGO_TOML_VERSION_PATTERN}/${BOOTSTRAPPED_SUITE_VERSION_STR}/" "${testsuite_cargo_toml_filepath}"; then
     echo "Error: Could not substitute version string '${CARGO_TOML_VERSION_PATTERN}' -> '${BOOTSTRAPPED_SUITE_VERSION_STR}' in '${testsuite_cargo_toml_filepath}'" >&2
     exit 1
 fi
@@ -130,7 +133,14 @@ fi
 # NOTE: This is a fairly aggressive removal, and one that could be prone to error!
 dockerfile_filepath="${output_dirpath}/${TESTSUITE_DIRNAME}/${DOCKERFILE_FILENAME}"
 pattern_to_remove="lib"
-if ! sed -i '' "/${pattern_to_remove}/d" "${dockerfile_filepath}"; then
+if ! sed -i"${SED_INPLACE_FILE_SUFFIX}" "/${pattern_to_remove}/d" "${dockerfile_filepath}"; then
     echo "Error: Failed to remove all lines in '${dockerfile_filepath}' containing pattern '${pattern_to_remove}'" >&2
+    exit 1
+fi
+
+
+# NOTE: Leave this as the last command in the file!! It removes all the backup files created by our in-place sed (see above for why this is necessary)
+if ! find "${output_dirpath}" -name "*${SED_INPLACE_FILE_SUFFIX}" -delete; then
+    echo "Error: Failed to remove the backup files suffixed with '${SED_INPLACE_FILE_SUFFIX}' that we created doing in-place string replacement with sed" >&2
     exit 1
 fi

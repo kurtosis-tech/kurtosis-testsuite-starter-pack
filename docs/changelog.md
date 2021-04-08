@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Fixes
+* Fix issue where bootstrap scripts would fail on Linux
 
 # 1.19.2
 ### Changes
