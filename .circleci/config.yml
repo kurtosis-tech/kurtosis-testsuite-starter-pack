@@ -13,7 +13,7 @@ executors:
 #  images), so we run everything inside a single job.
 # See also: https://discuss.circleci.com/t/can-docker-images-be-preserved-between-jobs-in-a-workflow-without-a-manual-load-save/23388/12
 jobs:
-  validate:
+  pr_validation:
     executor: ubuntu_vm
     steps:
       - checkout
@@ -26,6 +26,12 @@ jobs:
       - run: "! git --no-pager diff --exit-code origin/develop...HEAD docs/changelog.md > /dev/null"
       
       - run: bash .circleci/validate-all-testsuites.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${KURTOSIS_INTERNAL_CLIENT_ID}" "${KURTOSIS_INTERNAL_CLIENT_SECRET}"
+
+  validate_bootstraps:
+    executor: ubuntu_vm
+    steps:
+      - checkout
+      - run: bash .circleci/validate-all-bootstraps.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${KURTOSIS_INTERNAL_CLIENT_ID}" "${KURTOSIS_INTERNAL_CLIENT_SECRET}"
 
   push_docker_image:
     executor: ubuntu_vm
@@ -47,7 +53,8 @@ jobs:
 workflows:
   build:
     jobs:
-      - validate:
+      # ============ Jobs that run upon PR submission ===============
+      - pr_validation:
           context:
             - docker-user
             - kurtosis-user
@@ -56,6 +63,17 @@ workflows:
               ignore:
                 - develop
                 - master
+
+      # ============== Jobs that run upon release ==================
+      - validate_all_bootstraps:
+          context:
+            - docker-user
+            - kurtosis-user
+          filters:
+            branches:
+              ignore: /.*/
+            tags: 
+              only: /^[0-9]+\.[0-9]+\.[0-9]+$/
       - push_docker_image:
           context:
             - docker-user

@@ -20,9 +20,46 @@ CUSTOM_LANG_BOOTSTRAP_FLAGS[golang]="GO_NEW_MODULE_NAME=github.com/test/test-mod
 CUSTOM_LANG_BOOTSTRAP_FLAGS[rust]="RUST_NEW_PACKAGE_NAME=test-package"
 
 
+
+# ==========================================================================================
+#                                        Arg-parsing
+# ==========================================================================================
+docker_username="${1:-}"
+docker_password_DO_NOT_LOG="${2:-}" # WARNING: DO NOT EVER LOG THIS!!
+kurtosis_client_id="${3:-}"
+kurtosis_client_secret_DO_NOT_LOG="${4:-}" # WARNING: DO NOT EVER LOG THIS!!
+
+# ==========================================================================================
+#                                        Arg validation
+# ==========================================================================================
+if [ -z "${docker_username}" ]; then
+    echo "Error: Docker username cannot be empty" >&2
+    exit 1
+fi
+if [ -z "${docker_password_DO_NOT_LOG}" ]; then
+    echo "Error: Docker password cannot be empty" >&2
+    exit 1
+fi
+if [ -z "${kurtosis_client_id}" ]; then
+    echo "Error: Kurtosis client ID cannot be empty" >&2
+    exit 1
+fi
+if [ -z "${kurtosis_client_secret_DO_NOT_LOG}" ]; then
+    echo "Error: Kurtosis client secret cannot be empty" >&2
+    exit 1
+fi
+
+
 # ==========================================================================================
 #                                           Main code
 # ==========================================================================================
+# Docker is restricting anonymous image pulls, so we log in before we do any pulling
+if ! docker login -u "${docker_username}" -p "${docker_password_DO_NOT_LOG}"; then
+    echo "Error: Logging in to Docker failed" >&2
+    exit 1
+fi
+
+
 bootstrap_script_filepath="${root_dirpath}/${BOOTSTRAP_SCRIPTS_DIRNAME}/${BOOTSTRAP_SCRIPT_FILENAME}"
 echo "Bootstrapping and running new testsuites for all languages..."
 for lang in $(cat "${root_dirpath}/${SUPPORTED_LANGS_FILENAME}"); do
