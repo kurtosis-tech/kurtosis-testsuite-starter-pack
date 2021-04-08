@@ -8,7 +8,7 @@ keywords = ["kurtosis", "testing"]
 license-file = "../../LICENSE"
 name = "kurtosis-rust-lib"
 repository = "https://github.com/kurtosis-tech/kurtosis-libs"
-version = "1.19.2"  # Do not modify; gets automatically updated during release!
+version = "1.19.3"  # Do not modify; gets automatically updated during release!
 
 [lib]
 name = "kurtosis_rust_lib"
