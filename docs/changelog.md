@@ -2,6 +2,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.19.3
+### Fixes
+* Fix issue where bootstrap scripts would fail on Linux
+
 # 1.19.2
 ### Changes
 * Added `set -x` to Go `prep-new-repo` script to debug why it's failing the bootstrap check
