@@ -62,12 +62,12 @@ func NewNetworkContext(
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) AddService(
 		serviceId services.ServiceID,
-		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
+		configFactory services.ContainerConfigFactory) (services.Service, services.AvailabilityChecker, error) {
 	// Go mutexes aren't re-entrant, so we lock the mutex inside this call
 	service, availabilityChecker, err := networkCtx.AddServiceToPartition(
 		serviceId,
 		defaultPartitionId,
-		initializer)
+		configFactory)
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred adding service '%v' to the network in the default partition", serviceId)
 	}
@@ -79,17 +79,24 @@ func (networkCtx *NetworkContext) AddService(
 func (networkCtx *NetworkContext) AddServiceToPartition(
 		serviceId services.ServiceID,
 		partitionId PartitionID,
-		initializer services.DockerContainerInitializer) (services.Service, services.AvailabilityChecker, error) {
+		configFactory services.ContainerConfigFactory) (services.Service, services.AvailabilityChecker, error) {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
 	ctx := context.Background()
 
+	containerConfig := configFactory.Create()
+
+	filesToGenerate := map[string]bool{}
+	for fileId := range containerConfig.GetFileGeneratingFuncs() {
+		filesToGenerate[fileId] = true
+	}
+
 	logrus.Tracef("Registering new service ID with Kurtosis API...")
 	registerServiceArgs := &core_api_bindings.RegisterServiceArgs{
 		ServiceId:       string(serviceId),
 		PartitionId:     string(partitionId),
-		FilesToGenerate: initializer.GetFilesToGenerate(),
+		FilesToGenerate: filesToGenerate,
 	}
 	registerServiceResp, err := networkCtx.client.RegisterService(ctx, registerServiceArgs)
 	if err != nil {
@@ -100,7 +107,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	logrus.Tracef("New service successfully registered with Kurtosis API")
 
-	suiteExVolMountpointOnService := initializer.GetTestVolumeMountpoint()
+	suiteExVolMountpointOnService := containerConfig.GetTestVolumeMountpoint()
 	generatedFilesRelativeFilepaths := registerServiceResp.GeneratedFilesRelativeFilepaths
 	generatedFilesFps := map[string]*os.File{}
 	generatedFilesAbsoluteFilepathsOnService := map[string]string{}
@@ -122,15 +129,24 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 
 	logrus.Trace("Initializing generated files...")
-	if err := initializer.InitializeGeneratedFiles(generatedFilesFps); err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred initializing the generated files")
+	for fileId, initializingFunc := range containerConfig.GetFileGeneratingFuncs() {
+		fp, found := generatedFilesFps[fileId]
+		if !found {
+			return nil, nil, stacktrace.Propagate(
+				err,
+				"Needed to initialize file for file ID '%v', but no file pointer was found for that file ID; this is a Kurtosis bug",
+				fileId)
+		}
+		if err := initializingFunc(fp); err != nil {
+			return nil, nil, stacktrace.Propagate(err, "The function to initialize file with ID '%v' returned an error", fileId)
+		}
 	}
 	logrus.Trace("Successfully initialized generated files")
 
 
 	logrus.Tracef("Creating files artifact URL -> mount dirpaths map...")
 	artifactUrlToMountDirpath := map[string]string{}
-	for filesArtifactId, mountDirpath := range initializer.GetFilesArtifactMountpoints() {
+	for filesArtifactId, mountDirpath := range containerConfig.GetFilesArtifactMountpoints() {
 		artifactUrl, found := networkCtx.filesArtifactUrls[filesArtifactId]
 		if !found {
 			return nil, nil, stacktrace.Propagate(
@@ -145,7 +161,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 
 	logrus.Tracef("Creating start command for service...")
 	serviceIpAddr := registerServiceResp.IpAddr
-	entrypointArgs, cmdArgs, err := initializer.GetStartCommandOverrides(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
+	entrypointArgs, cmdArgs, err := containerConfig.GetCmdOverrideArgs(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "Failed to get start command overrides")
 	}
