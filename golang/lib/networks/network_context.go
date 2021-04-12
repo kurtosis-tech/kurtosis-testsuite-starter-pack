@@ -12,7 +12,6 @@ import (
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
-	"path"
 	"sync"
 )
 
@@ -89,7 +88,6 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	registerServiceArgs := &core_api_bindings.RegisterServiceArgs{
 		ServiceId:       string(serviceId),
 		PartitionId:     string(partitionId),
-		FilesToGenerate: initializer.GetFilesToGenerate(),
 	}
 	registerServiceResp, err := networkCtx.client.RegisterService(ctx, registerServiceArgs)
 	if err != nil {
@@ -98,16 +96,27 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 			"An error occurred registering service with ID '%v' with the Kurtosis API",
 			serviceId)
 	}
+	serviceIpAddr := registerServiceResp.IpAddr
+	serviceContext := services.NewServiceContext(
+		networkCtx.client,
+		serviceId,
+		serviceIpAddr,
+		suiteExVolMountpoint,
+		initializer.GetTestVolumeMountpoint())
 	logrus.Tracef("New service successfully registered with Kurtosis API")
 
-	suiteExVolMountpointOnService := initializer.GetTestVolumeMountpoint()
-	generatedFilesRelativeFilepaths := registerServiceResp.GeneratedFilesRelativeFilepaths
+	logrus.Trace("Initializing generated files in suite execution volume...")
+	generatedFileFilepaths, err := serviceContext.GenerateFiles(initializer.GetFilesToGenerate())
+	if err != nil {
+		return nil, nil, stacktrace.Propagate(err, "An error occurred generating the files needed for service startup")
+	}
 	generatedFilesFps := map[string]*os.File{}
-	generatedFilesAbsoluteFilepathsOnService := map[string]string{}
-	for fileId, relativeFilepath := range generatedFilesRelativeFilepaths {
-		absoluteFilepathOnTestsuite := path.Join(suiteExVolMountpoint, relativeFilepath)
-		logrus.Debugf("Opening generated file at '%v' for writing...", absoluteFilepathOnTestsuite)
-		fp, err := os.Create(absoluteFilepathOnTestsuite)
+	generatedFilesAbsFilepathsOnService := map[string]string{}
+	for fileId, filepaths := range generatedFileFilepaths {
+		absFilepathOnTestsuite := filepaths.AbsoluteFilepathOnTestsuiteContainer
+		absFilepathOnService := filepaths.AbsoluteFilepathOnServiceContainer
+		logrus.Debugf("Opening generated file at '%v' for writing...", absFilepathOnTestsuite)
+		fp, err := os.Create(absFilepathOnTestsuite)
 		if err != nil {
 			return nil, nil, stacktrace.Propagate(
 				err,
@@ -116,17 +125,12 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		}
 		defer fp.Close()
 		generatedFilesFps[fileId] = fp
-
-		absoluteFilepathOnService := path.Join(suiteExVolMountpointOnService, relativeFilepath)
-		generatedFilesAbsoluteFilepathsOnService[fileId] = absoluteFilepathOnService
+		generatedFilesAbsFilepathsOnService[fileId] = absFilepathOnService
 	}
-
-	logrus.Trace("Initializing generated files...")
 	if err := initializer.InitializeGeneratedFiles(generatedFilesFps); err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred initializing the generated files")
 	}
-	logrus.Trace("Successfully initialized generated files")
-
+	logrus.Trace("Successfully initialized generated files in suite execution volume")
 
 	logrus.Tracef("Creating files artifact URL -> mount dirpaths map...")
 	artifactUrlToMountDirpath := map[string]string{}
@@ -144,8 +148,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully created files artifact URL -> mount dirpaths map")
 
 	logrus.Tracef("Creating start command for service...")
-	serviceIpAddr := registerServiceResp.IpAddr
-	entrypointArgs, cmdArgs, err := initializer.GetStartCommandOverrides(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
+	entrypointArgs, cmdArgs, err := initializer.GetStartCommandOverrides(generatedFilesAbsFilepathsOnService, serviceIpAddr)
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "Failed to get start command overrides")
 	}
@@ -172,7 +175,6 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
 	logrus.Tracef("Creating service interface...")
-	serviceContext := services.NewServiceContext(networkCtx.client, serviceId, serviceIpAddr)
 	service := initializer.GetService(serviceContext)
 	logrus.Tracef("Successfully created service interface")
 

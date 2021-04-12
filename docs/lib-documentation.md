@@ -214,6 +214,8 @@ Uses [Docker exec](https://docs.docker.com/engine/reference/commandline/exec/) f
 * `exitCode`: The exit code of the command.
 * `logs`: The bytes of the command logs. This isn't a string because Kurtosis can't know what text encoding scheme the container uses.
 
+### TODO generateFiles
+
 Test\<N extends [Network][network]\>
 -------------------------------
 This interface represents a test that will be executed against a test network. You should create one implementation per test that you want to run. The generic type `N` will be the type of the test network that the test will run against.
