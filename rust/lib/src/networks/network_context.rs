@@ -49,38 +49,45 @@ impl NetworkContext {
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
     pub fn add_service_to_partition<S: Service>(&mut self, service_id: &ServiceId, partition_id: &PartitionId, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
-		let files_to_generate = NetworkContext::convert_hashset_to_hashmap(initializer.get_files_to_generate());
 		let args = RegisterServiceArgs{
 		    service_id: service_id.to_owned(),
 		    partition_id: partition_id.to_owned(),
-		    files_to_generate,
 		};
 		let register_service_args = tonic::Request::new(args);
 		let register_service_resp = self.async_runtime.block_on(self.client.register_service(register_service_args))
 			.context(format!("An error occurred registering service with ID '{}' with the Kurtosis API", service_id))?
 			.into_inner();
-		
-		let suite_ex_vol_mountpoint_on_service = initializer.get_test_volume_mountpoint();
-		let generated_files_relative_filepaths = register_service_resp.generated_files_relative_filepaths;
+		let service_ip_addr = register_service_resp.ip_addr;
+		let service_context_client = self.client.clone();
+		let service_context = ServiceContext::new(
+			self.async_runtime.clone(), 
+			service_context_client, 
+			service_id.to_owned(), 
+			service_ip_addr.to_owned(),
+			SUITE_EX_VOL_MOUNTPOINT.to_owned(),
+			initializer.get_test_volume_mountpoint().to_owned(),
+		);
+		trace!("New service successfully registered with Kurtosis API");
+
+		trace!("Initializing generated files in suite execution volume...");
+		let generated_file_filepaths = service_context.generate_files(initializer.get_files_to_generate())
+			.context(format!("An error occurred generating the files needed for service startup"))?;
 		let mut generated_files_fps: HashMap<String, File> = HashMap::new();
 		let mut generated_files_abs_filepaths_on_service: HashMap<String, PathBuf> = HashMap::new();
-		for (file_id, relative_filepath) in generated_files_relative_filepaths {
+		for (file_id, filepaths) in generated_file_filepaths {
+			let abs_filepath_on_testsuite = filepaths.absolute_filepath_on_testsuite_container;
+			let abs_filepath_on_service = filepaths.absolute_filepath_on_service_container;
 			// Per https://users.rust-lang.org/t/what-is-the-idiomatic-way-to-create-a-path-from-str-fragments/42882/2 , 
 			// this is the best way to join multiple fragments into a single path
-			let abs_filepath_on_testsuite: PathBuf = [SUITE_EX_VOL_MOUNTPOINT, &relative_filepath].iter().collect();
 			debug!("Opening generated file at '{}' for writing...", abs_filepath_on_testsuite.display());
 			let fp = File::create(abs_filepath_on_testsuite)
 				.context(format!("Could not open generated file '{}' for writing", file_id))?;
 			generated_files_fps.insert(file_id.clone(), fp);
-
-			let abs_filepath_on_service: PathBuf = [suite_ex_vol_mountpoint_on_service, &relative_filepath].iter().collect();
 			generated_files_abs_filepaths_on_service.insert(file_id.clone(), abs_filepath_on_service);
 		}
-
-		trace!("Initializing generated files...");
 		initializer.initialize_generated_files(generated_files_fps)
 			.context("An error occurred initializing the generated files")?;
-		trace!("Successfully initialized generated files");
+		trace!("Successfully initialized generated files in suite execution volume");
 
 		trace!("Creating files artifact URL -> mount dirpaths map...");
 		let mut artifact_url_to_mount_dirpath: HashMap<String, String> = HashMap::new();
@@ -96,7 +103,6 @@ impl NetworkContext {
 		trace!("Successfully created files artifact URL -> mount dirpaths map");
 
 		trace!("Creating start command for service...");
-		let service_ip_addr = register_service_resp.ip_addr;
 		let (entrypoint_args_opt, cmd_args_opt) = initializer.get_start_command_overrides(generated_files_abs_filepaths_on_service, &service_ip_addr)
 			.context("Failed to get start command overrides")?;
 		trace!("Successfully created start command for service");
@@ -120,8 +126,6 @@ impl NetworkContext {
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");
 
-		let service_context_client = self.client.clone();
-		let service_context = ServiceContext::new(self.async_runtime.clone(), service_context_client, service_id.to_owned(), service_ip_addr);
 
 		trace!("Creating service interface...");
 		let result_service_ptr = initializer.get_service(service_context);
