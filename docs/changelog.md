@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.20.0
 ### Features
 * Added a `ServiceContext.generateFiles` method that can be used to generate files inside a testsuite container on the fly, with docs available on [docs.kurtosistech.com](https://docs.kurtosistech.com/)
 
