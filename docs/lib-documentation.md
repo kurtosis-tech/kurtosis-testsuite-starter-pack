@@ -214,7 +214,26 @@ Uses [Docker exec](https://docs.docker.com/engine/reference/commandline/exec/) f
 * `exitCode`: The exit code of the command.
 * `logs`: The bytes of the command logs. This isn't a string because Kurtosis can't know what text encoding scheme the container uses.
 
-### TODO generateFiles
+### generateFiles(Set\<String\> filesToGenerate) -\> Map\<String, [GeneratedFileFilepaths][generatedfilefilepaths]\>
+Generates files inside the suite execution volume, which is mounted on both the testsuite container and the service container. This allows the testsuite to write data to files that are immediately available to the service container, as if they shared a filesystem.
+
+**Args**
+
+* `filesToGenerate`: A set of user-defined IDs identifying the files that will be generated.
+
+**Returns**
+
+A map of the file IDs (corresponding to the set passed in as input) mapped to a [GeneratedFileFilepaths][generatedfilefilepaths] object containing the filepaths on a) the testsuite container and b) the service container where the generated file was created.
+
+GeneratedFileFilepaths
+----------------------
+Simple structure containing the filepaths to a generated file on either a) the testsuite container or b) on the service container for whom the file was generated. These filepaths are different because the path where the suite execution volume is mounted on the testsuite container can be different from the path where the volume is mounted on the service container.
+
+### String absoluteFilepathOnTestsuiteContainer
+The absolute filepath where the file lives on the testsuite container, which would be used if the testsuite code wants to read or write data to the file.
+
+### String absoluteFilepathOnServiceContainer
+The absolute filepath where the file lives on the service container, which would be used if the service wants to read or write data to the file.
 
 Test\<N extends [Network][network]\>
 -------------------------------
@@ -335,6 +354,8 @@ Determines the width (in bits) of the Docker network that Kurtosis will create f
 [service_isavailable]: #isavailable---bool
 
 [servicecontext]: #servicecontext
+
+[generatedfilefilepaths]: #generatedfilefilepaths
 
 [test]: #testn-extends-network
 [test_configure]: #configuretestconfigurationbuilder-builder
