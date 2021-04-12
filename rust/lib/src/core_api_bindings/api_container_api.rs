@@ -201,21 +201,48 @@ pub struct RegisterServiceArgs {
     /// If emptystring, the default partition ID will be used
     #[prost(string, tag = "2")]
     pub partition_id: ::prost::alloc::string::String,
-    /// "Set" of files that the service needs and the API container should make available upon service start
-    /// The key of the map is a user-meaningful identifier
-    #[prost(map = "string, bool", tag = "3")]
-    pub files_to_generate: ::std::collections::HashMap<::prost::alloc::string::String, bool>,
 }
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct RegisterServiceResponse {
-    /// Mapping of user-created key in the request -> filepath (RELATIVE to the suite execution volume root!) where
-    ///  the file was created
-    #[prost(map = "string, string", tag = "1")]
-    pub generated_files_relative_filepaths:
-        ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
     /// The IP address that the service will receive when it starts
-    #[prost(string, tag = "2")]
+    #[prost(string, tag = "1")]
     pub ip_addr: ::prost::alloc::string::String,
+}
+/// ==============================================================================================
+///                                     Generate Files
+/// ==============================================================================================
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GenerateFilesArgs {
+    /// The service ID for which the files will be generated
+    #[prost(string, tag = "1")]
+    pub service_id: ::prost::alloc::string::String,
+    /// Mapping of meaningful-to-user string ID -> options controlling how the file gets generated
+    #[prost(map = "string, message", tag = "2")]
+    pub files_to_generate:
+        ::std::collections::HashMap<::prost::alloc::string::String, FileGenerationOptions>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct FileGenerationOptions {
+    #[prost(enumeration = "file_generation_options::FileTypeToGenerate", tag = "1")]
+    pub file_type_to_generate: i32,
+}
+/// Nested message and enum types in `FileGenerationOptions`.
+pub mod file_generation_options {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum FileTypeToGenerate {
+        /// TODO Uncomment and generate directories too
+        /// DIRECTORY = 1;
+        File = 0,
+    }
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GenerateFilesResponse {
+    /// Mapping of meaningful-to-user string ID (as passed in via the request) to the filepath (RELATIVE to the suite
+    ///  execution volume root!) where the file was generated
+    #[prost(map = "string, string", tag = "1")]
+    pub generated_file_relative_filepaths:
+        ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
 }
 /// ==============================================================================================
 ///                                        Start Service
@@ -434,6 +461,23 @@ pub mod test_execution_service_client {
             );
             self.inner.unary(request.into_request(), path, codec).await
         }
+        #[doc = " Generates files inside the test volume on the filesystem for a container"]
+        pub async fn generate_files(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GenerateFilesArgs>,
+        ) -> Result<tonic::Response<super::GenerateFilesResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/api_container_api.TestExecutionService/GenerateFiles",
+            );
+            self.inner.unary(request.into_request(), path, codec).await
+        }
         #[doc = " Starts a previously-registered service by creating a Docker container for it"]
         pub async fn start_service(
             &mut self,
@@ -550,6 +594,11 @@ pub mod test_execution_service_server {
             &self,
             request: tonic::Request<super::RegisterServiceArgs>,
         ) -> Result<tonic::Response<super::RegisterServiceResponse>, tonic::Status>;
+        #[doc = " Generates files inside the test volume on the filesystem for a container"]
+        async fn generate_files(
+            &self,
+            request: tonic::Request<super::GenerateFilesArgs>,
+        ) -> Result<tonic::Response<super::GenerateFilesResponse>, tonic::Status>;
         #[doc = " Starts a previously-registered service by creating a Docker container for it"]
         async fn start_service(
             &self,
@@ -755,6 +804,40 @@ pub mod test_execution_service_server {
                     };
                     Box::pin(fut)
                 }
+                "/api_container_api.TestExecutionService/GenerateFiles" => {
+                    #[allow(non_camel_case_types)]
+                    struct GenerateFilesSvc<T: TestExecutionService>(pub Arc<T>);
+                    impl<T: TestExecutionService>
+                        tonic::server::UnaryService<super::GenerateFilesArgs>
+                        for GenerateFilesSvc<T>
+                    {
+                        type Response = super::GenerateFilesResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::GenerateFilesArgs>,
+                        ) -> Self::Future {
+                            let inner = self.0.clone();
+                            let fut = async move { (*inner).generate_files(request).await };
+                            Box::pin(fut)
+                        }
+                    }
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let interceptor = inner.1.clone();
+                        let inner = inner.0;
+                        let method = GenerateFilesSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = if let Some(interceptor) = interceptor {
+                            tonic::server::Grpc::with_interceptor(codec, interceptor)
+                        } else {
+                            tonic::server::Grpc::new(codec)
+                        };
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
                 "/api_container_api.TestExecutionService/StartService" => {
                     #[allow(non_camel_case_types)]
                     struct StartServiceSvc<T: TestExecutionService>(pub Arc<T>);
@@ -938,7 +1021,7 @@ pub struct TestMetadata {
     #[prost(uint32, tag = "3")]
     pub test_setup_timeout_in_seconds: u32,
     #[prost(uint32, tag = "4")]
-    pub test_execution_timeout_in_seconds: u32,
+    pub test_run_timeout_in_seconds: u32,
 }
 #[doc = r" Generated client implementations."]
 pub mod suite_metadata_serialization_service_client {

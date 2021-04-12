@@ -35,7 +35,7 @@ impl<T: Test> DynTest for DynTestContainer<T> {
 			is_partitioning_enabled: test_config.is_partitioning_enabled,
 			used_artifact_urls: used_artifact_urls,
 			test_setup_timeout_in_seconds: test_config.test_setup_timeout_seconds,
-		    test_execution_timeout_in_seconds: test_config.test_run_timeout_seconds,
+		    test_run_timeout_in_seconds: test_config.test_run_timeout_seconds,
 		};
 		return Ok(test_metadata);
     }
