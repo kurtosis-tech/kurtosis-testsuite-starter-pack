@@ -41,8 +41,8 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 }
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreInitializer := datastore.NewDatastoreContainerInitializer(b.datstoreImage)
-	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreInitializer)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
+	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -53,8 +53,8 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	// Go doesn't have generics so we need to do this cast
 	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
 
-	apiInitializer := api.NewApiContainerInitializer(b.apiImage, datastoreSvc)
-	_, apiChecker, err := networkCtx.AddService(apiServiceId, apiInitializer)
+	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreSvc)
+	_, apiChecker, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}

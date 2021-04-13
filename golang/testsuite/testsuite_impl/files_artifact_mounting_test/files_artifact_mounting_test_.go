@@ -46,8 +46,8 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 }
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	nginxStaticInitializer := nginx_static.NewNginxStaticContainerInitializer(testFilesArtifactId)
-	_, availabilityChecker, err := networkCtx.AddService(fileServerServiceId, nginxStaticInitializer)
+	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
+	_, availabilityChecker, err := networkCtx.AddService(fileServerServiceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}

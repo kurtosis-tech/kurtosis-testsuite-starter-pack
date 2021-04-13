@@ -52,8 +52,8 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreInitializer := datastore.NewDatastoreContainerInitializer(test.datstoreImage)
-	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreInitializer)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
+	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -167,8 +167,8 @@ func (test NetworkPartitionTest) addApiService(
 		serviceId services.ServiceID,
 		partitionId networks.PartitionID,
 		datastoreSvc *datastore.DatastoreService) (*api.ApiService, error) {
-	apiInitializer := api.NewApiContainerInitializer(test.apiImage, datastoreSvc)
-	uncastedApiSvc, apiChecker, err := networkCtx.AddServiceToPartition(serviceId, partitionId, apiInitializer)
+	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreSvc)
+	uncastedApiSvc, apiChecker, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
