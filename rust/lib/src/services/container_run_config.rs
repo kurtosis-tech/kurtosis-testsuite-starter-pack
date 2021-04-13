@@ -5,17 +5,17 @@ use std::collections::HashMap;
 // ====================================================================================================
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 pub struct ContainerRunConfig {
-    entrypoint_override_args: Option<Vec<String>>,
-    cmd_override_args: Option<Vec<String>>,
+    entrypoint_override_args: Vec<String>,
+    cmd_override_args: Vec<String>,
     environment_variable_overrides: HashMap<String, String>,
 }
 
 impl ContainerRunConfig {
-    pub fn get_entrypoint_override_args(&self) -> &Option<Vec<String>> {
+    pub fn get_entrypoint_override_args(&self) -> &Vec<String> {
         return &self.entrypoint_override_args;
     }
 
-    pub fn get_cmd_override_args(&self) -> &Option<Vec<String>> {
+    pub fn get_cmd_override_args(&self) -> &Vec<String> {
         return &self.cmd_override_args;
     }
 
@@ -30,27 +30,27 @@ impl ContainerRunConfig {
 //                                      Builder
 // ====================================================================================================
 pub struct ContainerRunConfigBuilder {
-    entrypoint_override_args: Option<Vec<String>>,
-    cmd_override_args: Option<Vec<String>>,
+    entrypoint_override_args: Vec<String>,
+    cmd_override_args: Vec<String>,
     environment_variable_overrides: HashMap<String, String>,
 }
 
 impl ContainerRunConfigBuilder {
     pub fn new() -> ContainerRunConfigBuilder {
         return ContainerRunConfigBuilder{
-            entrypoint_override_args: None,
-            cmd_override_args: None,
+            entrypoint_override_args: Vec::new(),
+            cmd_override_args: Vec::new(),
             environment_variable_overrides: HashMap::new(),
         }
     }
 
     pub fn with_entrypoint_override(&mut self, args: Vec<String>) -> &mut ContainerRunConfigBuilder {
-        self.entrypoint_override_args = Some(args);
+        self.entrypoint_override_args = args;
         return self;
     }
 
     pub fn with_cmd_override(&mut self, args: Vec<String>) -> &mut ContainerRunConfigBuilder {
-        self.cmd_override_args = Some(args);
+        self.cmd_override_args = args;
         return self;
     }
 

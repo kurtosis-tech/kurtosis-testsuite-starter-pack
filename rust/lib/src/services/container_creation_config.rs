@@ -3,24 +3,24 @@ use anyhow::Result;
 
 use super::{service::Service, service_context::ServiceContext};
 
-pub type ServiceCreatingFunc = fn(ServiceContext) -> dyn Service;
+pub type ServiceCreatingFunc<S> = dyn Fn(ServiceContext) -> S;
 
-pub type FileGeneratingFunc = fn(File) -> Result<()>;
+pub type FileGeneratingFunc = dyn Fn(File) -> Result<()>;
 
 // ====================================================================================================
 //                                    Config Object
 // ====================================================================================================
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-pub struct ContainerCreationConfig {
+pub struct ContainerCreationConfig<S: Service> {
     image: String,
     test_volume_mountpoint: String,
     used_ports_set: HashSet<String>,
-    service_creating_func: ServiceCreatingFunc,
-    files_generating_funcs: HashMap<String, FileGeneratingFunc>,
+    service_creating_func: Box<ServiceCreatingFunc<S>>,
+    file_generating_Funcs: HashMap<String, Box<FileGeneratingFunc>>,
     files_artifact_mountpoints: HashMap<String, String>
 }
 
-impl ContainerCreationConfig {
+impl<S: Service> ContainerCreationConfig<S> {
     pub fn get_image(&self) -> &str {
         return &self.image;
     }
@@ -29,16 +29,16 @@ impl ContainerCreationConfig {
         return &self.test_volume_mountpoint;
     }
 
-    pub fn get_used_ports_set(&self) -> &HashSet<String> {
+    pub fn get_used_ports(&self) -> &HashSet<String> {
         return &self.used_ports_set;
     }
 
-    pub fn get_service_creating_func(&self) -> &ServiceCreatingFunc {
+    pub fn get_service_creating_func(&self) -> &ServiceCreatingFunc<S> {
         return &self.service_creating_func;
     }
 
-    pub fn get_files_generating_funcs(&self) -> &HashMap<String, FileGeneratingFunc> {
-        return &self.files_generating_funcs;
+    pub fn get_file_generating_funcs(&self) -> &HashMap<String, Box<FileGeneratingFunc>> {
+        return &self.file_generating_Funcs;
     }
 
     pub fn get_files_artifact_mountpoints(&self) -> &HashMap<String, String> {
@@ -50,17 +50,18 @@ impl ContainerCreationConfig {
 // ====================================================================================================
 //                                        Builder
 // ====================================================================================================
-pub struct ContainerCreationConfigBuilder {
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
+pub struct ContainerCreationConfigBuilder<S: Service> {
     image: String,
     test_volume_mountpoint: String,
     used_ports: HashSet<String>,
-    service_creating_func: ServiceCreatingFunc,
+    service_creating_func: Box<ServiceCreatingFunc<S>>,
     files_generating_funcs: HashMap<String, FileGeneratingFunc>,
     files_artifact_mountpoints: HashMap<String, String>
 }
 
-impl ContainerCreationConfigBuilder {
-    pub fn new(image: String, test_volume_mountpoint: String, service_creating_func: ServiceCreatingFunc) -> ContainerCreationConfigBuilder {
+impl<S: Service> ContainerCreationConfigBuilder<S> {
+    pub fn new(image: String, test_volume_mountpoint: String, service_creating_func: ServiceCreatingFunc<S>) -> ContainerCreationConfigBuilder<S> {
         return ContainerCreationConfigBuilder{
             image,
             test_volume_mountpoint,
@@ -71,28 +72,28 @@ impl ContainerCreationConfigBuilder {
         }
     }
 
-    pub fn with_used_ports(&mut self, used_ports: HashSet<String>) -> &mut ContainerCreationConfigBuilder {
+    pub fn with_used_ports(&mut self, used_ports: HashSet<String>) -> &mut ContainerCreationConfigBuilder<S> {
         self.used_ports = used_ports;
         return self;
     }
 
-    pub fn with_generated_files(&mut self, file_generating_funcs: HashMap<String, FileGeneratingFunc>) -> &mut ContainerCreationConfigBuilder {
+    pub fn with_generated_files(&mut self, file_generating_funcs: HashMap<String, FileGeneratingFunc>) -> &mut ContainerCreationConfigBuilder<S> {
         self.files_generating_funcs = file_generating_funcs;
         return self;
     }
 
-    pub fn with_files_artifacts(&mut self, files_artifact_mountpoints: HashMap<String, String>) -> &mut ContainerCreationConfigBuilder {
+    pub fn with_files_artifacts(&mut self, files_artifact_mountpoints: HashMap<String, String>) -> &mut ContainerCreationConfigBuilder<S> {
         self.files_artifact_mountpoints = files_artifact_mountpoints;
         return self;
     }
 
-    pub fn build(&self) -> ContainerCreationConfig {
+    pub fn build(&self) -> ContainerCreationConfig<S> {
         return ContainerCreationConfig{
             image: self.image.clone(),
             test_volume_mountpoint: self.test_volume_mountpoint.clone(),
             used_ports_set: self.used_ports.clone(),
             service_creating_func: self.service_creating_func.clone(),
-            files_generating_funcs: self.files_generating_funcs.clone(),
+            file_generating_Funcs: self.files_generating_funcs.clone(),
             files_artifact_mountpoints: self.files_artifact_mountpoints.clone(),
         }
     }
