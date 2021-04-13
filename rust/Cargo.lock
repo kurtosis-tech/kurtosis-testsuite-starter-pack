@@ -458,7 +458,7 @@ dependencies = [
 
 [[package]]
 name = "kurtosis-rust-example"
-version = "1.18.0"
+version = "1.19.6"
 dependencies = [
  "anyhow",
  "clap",
@@ -474,7 +474,7 @@ dependencies = [
 
 [[package]]
 name = "kurtosis-rust-lib"
-version = "1.18.0"
+version = "1.19.6"
 dependencies = [
  "anyhow",
  "dashmap",

@@ -2,6 +2,13 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.20.0
+### Features
+* Added a `ServiceContext.generateFiles` method that can be used to generate files inside a testsuite container on the fly, with docs available on [docs.kurtosistech.com](https://docs.kurtosistech.com/)
+
+### Breaking Changes
+* Upgraded to Kurtosis Core 1.11 (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
+
 # 1.19.6
 ### Features
 * Run the `validate-all-bootstraps` CI script using simulated trial user creds, to simulate a new user bootstrapping as closely as possible

@@ -15,7 +15,7 @@ type DatastoreContainerConfigFactory struct {
 	dockerImage string
 }
 
-func (factory DatastoreContainerConfigFactory) Create(containerIpAddr string) *services.ContainerConfig {
+func (factory DatastoreContainerConfigFactory) Create(containerIpAddr string) *services.ContainerCreationConfig {
 	serviceWrappingFunc := func(serviceCtx *services.ServiceContext) services.Service {
 		return NewDatastoreService(serviceCtx, port)
 	}

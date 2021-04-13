@@ -10,9 +10,9 @@ type ContainerConfigBuilder struct {
 	serviceCreatingFunc      func(*ServiceContext) Service
 	fileGeneratingFuncs      map[string]func(*os.File) error
 	filesArtifactMountpoints map[FilesArtifactID]string
-	entrypointOverride       []string
-	cmdOverride              []string
-	environmentVarOverrides  map[string]string
+	entrypointOverrideFunc 	 func(ipAddr string, generatedFileFilepaths map[string]string)
+	cmdOverrideFunc		     func(ipAddr string, generatedFileFilepaths map[string]string)
+	envVarOverridesFunc      func(ipAddr string, generatedFileFilepaths map[string]string)
 }
 
 func NewContainerConfigBuilder(image string, testVolumeMountpoint string, serviceCreatingFunc func(ctx *ServiceContext) Service) *ContainerConfigBuilder {
@@ -23,9 +23,6 @@ func NewContainerConfigBuilder(image string, testVolumeMountpoint string, servic
 		serviceCreatingFunc:      serviceCreatingFunc,
 		fileGeneratingFuncs:      map[string]func(file *os.File) error{},
 		filesArtifactMountpoints: map[FilesArtifactID]string{},
-		entrypointOverride:       nil,
-		cmdOverride:              nil,
-		environmentVarOverrides:  map[string]string{},
 	}
 }
 
@@ -44,32 +41,15 @@ func (builder *ContainerConfigBuilder) WithFilesArtifacts(filesArtifactMountpoin
 	return builder
 }
 
-func (builder *ContainerConfigBuilder) WithEntrypointOverride(args []string) *ContainerConfigBuilder {
-	builder.entrypointOverride = args
-	return builder
-}
 
-func (builder *ContainerConfigBuilder) WithCmdOverride(args []string) *ContainerConfigBuilder {
-	builder.cmdOverride = args
-	return builder
-}
-
-func (builder *ContainerConfigBuilder) WithEnvironmentVariableOverrides(envVars map[string]string) *ContainerConfigBuilder {
-	builder.environmentVarOverrides = envVars
-	return builder
-}
-
-func (builder *ContainerConfigBuilder) Build() *ContainerConfig {
-	return &ContainerConfig{
+func (builder *ContainerConfigBuilder) Build() *ContainerCreationConfig {
+	return &ContainerCreationConfig{
 		image:                        builder.image,
 		testVolumeMountpoint:         builder.testVolumeMountpoint,
 		usedPortsSet:                 builder.usedPortsSet,
 		serviceCreatingFunc:          builder.serviceCreatingFunc,
 		fileGeneratingFuncs:          builder.fileGeneratingFuncs,
 		filesArtifactMountpoints:     builder.filesArtifactMountpoints,
-		entrypointOverrideArgs:       builder.entrypointOverride,
-		cmdOverrideArgs:              builder.cmdOverride,
-		environmentVariableOverrides: builder.environmentVarOverrides,
 	}
 }
 
