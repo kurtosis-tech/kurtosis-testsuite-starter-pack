@@ -2,6 +2,8 @@ Lib Documentation
 =================
 Kurtosis libs exist in multiple languages and maintaining in-code comments for each of these is prohibitively expensive. This page exists to provide the canonical reference for Kurtosis lib classes and methods. Note that any comments specific to a language implementation will be found in the library code comments.
 
+_Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-libs/issues)!_
+
 TestSuiteConfigurator
 ---------------------
 Implementations of this interface are responsible for initializing the user-defined testsuite object for Kurtosis.
@@ -94,6 +96,79 @@ Blocks until the timeout is reached or the checker's corresponding service becom
 * `maxNumRetries`: The maximum number of failed calls to [Service.isAvailable][service_isavailable] that the checker will allow before returning an error.
 
 TODO TODO TODO Add Container Config documentation
+
+ContainerConfigFactory\<S extends [Service][service]\>
+-----------------------------------------------------
+Factory interface that creates [ContainerCreationConfig][containercreationconfig] and [ContainerRunConfig][containerrunconfig] instances, which instruct Kurtosis how to instantiate a container.
+
+### getCreationConfig(String containerIpAddr) -\> [ContainerCreationConfig][containercreationconfig]
+Returns a [ContainerCreationConfig][containercreationconfig] object for instructing Kurtosis how to create the container. You should use the [ContainerCreationConfigBuilder][containercreationconfigbuilder] object to create the result.
+
+**Args**
+* `containerIpAddr`: The IP address that the container-to-be will have.
+
+**Returns**
+The config detailing how the container will be created, constructed using a [ContainerCreationConfigBuilder][containercreationconfigbuilder].
+
+### getRunConfig(String containerIpAddr, Map\<String, String\> generatedFileFilepaths) -\> [ContainerRunConfig][containerrunconfig]
+Returns a [ContainerRunConfig][containerrunconfig] object for instructing Kurtosis how to run the container. You should use the [ContainerRunConfigBuilder][containerrunconfigbuilder] object to create the result.
+
+**Args**
+* `containerIpAddr`: The IP address that the container to run has been allocated.
+* `generatedFileFilepaths`: A mapping of file ID (as declared in [ContainerCreationConfig.fileGeneratingFuncs][containercreationconfig_filegeneratingfuncs] to the filepath on the service container where the generated file lives.
+
+**Returns**
+The config detailing how the container will be run, constructed using a [ContainerRunConfigBuilder][containerrunconfigbuilder].
+
+ContainerCreationConfig
+-----------------------
+Object containing information Kurtosis needs to create the container. This config should be created using [ContainerCreationConfigBuilder][containercreationconfigbuilder] instances.
+
+### String image
+The name of the container image that Kurtosis should use when creating the service's container (e.g. `my-repo/my-image:some-tag-name`).
+
+### String testVolumeMountpoint
+Kurtosis uses a Docker volume to keep track of test state, and needs to mount this volume on every container. Kurtosis can't know what filesystem the service image uses or what paths are safe to mount on though, so this property tells Kurtosis where that volume should be mounted. This should be set to a filepath that doesn't already exist where Kurtosis can safely mount the Kurtosis volume.
+
+### Set\<String\> usedPortsSet
+The set of ports that the container will be listening on, in the format `NUM/PROTOCOL` (e.g. `80/tcp`, `9090/udp`, etc.).
+
+### Func([ServiceContext][servicecontext]) -\> S
+A function that will wrap Kurtosis' internal representation of the running container, the [ServiceContext][servicecontext], with your custom [Service][service] type to make it as simple as possible for your tests to interact with your service.
+
+### Map\<String, Func(File)\> fileGeneratingFuncs
+Declares the files that will be generated before your service starts and made available on the container's filesystem, as well as the logic for generating their contents. The file keys declared here (which can be any string you like) will be the same keys used to identify the files in the map arg to [ContainerConfigFactory.getRunConfig][containerconfigfactory_getrunconfig].
+
+E.g. if your service needs a config file and a log file, you might return a map with keys `config` and `log` corresponding to logic for generating the config and log files respectively.
+
+### Map\<String, String\> filesArtifactMountpoints
+Sometimes a service needs files to be available before it starts, but creating those files via [ContainerCreationConfig.fileGeneratingFuncs][containercreationconfig_filegeneratingfuncs] is slow, difficult, or would require committing a very large artifact to the testsuite's Git repo (e.g. starting a service with a 5 GB Postgres database mounted). To ease this pain, Kurtosis allows you to specify URLs of gzipped TAR files that Kurtosis will download, uncompress, and mount inside your service containers. 
+
+This property is therefore a map of the file artifact ID -> path on the container where the uncompressed artifact contents should be mounted, with the file artifact IDs corresponding matching the files artifacts declared in the [TestConfiguration][testconfiguration] object returned by [Test.getTestConfiguration][test_gettestconfiguration]. 
+
+E.g. if my test declares an artifact called `5gb-database` that lives at `https://my-site.com/test-artifacts/5gb-database.tgz`, I might return the following map from this function to mount the artifact at the `/database` path inside my container: `{"5gb-database": "/database"}`.
+
+
+ContainerCreationConfigBuilder
+------------------------------
+The builder that should be used to create [ContainerCreationConfig][containercreationconfig] instances. The functions on this builder will correspond to the properties on the [ContainerCreationConfig][containercreationconfig] object, in the form `withPropertyName` (e.g. `withUsedPorts` sets the ports used by the container).
+
+ContainerRunConfig
+------------------
+Object containing information Kurtosis needs to run the container. This config should be created using [ContainerRunConfigBuilder][containerrunconfigbuilder] instances.
+
+### List\<String\> entrypointOverrideArgs
+You often won't control the container images that you'll be using in your testnet, and the `ENTRYPOINT` statement  hardcoded in their Dockerfiles might not be suitable for what you need. This function allows you to override these statements when necessary.
+
+### List\<String\> cmdOverrideArgs
+You often won't control the container images that you'll be using in your testnet, and the `CMD` statement  hardcoded in their Dockerfiles might not be suitable for what you need. This function allows you to override these statements when necessary.
+
+### Map\<String, String\> environmentVariableOverrides
+Defines environment variables that should be set inside the Docker container running the service. This can be necessary for starting containers from Docker images you don't control, as they'll often be parameterized with environment variables.
+
+ContainerRunConfigBuilder
+-------------------------
+The builder that should be used to create [ContainerRunConfig][containerrunconfig] instances. The functions on this builder will correspond to the properties on the [ContainerRunConfig][containerrunconfig] object, in the form `withPropertyName` (e.g. `withCmdOverride` overrides the container's CMD declaration).
 
 DockerContainerInitializer\<S extends [Service][service]\>
 -----------------------------------------------------
@@ -330,12 +405,28 @@ Map of test name -> test object.
 ### getNetworkWidthBits() -\> uint32
 Determines the width (in bits) of the Docker network that Kurtosis will create for each test. The maximum number of IP addresses that any test can use will be 2 ^ network_width_bits, which determines the maximum number of services that can be running at any given time in a testnet. This number should be set high enough that no test will run out of IP addresses, but low enough that the Docker environment doesn't run out of IP addresses (`8` is a good value to start with).
 
+---
+
+_Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-libs/issues)!_
+
 
 <!-- TODO Make the function definition not include args or return values, so we don't get these huge ugly links that break if we change the function signature -->
 <!-- TODO make the reference names a) be properly-cased (e.g. "Service.isAvailable" rather than "service_isavailable") and b) have an underscore in front of them, so they're easy to find-replace without accidentally over-replacing -->
 
 [availabilitychecker]: #availabilitychecker
 [availabilitychecker_waitforstartup]: #waitforstartupduration-timebetweenpolls-int-maxnumretries
+
+[containerconfigfactory]: #TODO
+[containerconfigfactory_getrunconfig]: #TODO
+
+[containercreationconfig]: #TODO
+[containercreationconfig_filegeneratingfuncs]: #TODO
+
+[containercreationconfigbuilder]: #TODO
+
+[containerrunconfig]: #TODO
+
+[containerrunconfigbuilder]: #TODO
 
 [dockercontainerinitializer]: #dockercontainerinitializers-extends-service
 [dockercontainerinitializer_getfilestogenerate]: #getfilestogenerate---setstring
