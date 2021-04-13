@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Fixes
+* Fixed issue with `validate-all-bootstraps.sh` where it would clobber your Git `user.email` and `user.name` if you run it on a machine where these are already set up
 
 # 1.20.0
 ### Features
