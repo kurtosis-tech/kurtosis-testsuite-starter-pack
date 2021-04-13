@@ -15,11 +15,11 @@ type DatastoreContainerConfigFactory struct {
 	dockerImage string
 }
 
-func (factory DatastoreContainerConfigFactory) Create(containerIpAddr string) *services.ContainerCreationConfig {
+func (factory DatastoreContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	serviceWrappingFunc := func(serviceCtx *services.ServiceContext) services.Service {
 		return NewDatastoreService(serviceCtx, port)
 	}
-	return services.NewContainerConfigBuilder(
+	result := services.NewContainerCreationConfigBuilder(
 		factory.dockerImage,
 		testVolumeMountpoint,
 		serviceWrappingFunc,
@@ -28,4 +28,9 @@ func (factory DatastoreContainerConfigFactory) Create(containerIpAddr string) *s
 			fmt.Sprintf("%v/tcp", port): true,
 		},
 	).Build()
+	return result, nil
+}
+
+func (factory DatastoreContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
+	return services.NewContainerRunConfigBuilder().Build(), nil
 }

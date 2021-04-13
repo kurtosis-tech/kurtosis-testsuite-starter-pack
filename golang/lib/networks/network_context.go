@@ -84,7 +84,6 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 
 	ctx := context.Background()
 
-	containerConfig := configFactory.GetCreationConfig()
 
 	logrus.Tracef("Registering new service ID with Kurtosis API...")
 	registerServiceArgs := &core_api_bindings.RegisterServiceArgs{
@@ -99,24 +98,29 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 			serviceId)
 	}
 	serviceIpAddr := registerServiceResp.IpAddr
+	containerCreationConfig, err := configFactory.GetCreationConfig(serviceIpAddr)
+	if err != nil {
+		return nil, nil, stacktrace.Propagate(err, "An error occurred getting the container creation config")
+	}
 	serviceContext := services.NewServiceContext(
 		networkCtx.client,
 		serviceId,
 		serviceIpAddr,
 		suiteExVolMountpoint,
-		containerConfig.GetTestVolumeMountpoint())
+		containerCreationConfig.GetTestVolumeMountpoint())
 	logrus.Tracef("New service successfully registered with Kurtosis API")
 
 	logrus.Trace("Initializing generated files...")
 	filesToGenerate := map[string]bool{}
-	for fileId := range containerConfig.GetFileGeneratingFuncs() {
+	for fileId := range containerCreationConfig.GetFileGeneratingFuncs() {
 		filesToGenerate[fileId] = true
 	}
 	generatedFileFilepaths, err := serviceContext.GenerateFiles(filesToGenerate)
 	if err != nil {
 		return nil, nil, stacktrace.Propagate(err, "An error occurred generating the files needed for service startup")
 	}
-	for fileId, initializingFunc := range containerConfig.GetFileGeneratingFuncs() {
+	generatedFileAbsFilepathsOnService := map[string]string{}
+	for fileId, initializingFunc := range containerCreationConfig.GetFileGeneratingFuncs() {
 		filepaths, found := generatedFileFilepaths[fileId]
 		if !found {
 			return nil, nil, stacktrace.Propagate(
@@ -131,12 +135,18 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		if err := initializingFunc(fp); err != nil {
 			return nil, nil, stacktrace.Propagate(err, "The function to initialize file with ID '%v' returned an error", fileId)
 		}
+		generatedFileAbsFilepathsOnService[fileId] = filepaths.AbsoluteFilepathOnServiceContainer
 	}
 	logrus.Trace("Successfully initialized generated files in suite execution volume")
 
+	containerRunConfig, err := configFactory.GetRunConfig(serviceIpAddr, generatedFileAbsFilepathsOnService)
+	if err != nil {
+		return nil, nil, stacktrace.Propagate(err, "An error occurred getting the container run config")
+	}
+
 	logrus.Tracef("Creating files artifact URL -> mount dirpaths map...")
 	artifactUrlToMountDirpath := map[string]string{}
-	for filesArtifactId, mountDirpath := range containerConfig.GetFilesArtifactMountpoints() {
+	for filesArtifactId, mountDirpath := range containerCreationConfig.GetFilesArtifactMountpoints() {
 		artifactUrl, found := networkCtx.filesArtifactUrls[filesArtifactId]
 		if !found {
 			return nil, nil, stacktrace.Propagate(
@@ -149,34 +159,15 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	logrus.Tracef("Successfully created files artifact URL -> mount dirpaths map")
 
-	logrus.Tracef("Creating start command for service...")
-<<<<<<< HEAD
-	serviceIpAddr := registerServiceResp.IpAddr
-	entrypointArgs, cmdArgs, err := containerConfig.GetCmdOverrideArgs(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
-||||||| merged common ancestors
-	serviceIpAddr := registerServiceResp.IpAddr
-	entrypointArgs, cmdArgs, err := initializer.GetStartCommandOverrides(generatedFilesAbsoluteFilepathsOnService, serviceIpAddr)
-=======
-	entrypointArgs, cmdArgs, err := initializer.GetStartCommandOverrides(generatedFilesAbsFilepathsOnService, serviceIpAddr)
->>>>>>> develop
-	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "Failed to get start command overrides")
-	}
-	logrus.Tracef("Successfully created start command for service")
-
 	logrus.Tracef("Starting new service with Kurtosis API...")
-	envVarOverrides, err := initializer.GetEnvironmentVariableOverrides()
-	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred getting the environment variable overrides");
-	}
 	startServiceArgs := &core_api_bindings.StartServiceArgs{
 		ServiceId:                   string(serviceId),
-		DockerImage:                 initializer.GetDockerImage(),
-		UsedPorts:                   initializer.GetUsedPorts(),
-		EntrypointArgs:              entrypointArgs,
-		CmdArgs:                     cmdArgs,
-		DockerEnvVars:               envVarOverrides,
-		SuiteExecutionVolMntDirpath: initializer.GetTestVolumeMountpoint(),
+		DockerImage:                 containerCreationConfig.GetImage(),
+		UsedPorts:                   containerCreationConfig.GetUsedPortsSet(),
+		EntrypointArgs:              containerRunConfig.GetEntrypointOverrideArgs(),
+		CmdArgs:                     containerRunConfig.GetCmdOverrideArgs(),
+		DockerEnvVars:               containerRunConfig.GetEnvironmentVariableOverrides(),
+		SuiteExecutionVolMntDirpath: containerCreationConfig.GetTestVolumeMountpoint(),
 		FilesArtifactMountDirpaths:  artifactUrlToMountDirpath,
 	}
 	if _, err := networkCtx.client.StartService(ctx, startServiceArgs); err != nil {
@@ -185,7 +176,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
 	logrus.Tracef("Creating service interface...")
-	service := initializer.GetService(serviceContext)
+	service := containerCreationConfig.GetServiceCreatingFunc()(serviceContext)
 	logrus.Tracef("Successfully created service interface")
 
 	networkCtx.services[serviceId] = service

@@ -3,7 +3,7 @@ package services
 import "os"
 
 // TODO TODO document all these
-type ContainerConfigBuilder struct {
+type ContainerCreationConfigBuilder struct {
 	image                    string
 	testVolumeMountpoint     string
 	usedPortsSet             map[string]bool
@@ -15,8 +15,8 @@ type ContainerConfigBuilder struct {
 	envVarOverridesFunc      func(ipAddr string, generatedFileFilepaths map[string]string)
 }
 
-func NewContainerConfigBuilder(image string, testVolumeMountpoint string, serviceCreatingFunc func(ctx *ServiceContext) Service) *ContainerConfigBuilder {
-	return &ContainerConfigBuilder{
+func NewContainerCreationConfigBuilder(image string, testVolumeMountpoint string, serviceCreatingFunc func(ctx *ServiceContext) Service) *ContainerCreationConfigBuilder {
+	return &ContainerCreationConfigBuilder{
 		image:                    image,
 		testVolumeMountpoint:     testVolumeMountpoint,
 		usedPortsSet:             map[string]bool{},
@@ -26,23 +26,23 @@ func NewContainerConfigBuilder(image string, testVolumeMountpoint string, servic
 	}
 }
 
-func (builder *ContainerConfigBuilder) WithUsedPorts(usedPortsSet map[string]bool) *ContainerConfigBuilder {
+func (builder *ContainerCreationConfigBuilder) WithUsedPorts(usedPortsSet map[string]bool) *ContainerCreationConfigBuilder {
 	builder.usedPortsSet = usedPortsSet
 	return builder
 }
 
-func (builder *ContainerConfigBuilder) WithGeneratedFiles(fileGeneratingFuncs map[string]func(*os.File) error) *ContainerConfigBuilder {
+func (builder *ContainerCreationConfigBuilder) WithGeneratedFiles(fileGeneratingFuncs map[string]func(*os.File) error) *ContainerCreationConfigBuilder {
 	builder.fileGeneratingFuncs = fileGeneratingFuncs
 	return builder
 }
 
-func (builder *ContainerConfigBuilder) WithFilesArtifacts(filesArtifactMountpoints map[FilesArtifactID]string) *ContainerConfigBuilder {
+func (builder *ContainerCreationConfigBuilder) WithFilesArtifacts(filesArtifactMountpoints map[FilesArtifactID]string) *ContainerCreationConfigBuilder {
 	builder.filesArtifactMountpoints = filesArtifactMountpoints
 	return builder
 }
 
 
-func (builder *ContainerConfigBuilder) Build() *ContainerCreationConfig {
+func (builder *ContainerCreationConfigBuilder) Build() *ContainerCreationConfig {
 	return &ContainerCreationConfig{
 		image:                        builder.image,
 		testVolumeMountpoint:         builder.testVolumeMountpoint,

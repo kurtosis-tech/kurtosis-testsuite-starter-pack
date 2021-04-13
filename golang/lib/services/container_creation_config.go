@@ -3,6 +3,7 @@ package services
 import "os"
 
 // TODO defensive copy when we're giving back complex objects?????
+// TODO Document all these functions
 type ContainerCreationConfig struct {
 	image                        string
 	testVolumeMountpoint         string
