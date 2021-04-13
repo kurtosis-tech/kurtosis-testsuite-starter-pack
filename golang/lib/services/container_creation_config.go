@@ -2,8 +2,11 @@ package services
 
 import "os"
 
+// The ID of an artifact containing files that should be mounted into a service container
+type FilesArtifactID string
+
 // TODO defensive copy when we're giving back complex objects?????
-// TODO Document all these functions
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type ContainerCreationConfig struct {
 	image                        string
 	testVolumeMountpoint         string

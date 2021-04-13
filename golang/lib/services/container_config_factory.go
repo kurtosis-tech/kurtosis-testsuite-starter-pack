@@ -1,9 +1,9 @@
 package services
 
 type ContainerConfigFactory interface {
-	// TODO DOCS LINK
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 	GetCreationConfig(containerIpAddr string) (*ContainerCreationConfig, error)
 
-	// TODO DOCS Link
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 	GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*ContainerRunConfig, error)
 }

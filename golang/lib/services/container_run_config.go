@@ -1,5 +1,6 @@
 package services
 
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type ContainerRunConfig struct {
 	entrypointOverrideArgs  []string
 	cmdOverrideArgs         []string

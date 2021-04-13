@@ -1,6 +1,7 @@
 package services
 
 // TODO Defensive copies on all these With... functions???
+// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type ContainerRunConfigBuilder struct {
 	entrypointOverrideArgs  []string
 	cmdOverrideArgs         []string
