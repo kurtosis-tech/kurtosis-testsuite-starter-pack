@@ -1,11 +1,11 @@
-use std::{collections::{HashMap, HashSet}, fs::File};
+use std::{collections::{HashMap, HashSet}, fs::File, io::Write};
 use anyhow::Result;
 
 use super::{service::Service, service_context::ServiceContext};
 
-pub type ServiceCreatingFunc<S> = dyn Fn(ServiceContext) -> S;
+pub type ServiceCreatingFunc<S> = fn(ServiceContext) -> S;
 
-pub type FileGeneratingFunc = dyn Fn(File) -> Result<()>;
+pub type FileGeneratingFunc = fn(File) -> Result<()>;
 
 // ====================================================================================================
 //                                    Config Object
@@ -15,8 +15,8 @@ pub struct ContainerCreationConfig<S: Service> {
     image: String,
     test_volume_mountpoint: String,
     used_ports_set: HashSet<String>,
-    service_creating_func: Box<ServiceCreatingFunc<S>>,
-    file_generating_Funcs: HashMap<String, Box<FileGeneratingFunc>>,
+    service_creating_func: ServiceCreatingFunc<S>,
+    file_generating_funcs: HashMap<String, FileGeneratingFunc>,
     files_artifact_mountpoints: HashMap<String, String>
 }
 
@@ -37,8 +37,8 @@ impl<S: Service> ContainerCreationConfig<S> {
         return &self.service_creating_func;
     }
 
-    pub fn get_file_generating_funcs(&self) -> &HashMap<String, Box<FileGeneratingFunc>> {
-        return &self.file_generating_Funcs;
+    pub fn get_file_generating_funcs(&self) -> &HashMap<String, FileGeneratingFunc> {
+        return &self.file_generating_funcs;
     }
 
     pub fn get_files_artifact_mountpoints(&self) -> &HashMap<String, String> {
@@ -55,7 +55,7 @@ pub struct ContainerCreationConfigBuilder<S: Service> {
     image: String,
     test_volume_mountpoint: String,
     used_ports: HashSet<String>,
-    service_creating_func: Box<ServiceCreatingFunc<S>>,
+    service_creating_func: ServiceCreatingFunc<S>,
     files_generating_funcs: HashMap<String, FileGeneratingFunc>,
     files_artifact_mountpoints: HashMap<String, String>
 }
@@ -93,7 +93,7 @@ impl<S: Service> ContainerCreationConfigBuilder<S> {
             test_volume_mountpoint: self.test_volume_mountpoint.clone(),
             used_ports_set: self.used_ports.clone(),
             service_creating_func: self.service_creating_func.clone(),
-            file_generating_Funcs: self.files_generating_funcs.clone(),
+            file_generating_funcs: self.files_generating_funcs.clone(),
             files_artifact_mountpoints: self.files_artifact_mountpoints.clone(),
         }
     }

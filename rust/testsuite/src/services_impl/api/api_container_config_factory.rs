@@ -58,7 +58,7 @@ impl<'obj> ContainerConfigFactory<ApiService> for ApiContainerConfigFactory<'obj
         let mut ports = HashSet::new();
         ports.insert(format!("{}/tcp", PORT));
 
-        let config_initialization_func = |fp: File| -> Result<()> {
+        let config_initialization_func: fn(File) -> Result<()> = move |fp: File| -> Result<()> {
             debug!("Datastore IP: {} , port: {}", self.datastore.get_ip_address(), self.datastore.get_port());
             let config_obj = Config{
                 datastore_ip: self.datastore.get_ip_address().to_owned(),
@@ -73,8 +73,7 @@ impl<'obj> ContainerConfigFactory<ApiService> for ApiContainerConfigFactory<'obj
         };
 
         let mut file_generation_funcs: HashMap<String, FileGeneratingFunc> = HashMap::new();
-        file_generation_funcs.insert(CONFIG_FILE_KEY.to_owned(), config_initialization_func);
-
+        file_generation_funcs.insert(CONFIG_FILE_KEY.to_owned(), config_initialization_func );
 
 
         ContainerCreationConfigBuilder::new(self.image, TEST_VOLUME_MOUNTPOINT, ApiContainerConfigFactory::create_service)
