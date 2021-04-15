@@ -69,6 +69,9 @@ workflows:
           context:
             - docker-user
             - simulated-trial-user
+          requires:
+            - push_docker_image
+            - push_rust_lib
           filters:
             branches:
               ignore: /.*/
