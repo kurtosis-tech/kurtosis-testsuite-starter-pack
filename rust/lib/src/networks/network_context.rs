@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{PathBuf}, rc::Rc};
+use std::{collections::{HashMap, HashSet}, fs::File, ops::{Deref, DerefMut}, path::{PathBuf}, rc::Rc};
 use std::hash::Hash;
 
 use dashmap::DashMap;
@@ -78,9 +78,8 @@ impl NetworkContext {
 		}
 		let generated_file_filepaths = service_context.generate_files(files_to_generate)
 			.context(format!("An error occurred generating the files needed for service startup"))?;
-		let mut generated_files_fps: HashMap<String, File> = HashMap::new();
 		let mut generated_files_abs_filepaths_on_service: HashMap<String, PathBuf> = HashMap::new();
-		for (file_id, initializing_func) in container_creation_config.get_file_generating_funcs() {
+		for (file_id, initializing_func_arc_mutex) in container_creation_config.get_file_generating_funcs() {
 			let filepaths = generated_file_filepaths.get(file_id)
 				.context(format!(
 					"Needed to initialize file for file ID '{}', but no generated file filepaths were found for that file ID; this is a Kurtosis bug",
@@ -88,7 +87,8 @@ impl NetworkContext {
 				))?;
 			let fp = File::create(&filepaths.absolute_filepath_on_testsuite_container)
 				.context(format!("An error occurred opening file pointer for file '{}'", file_id))?;
-			initializing_func(fp)
+			let mut initializing_func = initializing_func_arc_mutex.lock().unwrap();
+			initializing_func.deref_mut()(fp)
 				.context(format!("The function to initialize file with ID '{}' returned an error", file_id))?;
 			generated_files_abs_filepaths_on_service.insert(file_id.to_owned(), filepaths.absolute_filepath_on_testsuite_container.clone());
 		}

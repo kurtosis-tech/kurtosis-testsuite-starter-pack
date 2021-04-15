@@ -1,11 +1,11 @@
-use std::{collections::{HashMap, HashSet}, fs::File, io::Write};
+use std::{collections::{HashMap, HashSet}, fs::File, io::Write, sync::{Arc, Mutex}};
 use anyhow::Result;
 
 use super::{service::Service, service_context::ServiceContext};
 
-pub type ServiceCreatingFunc<S> = fn(ServiceContext) -> S;
+pub type ServiceCreatingFunc<S> = dyn Fn(ServiceContext) -> S;
 
-pub type FileGeneratingFunc = fn(File) -> Result<()>;
+pub type FileGeneratingFunc = dyn FnMut(File) -> Result<()>;
 
 // ====================================================================================================
 //                                    Config Object
@@ -15,8 +15,8 @@ pub struct ContainerCreationConfig<S: Service> {
     image: String,
     test_volume_mountpoint: String,
     used_ports_set: HashSet<String>,
-    service_creating_func: ServiceCreatingFunc<S>,
-    file_generating_funcs: HashMap<String, FileGeneratingFunc>,
+    service_creating_func: Arc<ServiceCreatingFunc<S>>,
+    file_generating_funcs: HashMap<String, Arc<Mutex<FileGeneratingFunc>>>,
     files_artifact_mountpoints: HashMap<String, String>
 }
 
@@ -33,11 +33,11 @@ impl<S: Service> ContainerCreationConfig<S> {
         return &self.used_ports_set;
     }
 
-    pub fn get_service_creating_func(&self) -> &ServiceCreatingFunc<S> {
+    pub fn get_service_creating_func(&self) -> &Arc<ServiceCreatingFunc<S>> {
         return &self.service_creating_func;
     }
 
-    pub fn get_file_generating_funcs(&self) -> &HashMap<String, FileGeneratingFunc> {
+    pub fn get_file_generating_funcs(&self) -> &HashMap<String, Arc<Mutex<FileGeneratingFunc>>> {
         return &self.file_generating_funcs;
     }
 
@@ -55,13 +55,15 @@ pub struct ContainerCreationConfigBuilder<S: Service> {
     image: String,
     test_volume_mountpoint: String,
     used_ports: HashSet<String>,
-    service_creating_func: ServiceCreatingFunc<S>,
-    files_generating_funcs: HashMap<String, FileGeneratingFunc>,
+    service_creating_func: Arc<ServiceCreatingFunc<S>>,
+    // Reason for the Arc<Mutex<...>>:
+    // https://stackoverflow.com/questions/57482574/how-to-store-and-use-an-arcdyn-fnmut
+    files_generating_funcs: HashMap<String, Arc<Mutex<FileGeneratingFunc>>>,
     files_artifact_mountpoints: HashMap<String, String>
 }
 
 impl<S: Service> ContainerCreationConfigBuilder<S> {
-    pub fn new(image: String, test_volume_mountpoint: String, service_creating_func: ServiceCreatingFunc<S>) -> ContainerCreationConfigBuilder<S> {
+    pub fn new(image: String, test_volume_mountpoint: String, service_creating_func: Arc<ServiceCreatingFunc<S>>) -> ContainerCreationConfigBuilder<S> {
         return ContainerCreationConfigBuilder{
             image,
             test_volume_mountpoint,
@@ -77,7 +79,7 @@ impl<S: Service> ContainerCreationConfigBuilder<S> {
         return self;
     }
 
-    pub fn with_generated_files(&mut self, file_generating_funcs: HashMap<String, FileGeneratingFunc>) -> &mut ContainerCreationConfigBuilder<S> {
+    pub fn with_generated_files(&mut self, file_generating_funcs: HashMap<String, Arc<Mutex<FileGeneratingFunc>>>) -> &mut ContainerCreationConfigBuilder<S> {
         self.files_generating_funcs = file_generating_funcs;
         return self;
     }
