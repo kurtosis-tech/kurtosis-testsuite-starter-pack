@@ -48,8 +48,8 @@ func (network *TestNetwork) AddDatastore() error {
 		return stacktrace.NewError("Cannot add datastore service to network; datastore already exists!")
 	}
 
-	initializer := datastore.NewDatastoreContainerInitializer(network.datastoreServiceImage)
-	uncastedDatastore, checker, err := network.networkCtx.AddService(datastoreServiceId, initializer)
+	configFactory := datastore.NewDatastoreContainerConfigFactory(network.datastoreServiceImage)
+	uncastedDatastore, checker, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -74,8 +74,8 @@ func (network *TestNetwork) AddApiService() (services.ServiceID, error) {
 	network.nextApiServiceId = network.nextApiServiceId + 1
 	serviceId := services.ServiceID(serviceIdStr)
 
-	initializer := api.NewApiContainerInitializer(network.apiServiceImage, network.datastoreService)
-	uncastedApiService, checker, err := network.networkCtx.AddService(serviceId, initializer)
+	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreService)
+	uncastedApiService, checker, err := network.networkCtx.AddService(serviceId, configFactory)
 	if err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred adding the API service")
 	}

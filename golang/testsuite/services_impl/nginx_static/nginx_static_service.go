@@ -13,14 +13,6 @@ import (
 	"net/http"
 )
 
-const (
-	listenPort = 8080
-
-	dockerImage = "flashspys/nginx-static"
-
-	nginxStaticFilesDirpath = "/static"
-)
-
 /*
 An Nginx service that serves files mounted in the /static directory
  */

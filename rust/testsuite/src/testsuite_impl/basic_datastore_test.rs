@@ -1,10 +1,9 @@
 use std::{borrow::BorrowMut, rc::Rc, time::Duration};
 use anyhow::{anyhow, Context, Result};
 
-use datastore_container_initializer::DatastoreContainerInitializer;
 use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test}};
 
-use crate::services_impl::datastore::{datastore_container_initializer, datastore_service::DatastoreService};
+use crate::services_impl::datastore::{datastore_container_config_factory::DatastoreContainerConfigFactory, datastore_service::DatastoreService};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 
@@ -35,7 +34,7 @@ impl Test for BasicDatastoreTest {
     }
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
-		let initializer = DatastoreContainerInitializer::new(&self.datastore_image);
+		let initializer = DatastoreContainerConfigFactory::new(self.datastore_image.clone());
 		let (_, availability_checker) = network_ctx.borrow_mut().add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
 			.context("An error occurred adding the datastore service")?;
 		availability_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_POLLS)

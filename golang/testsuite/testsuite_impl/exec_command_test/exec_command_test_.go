@@ -42,8 +42,8 @@ func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) 
 }
 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	initializer := exec_cmd_test.NewExecCmdTestContainerInitializer(execCmdTestImage)
-	_, checker, err := networkCtx.AddService(testServiceId, initializer)
+	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(execCmdTestImage)
+	_, checker, err := networkCtx.AddService(testServiceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(
 			err,
