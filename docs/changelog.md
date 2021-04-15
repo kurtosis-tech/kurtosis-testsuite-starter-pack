@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.21.0
 ### Features
 * The specifications for starting a container are now provided via the `ContainerConfigFactory` interface (rather than `DockerContainerInitializer`), with the actual container config created via `ContainerCreationConfigBuilder` and `ContainerRunConfigBuilder`. This was done so that:
     * Optional features are only specified if needed (e.g. many containers won't need files artifacts, so users shouldn't need to fill out a `getFilesArtifact` function like they had to with `DockerContainerInitializer`)
