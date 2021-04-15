@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Fixes
+* Bootstrap-validating CircleCI job was running before the Rust libs & Docker image were pushed and failing, so added a dependency on them to prevent this
 
 # 1.21.0
 ### Features
