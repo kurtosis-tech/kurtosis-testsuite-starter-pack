@@ -1,8 +1,20 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* The specifications for starting a container are now provided via the `ContainerConfigFactory` interface (rather than `DockerContainerInitializer`), with the actual container config created via `ContainerCreationConfigBuilder` and `ContainerRunConfigBuilder`. This was done so that:
+    * Optional features are only specified if needed (e.g. many containers won't need files artifacts, so users shouldn't need to fill out a `getFilesArtifact` function like they had to with `DockerContainerInitializer`)
+    * New features won't cause an API break (adding a new feature usually meant a new function in the `DockerContainerInitializer` interface)
+* Added docs for `ContainerConfigFactory` to [the Kurtosis Libs documentation](https://docs.kurtosistech.com/kurtosis-libs/lib-documentation)
+
 ### Fixes
 * Fixed issue with `validate-all-bootstraps.sh` where it would clobber your Git `user.email` and `user.name` if you run it on a machine where these are already set up
+
+### Breaking Changes
+* The `DockerContainerInitializer` interface has been replaced with the `ContainerConfigFactory` interface
+* The functionality in the `getDockerImage`, `getTestVolumeMountpoint`, `getUsedPorts`, `getService`, `getFilesToGenerate`, `initializeGeneratedFiles`, and `getFilesArtifactMountpoints` functions have been moved to `ContainerCreationConfigBuilder`, which should be used in `ContainerConfigFactory.getCreationConfig`
+* The functionality in the `getStartCommandOverrides` and `getEnvironmentVariableOverrides` functions have been moved to `ContainerRunConfigBuilder`, which should be used in `ContainerConfigFactory.getRunConfig`
+
 
 # 1.20.0
 ### Features
