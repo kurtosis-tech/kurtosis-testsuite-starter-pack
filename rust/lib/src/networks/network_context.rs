@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::File, ops::Deref, path::{PathBuf}, rc::Rc};
+use std::{collections::{HashMap, HashSet}, fs::File, ops::{Deref, DerefMut}, path::{PathBuf}, rc::Rc};
 use std::hash::Hash;
 
 use dashmap::DashMap;
@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, docker_container_initializer::DockerContainerInitializer, service::{Service, ServiceId}, service_context::ServiceContext}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, container_config_factory::ContainerConfigFactory, service::{Service, ServiceId}, service_context::ServiceContext}};
 
 use super::network::Network;
 
@@ -40,14 +40,14 @@ impl NetworkContext {
     }
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn add_service<S: Service>(&mut self, service_id: &ServiceId, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
-		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, &DEFAULT_PARTITION_ID_STR.to_owned(), initializer)
+    pub fn add_service<S: Service>(&mut self, service_id: &ServiceId, config_factory: &dyn ContainerConfigFactory<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, &DEFAULT_PARTITION_ID_STR.to_owned(), config_factory)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
 		return Ok((service_ptr, availability_checker));
 	}
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &ServiceId, partition_id: &PartitionId, initializer: &dyn DockerContainerInitializer<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &ServiceId, partition_id: &PartitionId, config_factory: &dyn ContainerConfigFactory<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let args = RegisterServiceArgs{
 		    service_id: service_id.to_owned(),
@@ -58,6 +58,8 @@ impl NetworkContext {
 			.context(format!("An error occurred registering service with ID '{}' with the Kurtosis API", service_id))?
 			.into_inner();
 		let service_ip_addr = register_service_resp.ip_addr;
+		let container_creation_config = config_factory.get_creation_config(&service_ip_addr)
+			.context("An error occurred getting the container creation config")?;
 		let service_context_client = self.client.clone();
 		let service_context = ServiceContext::new(
 			self.async_runtime.clone(), 
@@ -65,59 +67,58 @@ impl NetworkContext {
 			service_id.to_owned(), 
 			service_ip_addr.to_owned(),
 			SUITE_EX_VOL_MOUNTPOINT.to_owned(),
-			initializer.get_test_volume_mountpoint().to_owned(),
+			container_creation_config.get_test_volume_mountpoint().to_owned(),
 		);
 		trace!("New service successfully registered with Kurtosis API");
 
 		trace!("Initializing generated files in suite execution volume...");
-		let generated_file_filepaths = service_context.generate_files(initializer.get_files_to_generate())
-			.context(format!("An error occurred generating the files needed for service startup"))?;
-		let mut generated_files_fps: HashMap<String, File> = HashMap::new();
-		let mut generated_files_abs_filepaths_on_service: HashMap<String, PathBuf> = HashMap::new();
-		for (file_id, filepaths) in generated_file_filepaths {
-			let abs_filepath_on_testsuite = filepaths.absolute_filepath_on_testsuite_container;
-			let abs_filepath_on_service = filepaths.absolute_filepath_on_service_container;
-			// Per https://users.rust-lang.org/t/what-is-the-idiomatic-way-to-create-a-path-from-str-fragments/42882/2 , 
-			// this is the best way to join multiple fragments into a single path
-			debug!("Opening generated file at '{}' for writing...", abs_filepath_on_testsuite.display());
-			let fp = File::create(abs_filepath_on_testsuite)
-				.context(format!("Could not open generated file '{}' for writing", file_id))?;
-			generated_files_fps.insert(file_id.clone(), fp);
-			generated_files_abs_filepaths_on_service.insert(file_id.clone(), abs_filepath_on_service);
+		let mut files_to_generate: HashSet<String> = HashSet::new();
+		for (file_id, _) in container_creation_config.get_file_generating_funcs() {
+			files_to_generate.insert(file_id.to_owned());
 		}
-		initializer.initialize_generated_files(generated_files_fps)
-			.context("An error occurred initializing the generated files")?;
+		let generated_file_filepaths = service_context.generate_files(files_to_generate)
+			.context(format!("An error occurred generating the files needed for service startup"))?;
+		let mut generated_files_abs_filepaths_on_service: HashMap<String, PathBuf> = HashMap::new();
+		for (file_id, initializing_func_arc_mutex) in container_creation_config.get_file_generating_funcs() {
+			let filepaths = generated_file_filepaths.get(file_id)
+				.context(format!(
+					"Needed to initialize file for file ID '{}', but no generated file filepaths were found for that file ID; this is a Kurtosis bug",
+					file_id,
+				))?;
+			let fp = File::create(&filepaths.absolute_filepath_on_testsuite_container)
+				.context(format!("An error occurred opening file pointer for file '{}'", file_id))?;
+			let mut initializing_func = initializing_func_arc_mutex.lock().unwrap();
+			initializing_func.deref_mut()(fp)
+				.context(format!("The function to initialize file with ID '{}' returned an error", file_id))?;
+			generated_files_abs_filepaths_on_service.insert(file_id.to_owned(), filepaths.absolute_filepath_on_service_container.clone());
+		}
 		trace!("Successfully initialized generated files in suite execution volume");
+
+		let container_run_config = config_factory.get_run_config(&service_ip_addr, generated_files_abs_filepaths_on_service)
+			.context("An error occurred getting the container run config")?;
 
 		trace!("Creating files artifact URL -> mount dirpaths map...");
 		let mut artifact_url_to_mount_dirpath: HashMap<String, String> = HashMap::new();
-		for (files_artifact_id, mount_dirpath) in initializer.get_files_artifact_mountpoints() {
-			let artifact_url = self.files_artifact_urls.get(&files_artifact_id)
+		for (files_artifact_id, mount_dirpath) in container_creation_config.get_files_artifact_mountpoints() {
+			let artifact_url = self.files_artifact_urls.get(files_artifact_id)
 				.context(format!(
 					"Service requested file artifact '{}', but the network context doesn't have a URL for that file artifact; this is a bug with Kurtosis itself",
 					files_artifact_id
 				))?;
-			artifact_url_to_mount_dirpath.insert(artifact_url.to_owned(), mount_dirpath);
+			artifact_url_to_mount_dirpath.insert(artifact_url.to_owned(), mount_dirpath.to_owned());
 		}
 
 		trace!("Successfully created files artifact URL -> mount dirpaths map");
 
-		trace!("Creating start command for service...");
-		let (entrypoint_args_opt, cmd_args_opt) = initializer.get_start_command_overrides(generated_files_abs_filepaths_on_service, &service_ip_addr)
-			.context("Failed to get start command overrides")?;
-		trace!("Successfully created start command for service");
-
 		trace!("Starting new service with Kurtosis API...");
-		let env_var_overrides = initializer.get_environment_variable_overrides()
-			.context("An error occurred getting the environment variable overrides")?;
 		let start_service_args = StartServiceArgs{
 		    service_id: service_id.to_owned(),
-		    docker_image: initializer.get_docker_image().to_owned(),
-		    used_ports: NetworkContext::convert_hashset_to_hashmap(initializer.get_used_ports()),
-			entrypoint_args: entrypoint_args_opt.unwrap_or(Vec::new()), // Empty vector says "don't override anything"
-			cmd_args: cmd_args_opt.unwrap_or(Vec::new()), // Empty vector says "don't override anything"
-		    docker_env_vars: env_var_overrides,
-		    suite_execution_vol_mnt_dirpath: initializer.get_test_volume_mountpoint().to_owned(),
+		    docker_image: container_creation_config.get_image().to_owned(),
+		    used_ports: NetworkContext::convert_hashset_to_hashmap(container_creation_config.get_used_ports().to_owned()),
+			entrypoint_args: container_run_config.get_entrypoint_override_args().to_owned(),
+			cmd_args: container_run_config.get_cmd_override_args().to_owned(),
+		    docker_env_vars: container_run_config.get_environment_variable_overrides().to_owned(),
+		    suite_execution_vol_mnt_dirpath: container_creation_config.get_test_volume_mountpoint().to_owned(),
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};
 		let start_service_req = tonic::Request::new(start_service_args);
@@ -128,12 +129,13 @@ impl NetworkContext {
 
 
 		trace!("Creating service interface...");
-		let result_service_ptr = initializer.get_service(service_context);
-		let casted_result_service_rc = Rc::new(*result_service_ptr);
-		let availability_checker = AvailabilityChecker::new(service_id, casted_result_service_rc.clone());
+		let result_service_ptr = container_creation_config.get_service_creating_func()(service_context);
+		let casted_result_service_rc = Rc::new(result_service_ptr);
 		trace!("Successfully created service interface");
 
 		self.all_services.insert(service_id.to_owned(), casted_result_service_rc.clone());
+
+		let availability_checker = AvailabilityChecker::new(service_id, casted_result_service_rc.clone());
 
 		return Ok((casted_result_service_rc, availability_checker));
     }

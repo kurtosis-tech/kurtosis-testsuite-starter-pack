@@ -12,6 +12,9 @@ SCRIPTS_DIRNAME_INSIDE_TESTSUITE="scripts"
 BUILD_AND_RUN_FILENAME="build-and-run.sh"
 BUILD_AND_RUN_ALL_CMD="all"
 
+GIT_USER_EMAIL_PROPERTY="user.email"
+GIT_USER_NAME_PROPERTY="user.name"
+
 # Bootstrapping normally requires input from STDIN, but we can set
 #  certain variables so this isn't required for CI
 # NOTE: This won't handle flag values that contain spaces, though it can handle multiple flags separated by a space
@@ -60,8 +63,10 @@ if ! docker login -u "${docker_username}" -p "${docker_password_DO_NOT_LOG}"; th
 fi
 
 # Git needs to be initialized, since the bootstrap will create a new Git repo and commit to it
-git config --global user.email "bootstrap-tester@test.com"
-git config --global user.name "Bootstrap Tester"
+if ! [ git config --list | grep "${GIT_USER_EMAIL_PROPERTY}" ] || ! [ git config --list | grep "${GIT_USER_NAME_PROPERTY}" ]; then
+    git config --global "${GIT_USER_EMAIL_PROPERTY}" "bootstrap-tester@test.com"
+    git config --global "${GIT_USER_NAME_PROPERTY}" "Bootstrap Tester"
+fi
 
 bootstrap_script_filepath="${root_dirpath}/${BOOTSTRAP_SCRIPTS_DIRNAME}/${BOOTSTRAP_SCRIPT_FILENAME}"
 echo "Bootstrapping and running new testsuites for all languages..."

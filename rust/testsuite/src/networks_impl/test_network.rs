@@ -3,7 +3,7 @@ use anyhow::{Context, Result, anyhow};
 
 use kurtosis_rust_lib::{networks::{network::Network, network_context::NetworkContext}, services::service::ServiceId};
 
-use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::{datastore_container_initializer::DatastoreContainerInitializer, datastore_service::DatastoreService}};
+use crate::services_impl::{api::{api_service::ApiService, api_container_config_factory::ApiContainerConfigFactory}, datastore::{datastore_container_config_factory::DatastoreContainerConfigFactory, datastore_service::DatastoreService}};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 const API_SERVICE_ID_PREFIX: &str = "api-";
@@ -39,7 +39,7 @@ impl TestNetwork {
             ));
         }
 
-        let initializer = DatastoreContainerInitializer::new(&self.datastore_service_image);
+        let initializer = DatastoreContainerConfigFactory::new(self.datastore_service_image.clone());
         let (service, checker) = self.network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
             .context("An error occurred adding the datastore service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
@@ -57,7 +57,7 @@ impl TestNetwork {
             )),
         }
 
-        let initializer = ApiContainerInitializer::new(self.api_service_image.clone(), datastore.borrow());
+        let initializer = ApiContainerConfigFactory::new(self.api_service_image.clone(), datastore.borrow());
 
         let service_id: ServiceId = format!("{}{}", API_SERVICE_ID_PREFIX, self.next_api_service_id);
         self.next_api_service_id += 1;

@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use std::{time::Duration};
 use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test}};
-use crate::services_impl::{api::{api_container_initializer::ApiContainerInitializer, api_service::ApiService}, datastore::datastore_container_initializer::DatastoreContainerInitializer};
+use crate::services_impl::{api::{api_container_config_factory::ApiContainerConfigFactory, api_service::ApiService}, datastore::datastore_container_config_factory::DatastoreContainerConfigFactory};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 const API_SERVICE_ID: &str = "api";
@@ -35,13 +35,13 @@ impl Test for BasicDatastoreAndApiTest {
     }
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
-        let datastore_initializer = DatastoreContainerInitializer::new(&self.datastore_image);
+        let datastore_initializer = DatastoreContainerConfigFactory::new(self.datastore_image.clone());
         let (datastore_service, datastore_checker) = network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &datastore_initializer)
             .context("An error occurred adding the datastore service")?;
         datastore_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
 
-        let api_initializer = ApiContainerInitializer::new(self.api_image.clone(), &datastore_service);
+        let api_initializer = ApiContainerConfigFactory::new(self.api_image.clone(), &datastore_service);
         let (_, api_checker) = network_ctx.add_service(&API_SERVICE_ID.to_owned(), &api_initializer)
             .context("An error occurred adding the API service")?;
         api_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)

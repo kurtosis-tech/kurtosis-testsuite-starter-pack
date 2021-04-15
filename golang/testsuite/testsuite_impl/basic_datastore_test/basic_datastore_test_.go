@@ -38,8 +38,8 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 }
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreContainerInitializer := datastore.NewDatastoreContainerInitializer(test.datastoreImage)
-	_, availabilityChecker, err := networkCtx.AddService(datastoreServiceId, datastoreContainerInitializer)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
+	_, availabilityChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}

@@ -2,6 +2,8 @@ Lib Documentation
 =================
 Kurtosis libs exist in multiple languages and maintaining in-code comments for each of these is prohibitively expensive. This page exists to provide the canonical reference for Kurtosis lib classes and methods. Note that any comments specific to a language implementation will be found in the library code comments.
 
+_Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-libs/issues)!_
+
 TestSuiteConfigurator
 ---------------------
 Implementations of this interface are responsible for initializing the user-defined testsuite object for Kurtosis.
@@ -32,21 +34,21 @@ NetworkContext
 --------------
 This Kurtosis-provided class is the lowest-level representation of a test network, and provides methods for inspecting and manipulating the network. All [Network][network] implementations will encapsulate an instance of this class.
 
-### addServiceToPartition(ServiceID serviceId, PartitionID partitionId, [DockerContainerInitializer\<S\>][dockercontainerinitializer] initializer) -\> (S service, [AvailabilityChecker][availabilitychecker] checker)
-Starts a new service in the network with the given service ID, inside the partition with the given ID, using the given initializer.
+### addServiceToPartition(ServiceID serviceId, PartitionID partitionId, [ContainerConfigFactory\<S\>][containerconfigfactory] configFactory) -\> (S service, [AvailabilityChecker][availabilitychecker] checker)
+Starts a new service in the network with the given service ID, inside the partition with the given ID, using the given config factory.
 
 **Args**
 
 * `serviceId`: The ID that the new service should have.
 * `partitionId`: The ID of the partition that the new service should be started in. This can be left blank to start the service in the default partition if it exists (i.e. if the network hasn't been repartitioned and the default partition removed).
-* `initializer`: The initializer that provides the logic for starting the container for the new service.
+* `configFactory`: The factory that produces the configs Kurtosis will use to start the container for the new service.
 
 **Returns**
 
-* `service`: The [Service][service] implementation representing the new service, as created by the initializer's [DockerContainerInitializer.getService][dockercontainerinitializer_getservice] method.
+* `service`: The [Service][service] implementation representing the new service, as created via the [ContainerCreationConfig.serviceCreatingFunc][containercreationconfig_servicecreatingfunc].
 * `checker`: A class for checking if the returned service is available yet, as defined by [Service.isAvailable][service_isavailable]. 
 
-### addService(ServiceID serviceId, [DockerContainerInitializer\<S\>][dockercontainerinitializer] initializer) -\> (S service, [AvailabilityChecker][availabilitychecker] checker)
+### addService(ServiceID serviceId, [ContainerConfigFactory\<S\>][containerconfigfactory] configFactory) -\> (S service, [AvailabilityChecker][availabilitychecker] checker)
 Convenience wrapper around [NetworkContext.addServiceToPartition][networkcontext_addservicetopartition], that adds the service to the default partition. Note that if the network has been repartitioned and the default partition doesn't exist anymore, this method will fail.
 
 ### \<S extends [Service][service]\> getService(ServiceID serviceId) -\> S
@@ -93,84 +95,89 @@ Blocks until the timeout is reached or the checker's corresponding service becom
 * `timeBetweenPolls`: The time that the checker should wait before calls to [Service.isAvailable][service_isavailable].
 * `maxNumRetries`: The maximum number of failed calls to [Service.isAvailable][service_isavailable] that the checker will allow before returning an error.
 
-DockerContainerInitializer\<S extends [Service][service]\>
+
+
+ContainerConfigFactory\<S extends [Service][service]\>
 -----------------------------------------------------
-Interface that instructs Kurtosis how to create a Docker container that will be represented by an instance of your custom [Service][service] implementation. The generic type `S` defines the type of the [Service][service] implementation that the initializer will produce.
+Factory interface that creates [ContainerCreationConfig][containercreationconfig] and [ContainerRunConfig][containerrunconfig] instances, which instruct Kurtosis how to instantiate a container.
 
-### getDockerImage() -\> String
-Provides the name of the Docker image that Kurtosis should use when creating the service's container.
-
-**Returns**
-
-A Docker image specifier (e.g. `my-repo/my-image:some-tag-name`).
-
-### getUsedPorts() -\> Set\<String\>
-Provides the ports that the container will be listening on.
-
-**Returns**
-
-Set of ports, in the format `NUM/PROTOCOL` (e.g. `80/tcp`, `9090/udp`, etc.).
-
-### getService([ServiceContext][servicecontext] serviceContext) -\> S
-You should fill in this method to create an instance of your custom [Service][service] type, usually be wrapping the provided [ServiceContext][servicecontext] object.
+### getCreationConfig(String containerIpAddr) -\> [ContainerCreationConfig][containercreationconfig]
+Returns a [ContainerCreationConfig][containercreationconfig] object for instructing Kurtosis how to create the container. You should use the [ContainerCreationConfigBuilder][containercreationconfigbuilder] object to create the result.
 
 **Args**
-
-* `serviceContext`: Kurtosis' internal representation of the running container, that your [Service][service] implementation can call down to for various purposes.
-
-**Returns**
-
-An instance of your custom [Service][service] implementation, that your test will use to interact with the service.
-
-### getFilesToGenerate() -\> Set\<String\>
-Declares the files that your service needs generated before your service starts. The file keys here (which can be anything you like) simply tell Kurtosis the number of generated files needed, with the actual file contents generated in [DockerContainerInitializer.initializeGeneratedFiles][dockercontainerinitializer_initializegeneratedfiles].
+* `containerIpAddr`: The IP address that the container-to-be will have.
 
 **Returns**
+The config detailing how the container will be created, constructed using a [ContainerCreationConfigBuilder][containercreationconfigbuilder].
 
-A set of identifiers for the files to generate that are meaningful to you. E.g. if your service needs a config file and a log file, you might return a set with keys `config` and `log`, whose contents will be generated in [DockerContainerInitializer.initializeGeneratedFiles][dockercontainerinitializer_initializegeneratedfiles].
-
-### initializeGeneratedFiles(Map\<String, File\> generatedFiles)
-Allows the user to fill the contents of files that your service needs before starting. 
+### getRunConfig(String containerIpAddr, Map\<String, String\> generatedFileFilepaths) -\> [ContainerRunConfig][containerrunconfig]
+Returns a [ContainerRunConfig][containerrunconfig] object for instructing Kurtosis how to run the container. You should use the [ContainerRunConfigBuilder][containerrunconfigbuilder] object to create the result.
 
 **Args**
-
-* `generatedFiles`: A map whose keys correspond to the output of [DockerContainerInitializer.getFilesToGenerate][dockercontainerinitializer_getfilestogenerate] and whose values are filepointers, for you to write whatever file contents you please.
-
-<!-- TODO Change the key type to FilesArtifactID???? -->
-### getFilesArtifactMountpoints() -\> Map\<String, String\>
-Sometimes a service needs files to be available before it starts, but creating those files via [DockerContainerInitializer.initializeGeneratedFiles][dockercontainerinitializer_initializegeneratedfiles] is slow, difficult, or would require committing a very large artifact to the testsuite's Git repo (e.g. starting a service with a 5 GB Postgres database mounted). To ease this pain, Kurtosis allows you to specify URLs of gzipped TAR files that Kurtosis will download, uncompress, and mount inside your service containers. This function will allow you to specify where those artifacts should get mounted on your service's Docker container.
+* `containerIpAddr`: The IP address that the container to run has been allocated.
+* `generatedFileFilepaths`: A mapping of file ID (as declared in [ContainerCreationConfig.fileGeneratingFuncs][containercreationconfig_filegeneratingfuncs] to the filepath on the service container where the generated file lives.
 
 **Returns**
+The config detailing how the container will be run, constructed using a [ContainerRunConfigBuilder][containerrunconfigbuilder].
 
-<!-- TODO when we change the way file artifact IDs are specified, update these docs -->
-A map of the file artifact ID -> path on the container where the uncompressed artifact contents should be mounted, with the file artifact IDs corresponding matching the files artifacts declared in the [TestConfiguration][testconfiguration] object returned by [Test.getTestConfiguration][test_gettestconfiguration]. E.g. if my test declares an artifact called `5gb-database` that lives at `https://my-site.com/test-artifacts/5gb-database.tgz`, I might return the following map from this function to mount the artifact at the `/database` path inside my container: `{"5gb-database": "/database"}`.
 
-### getTestVolumeMountpoint() -\> String
-Kurtosis uses a Docker volume to keep track of test state, and needs to mount this volume on every container. Kurtosis can't know what filesystem the service image uses or what paths are safe to mount on though, so this function is how you specify where that volume should be mounted. Your implementation of this method should return a filepath that doesn't already exist where Kurtosis can safely mount the Kurtosis volume.
 
-**Returns**
+ContainerCreationConfig
+-----------------------
+Object containing information Kurtosis needs to create the container. This config should be created using [ContainerCreationConfigBuilder][containercreationconfigbuilder] instances.
 
-A filepath where Kurtosis can safely mount the test volume on your container.
+### String image
+The name of the container image that Kurtosis should use when creating the service's container (e.g. `my-repo/my-image:some-tag-name`).
 
-### getStartCommandOverrides(Map\<String, String\> generatedFileFilepaths, String ipAddr) -\> (Option\<List\<String\>> entrypointArgs, Option\<List\<String\>> cmdArgs)
-You often won't control the Docker images that you'll be using in your testnet, and the `ENTRYPOINT` and `CMD` statements hardcoded in their Dockerfiles might not be suitable for what you need. This function allows you to override these statements to your needs. To use the Dockerfile versions without overriding, leave the option empty.
+### String testVolumeMountpoint
+Kurtosis uses a Docker volume to keep track of test state, and needs to mount this volume on every container. Kurtosis can't know what filesystem the service image uses or what paths are safe to mount on though, so this property tells Kurtosis where that volume should be mounted. This should be set to a filepath that doesn't already exist where Kurtosis can safely mount the Kurtosis volume.
 
-**Args**
+### Set\<String\> usedPortsSet
+The set of ports that the container will be listening on, in the format `NUM/PROTOCOL` (e.g. `80/tcp`, `9090/udp`, etc.).
 
-* `generatedFileFilepaths`: Mapping of file ID (as declared in [DockerContainerInitializer.getFilesToGenerate][dockercontainerinitializer_getfilestogenerate]) to the filepath on the container's filesystem where the file exists.
-* `ipAddr`: The IP address of the container the service is running inside.
+### Func([ServiceContext][servicecontext]) -\> S serviceCreatingFunc
+A function that will wrap Kurtosis' internal representation of the running container, the [ServiceContext][servicecontext], with your custom [Service][service] type to make it as simple as possible for your tests to interact with your service.
 
-**Returns**
+### Map\<String, Func(File)\> fileGeneratingFuncs
+Declares the files that will be generated before your service starts and made available on the container's filesystem, as well as the logic for generating their contents. The file keys declared here (which can be any string you like) will be the same keys used to identify the files in the map arg to [ContainerConfigFactory.getRunConfig][containerconfigfactory_getrunconfig].
 
-* `entrypointArgs`: If set, overrides the `ENTRYPOINT` statement in the image's Dockerfile with the given args.
-* `cmdArgs`: If set, overrides the `CMD` statement in the image's Dockerfile with the given args.
+E.g. if your service needs a config file and a log file, you might return a map with keys `config` and `log` corresponding to logic for generating the config and log files respectively.
 
-### getEnvironmentVariableOverrides() -\> Map\<String, String\>
-Defines environment variables that should be set inside the Docker container running the service. This is often necessary for starting containers from Docker images you don't control, as they'll often be parameterized with environment variables.
+### Map\<String, String\> filesArtifactMountpoints
+Sometimes a service needs files to be available before it starts, but creating those files via [ContainerCreationConfig.fileGeneratingFuncs][containercreationconfig_filegeneratingfuncs] is slow, difficult, or would require committing a very large artifact to the testsuite's Git repo (e.g. starting a service with a 5 GB Postgres database mounted). To ease this pain, Kurtosis allows you to specify URLs of gzipped TAR files that Kurtosis will download, uncompress, and mount inside your service containers. 
 
-**Returns**
+This property is therefore a map of the file artifact ID -> path on the container where the uncompressed artifact contents should be mounted, with the file artifact IDs corresponding matching the files artifacts declared in the [TestConfiguration][testconfiguration] object returned by [Test.getTestConfiguration][test_gettestconfiguration]. 
 
-A map of environmentVariableName -> environmentVariableValue that will be set inside the container during startup.
+E.g. if my test declares an artifact called `5gb-database` that lives at `https://my-site.com/test-artifacts/5gb-database.tgz`, I might return the following map from this function to mount the artifact at the `/database` path inside my container: `{"5gb-database": "/database"}`.
+
+
+
+ContainerCreationConfigBuilder
+------------------------------
+The builder that should be used to create [ContainerCreationConfig][containercreationconfig] instances. The functions on this builder will correspond to the properties on the [ContainerCreationConfig][containercreationconfig] object, in the form `withPropertyName` (e.g. `withUsedPorts` sets the ports used by the container).
+
+
+
+ContainerRunConfig
+------------------
+Object containing information Kurtosis needs to run the container. This config should be created using [ContainerRunConfigBuilder][containerrunconfigbuilder] instances.
+
+### List\<String\> entrypointOverrideArgs
+You often won't control the container images that you'll be using in your testnet, and the `ENTRYPOINT` statement  hardcoded in their Dockerfiles might not be suitable for what you need. This function allows you to override these statements when necessary.
+
+### List\<String\> cmdOverrideArgs
+You often won't control the container images that you'll be using in your testnet, and the `CMD` statement  hardcoded in their Dockerfiles might not be suitable for what you need. This function allows you to override these statements when necessary.
+
+### Map\<String, String\> environmentVariableOverrides
+Defines environment variables that should be set inside the Docker container running the service. This can be necessary for starting containers from Docker images you don't control, as they'll often be parameterized with environment variables.
+
+
+
+ContainerRunConfigBuilder
+-------------------------
+The builder that should be used to create [ContainerRunConfig][containerrunconfig] instances. The functions on this builder will correspond to the properties on the [ContainerRunConfig][containerrunconfig] object, in the form `withPropertyName` (e.g. `withCmdOverride` overrides the container's CMD declaration).
+
+
 
 Service
 -------
@@ -303,7 +310,7 @@ Setting this to true allows a test to make use of the [NetworkContext.repartitio
 
 <!-- TODO change key type to FilesArtifactID -->
 ### Map\<String, String\> filesArtifactUrls
-Mapping of a user-defined key -> URL of a gzipped TAR whose contents the test will mount on a service. This should be left empty if no files artifacts are needed. For more details on what files artifacts are, see [DockerContainerInitializer.getFilesArtifactMountpoints][dockercontainerinitializer_getfilesartifactmountpoints].
+Mapping of a user-defined key -> URL of a gzipped TAR whose contents the test will mount on a service. This should be left empty if no files artifacts are needed. For more details on what files artifacts are, see [ContainerCreationConfig.filesArtifactMountpoints][containercreationconfig_filesartifactmountpoints].
 
 TestConfigurationBuilder
 ------------------------
@@ -328,6 +335,10 @@ Map of test name -> test object.
 ### getNetworkWidthBits() -\> uint32
 Determines the width (in bits) of the Docker network that Kurtosis will create for each test. The maximum number of IP addresses that any test can use will be 2 ^ network_width_bits, which determines the maximum number of services that can be running at any given time in a testnet. This number should be set high enough that no test will run out of IP addresses, but low enough that the Docker environment doesn't run out of IP addresses (`8` is a good value to start with).
 
+---
+
+_Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-libs/issues)!_
+
 
 <!-- TODO Make the function definition not include args or return values, so we don't get these huge ugly links that break if we change the function signature -->
 <!-- TODO make the reference names a) be properly-cased (e.g. "Service.isAvailable" rather than "service_isavailable") and b) have an underscore in front of them, so they're easy to find-replace without accidentally over-replacing -->
@@ -335,17 +346,25 @@ Determines the width (in bits) of the Docker network that Kurtosis will create f
 [availabilitychecker]: #availabilitychecker
 [availabilitychecker_waitforstartup]: #waitforstartupduration-timebetweenpolls-int-maxnumretries
 
-[dockercontainerinitializer]: #dockercontainerinitializers-extends-service
-[dockercontainerinitializer_getfilestogenerate]: #getfilestogenerate---setstring
-[dockercontainerinitializer_getservice]: #getserviceservicecontext-servicecontext---s
-[dockercontainerinitializer_initializegeneratedfiles]: #initializegeneratedfilesmapstring-file-generatedfiles
-[dockercontainerinitializer_getfilesartifactmountpoints]: #getfilesartifactmountpoints---mapstring-string
+[containerconfigfactory]: #containerconfigfactorys-extends-service
+[containerconfigfactory_getrunconfig]: #getrunconfigstring-containeripaddr-mapstring-string-generatedfilefilepaths---containerrunconfig
+
+[containercreationconfig]: #containercreationconfig
+[containercreationconfig_filegeneratingfuncs]: #mapstring-funcfile-filegeneratingfuncs
+[containercreationconfig_filesartifactmountpoints]: #mapstring-string-filesartifactmountpoints
+[containercreationconfig_servicecreatingfunc]: #funcservicecontext---s-servicecreatingfunc
+
+[containercreationconfigbuilder]: #containercreationconfigbuilder
+
+[containerrunconfig]: #containerrunconfig
+
+[containerrunconfigbuilder]: #containerrunconfigbuilder
 
 [network]: #network
 
 [networkcontext]: #networkcontext
-[networkcontext_addservice]: #addserviceserviceid-serviceid-dockercontainerinitializers-initializer---s-service-availabilitychecker-checker
-[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-dockercontainerinitializers-initializer---s-service-availabilitychecker-checker
+[networkcontext_addservice]: #addserviceserviceid-serviceid-containerconfigfactorys-configfactory---s-service-availabilitychecker-checker
+[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-containerconfigfactorys-configfactory---s-service-availabilitychecker-checker
 [networkcontext_repartitionnetwork]: #repartitionnetworkmappartitionid-setserviceid-partitionservices-mappartitionid-mappartitionid-partitionconnectioninfo-partitionconnections-partitionconnectioninfo-defaultconnection
 
 [partitionconnectioninfo]: #partitionconnectioninfo
