@@ -3,7 +3,7 @@ use anyhow::{Context, Result, anyhow};
 
 use kurtosis_rust_lib::{networks::{network::Network, network_context::NetworkContext}, services::service::ServiceId};
 
-use crate::services_impl::{api::{api_service::ApiService}, datastore::{datastore_container_config_factory::DatastoreContainerConfigFactory, datastore_service::DatastoreService}};
+use crate::services_impl::{api::{api_service::ApiService, api_container_config_factory::ApiContainerConfigFactory}, datastore::{datastore_container_config_factory::DatastoreContainerConfigFactory, datastore_service::DatastoreService}};
 
 const DATASTORE_SERVICE_ID_STR: &str = "datastore";
 const API_SERVICE_ID_PREFIX: &str = "api-";

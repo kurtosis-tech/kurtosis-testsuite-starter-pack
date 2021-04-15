@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, fs::File, io::Write, sync::{Arc, Mutex}};
+use std::{collections::{HashMap, HashSet}, fs::File, sync::{Arc, Mutex}};
 use anyhow::Result;
 
 use super::{service::Service, service_context::ServiceContext};

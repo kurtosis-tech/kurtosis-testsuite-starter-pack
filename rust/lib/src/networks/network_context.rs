@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, container_config_factory::ContainerConfigFactory, docker_container_initializer::DockerContainerInitializer, service::{Service, ServiceId}, service_context::ServiceContext}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, container_config_factory::ContainerConfigFactory, service::{Service, ServiceId}, service_context::ServiceContext}};
 
 use super::network::Network;
 
@@ -90,7 +90,7 @@ impl NetworkContext {
 			let mut initializing_func = initializing_func_arc_mutex.lock().unwrap();
 			initializing_func.deref_mut()(fp)
 				.context(format!("The function to initialize file with ID '{}' returned an error", file_id))?;
-			generated_files_abs_filepaths_on_service.insert(file_id.to_owned(), filepaths.absolute_filepath_on_testsuite_container.clone());
+			generated_files_abs_filepaths_on_service.insert(file_id.to_owned(), filepaths.absolute_filepath_on_service_container.clone());
 		}
 		trace!("Successfully initialized generated files in suite execution volume");
 

@@ -1,6 +1,6 @@
 use std::{collections::HashSet, sync::Arc};
 
-use kurtosis_rust_lib::services::{container_config_factory::ContainerConfigFactory, container_creation_config::{ContainerCreationConfig, ContainerCreationConfigBuilder}, container_run_config::{ContainerRunConfig, ContainerRunConfigBuilder}, service_context::ServiceContext};
+use kurtosis_rust_lib::services::{container_config_factory::ContainerConfigFactory, container_creation_config::{ContainerCreationConfigBuilder}, container_run_config::{ContainerRunConfigBuilder}, service_context::ServiceContext};
 
 use super::datastore_service::DatastoreService;
 
@@ -26,12 +26,12 @@ impl DatastoreContainerConfigFactory {
 }
 
 impl ContainerConfigFactory<DatastoreService> for DatastoreContainerConfigFactory {
-    fn get_creation_config(&self, container_ip_addr: &str) -> anyhow::Result<kurtosis_rust_lib::services::container_creation_config::ContainerCreationConfig<DatastoreService>> {
+    fn get_creation_config(&self, _container_ip_addr: &str) -> anyhow::Result<kurtosis_rust_lib::services::container_creation_config::ContainerCreationConfig<DatastoreService>> {
         let mut ports = HashSet::new();
         ports.insert(format!("{}/{}", PORT, PROTOCOL));
 
         let result = ContainerCreationConfigBuilder::new(
-                self.image, 
+                self.image.clone(), 
                 TEST_VOLUME_MOUNTPOINT.to_owned(), 
                 Arc::new(DatastoreContainerConfigFactory::create_service))
             .with_used_ports(ports)
@@ -40,7 +40,7 @@ impl ContainerConfigFactory<DatastoreService> for DatastoreContainerConfigFactor
         return Ok(result);
     }
 
-    fn get_run_config(&self, container_ip_addr: &str, generated_file_filepaths: std::collections::HashMap<String, std::path::PathBuf>) -> anyhow::Result<kurtosis_rust_lib::services::container_run_config::ContainerRunConfig> {
+    fn get_run_config(&self, _container_ip_addr: &str, _generated_file_filepaths: std::collections::HashMap<String, std::path::PathBuf>) -> anyhow::Result<kurtosis_rust_lib::services::container_run_config::ContainerRunConfig> {
         let result = ContainerRunConfigBuilder::new().build();
         return Ok(result);
     }
