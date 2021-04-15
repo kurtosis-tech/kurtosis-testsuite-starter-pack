@@ -14,6 +14,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 * The `DockerContainerInitializer` interface has been replaced with the `ContainerConfigFactory` interface
 * The functionality in the `getDockerImage`, `getTestVolumeMountpoint`, `getUsedPorts`, `getService`, `getFilesToGenerate`, `initializeGeneratedFiles`, and `getFilesArtifactMountpoints` functions have been moved to `ContainerCreationConfigBuilder`, which should be used in `ContainerConfigFactory.getCreationConfig`
 * The functionality in the `getStartCommandOverrides` and `getEnvironmentVariableOverrides` functions have been moved to `ContainerRunConfigBuilder`, which should be used in `ContainerConfigFactory.getRunConfig`
+* `NetworkContext.addService` and `NetworkContext.addServiceToPartition` take in a `ContainerConfigFactory` argument, rather than `DockerContainerInitializer`
 
 
 # 1.20.0
