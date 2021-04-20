@@ -1,6 +1,12 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Service ports declared in `ContainerCreationConfig.usedPorts` will get bound to Docker host machine ports, allowing users to access services running inside Kurtosis by making requests to the port on their local machine
+
+### Breaking Changes
+* `NetworkContext.addService` and `NetworkContext.addServiceToPartition` now return an extra argument, which contains the interface IP & port on the Docker host machine where the service's ports have been bound
+* Upgraded Kurtosis Core to version TODO (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
 
 # 1.21.1
 ### Fixes

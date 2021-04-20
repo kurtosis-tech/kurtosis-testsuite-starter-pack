@@ -34,7 +34,7 @@ NetworkContext
 --------------
 This Kurtosis-provided class is the lowest-level representation of a test network, and provides methods for inspecting and manipulating the network. All [Network][network] implementations will encapsulate an instance of this class.
 
-### addServiceToPartition(ServiceID serviceId, PartitionID partitionId, [ContainerConfigFactory\<S\>][containerconfigfactory] configFactory) -\> (S service, [AvailabilityChecker][availabilitychecker] checker)
+### addServiceToPartition(ServiceID serviceId, PartitionID partitionId, [ContainerConfigFactory\<S\>][containerconfigfactory] configFactory) -\> (S service, Map\<String, PortBinding\> hostPortBindings, [AvailabilityChecker][availabilitychecker] checker)
 Starts a new service in the network with the given service ID, inside the partition with the given ID, using the given config factory.
 
 **Args**
@@ -46,9 +46,10 @@ Starts a new service in the network with the given service ID, inside the partit
 **Returns**
 
 * `service`: The [Service][service] implementation representing the new service, as created via the [ContainerCreationConfig.serviceCreatingFunc][containercreationconfig_servicecreatingfunc].
+* `hostPortBindings`: The port spec strings that the service declared (as defined in [ContainerCreationConfig.usedPorts][containercreationconfig_usedports]), mapped to the port on the host machine where the port has been bound to. This allows you to make requests to a service running in Kurtosis by making requests to a port on your local machine. If a port was not bound to a host machine port, it will not be present in the map (and if no ports were bound to host machine ports, the map will be empty).
 * `checker`: A class for checking if the returned service is available yet, as defined by [Service.isAvailable][service_isavailable]. 
 
-### addService(ServiceID serviceId, [ContainerConfigFactory\<S\>][containerconfigfactory] configFactory) -\> (S service, [AvailabilityChecker][availabilitychecker] checker)
+### addService(ServiceID serviceId, [ContainerConfigFactory\<S\>][containerconfigfactory] configFactory) -\> (S service, Map\<String, PortBinding\> hostPortBindings, [AvailabilityChecker][availabilitychecker] checker)
 Convenience wrapper around [NetworkContext.addServiceToPartition][networkcontext_addservicetopartition], that adds the service to the default partition. Note that if the network has been repartitioned and the default partition doesn't exist anymore, this method will fail.
 
 ### \<S extends [Service][service]\> getService(ServiceID serviceId) -\> S
@@ -132,7 +133,7 @@ The name of the container image that Kurtosis should use when creating the servi
 ### String testVolumeMountpoint
 Kurtosis uses a Docker volume to keep track of test state, and needs to mount this volume on every container. Kurtosis can't know what filesystem the service image uses or what paths are safe to mount on though, so this property tells Kurtosis where that volume should be mounted. This should be set to a filepath that doesn't already exist where Kurtosis can safely mount the Kurtosis volume.
 
-### Set\<String\> usedPortsSet
+### Set\<String\> usedPorts
 The set of ports that the container will be listening on, in the format `NUM/PROTOCOL` (e.g. `80/tcp`, `9090/udp`, etc.).
 
 ### Func([ServiceContext][servicecontext]) -\> S serviceCreatingFunc
@@ -350,6 +351,7 @@ _Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-li
 [containerconfigfactory_getrunconfig]: #getrunconfigstring-containeripaddr-mapstring-string-generatedfilefilepaths---containerrunconfig
 
 [containercreationconfig]: #containercreationconfig
+[containercreationconfig_usedports]: #setstring-usedports
 [containercreationconfig_filegeneratingfuncs]: #mapstring-funcfile-filegeneratingfuncs
 [containercreationconfig_filesartifactmountpoints]: #mapstring-string-filesartifactmountpoints
 [containercreationconfig_servicecreatingfunc]: #funcservicecontext---s-servicecreatingfunc
@@ -363,8 +365,8 @@ _Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-li
 [network]: #network
 
 [networkcontext]: #networkcontext
-[networkcontext_addservice]: #addserviceserviceid-serviceid-containerconfigfactorys-configfactory---s-service-availabilitychecker-checker
-[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-containerconfigfactorys-configfactory---s-service-availabilitychecker-checker
+[networkcontext_addservice]: #addserviceserviceid-serviceid-containerconfigfactorys-configfactory---s-service-mapstring-portbinding-hostportbindings-availabilitychecker-checker
+[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-containerconfigfactorys-configfactory---s-service-mapstring-portbinding-hostportbindings-availabilitychecker-checker
 [networkcontext_repartitionnetwork]: #repartitionnetworkmappartitionid-setserviceid-partitionservices-mappartitionid-mappartitionid-partitionconnectioninfo-partitionconnections-partitionconnectioninfo-defaultconnection
 
 [partitionconnectioninfo]: #partitionconnectioninfo

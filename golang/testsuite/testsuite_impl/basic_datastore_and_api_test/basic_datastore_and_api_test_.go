@@ -42,25 +42,27 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
-	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	uncastedDatastoreSvc, datastoreSvcHostPortBindings, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 	if err := datastoreChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
 	}
+	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
 	// Go doesn't have generics so we need to do this cast
 	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
 
 	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreSvc)
-	_, apiChecker, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
+	_, apiSvcHostPortBindings, apiChecker, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 	if err := apiChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
 	}
+	logrus.Infof("Added API service with host port bindings: %+v", apiSvcHostPortBindings)
 	return networkCtx, nil
 }
 
@@ -109,5 +111,9 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 			person.BooksRead,
 		)
 	}
+
+	// TODO DEBUGGING
+	time.Sleep(9999 * time.Second)
+
 	return nil
 }

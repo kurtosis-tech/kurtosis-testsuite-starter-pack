@@ -15,7 +15,7 @@ set -euo pipefail
 # Can make this configurable if needed
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-KURTOSIS_CORE_TAG="1.11"
+KURTOSIS_CORE_TAG="mieubrisse_host-port-bindings-for-services"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_TAG}"
 API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_TAG}"
@@ -146,7 +146,8 @@ if "${show_help}"; then
 fi
 
 # Restore positional parameters and assign them to variables
-set -- "${POSITIONAL[@]}"
+# NOTE: This incantation is the only cross-shell compatiable expansion: https://stackoverflow.com/questions/7577052/bash-empty-array-expansion-with-set-u 
+set -- "${POSITIONAL[@]+"${POSITIONAL[@]}"}"
 test_suite_image="${1:-}"
 
 
@@ -170,19 +171,7 @@ fi
 
 # ============================================================================================
 #                                    Main Logic
-# ============================================================================================# Because Kurtosis X.Y.Z tags are normalized to X.Y so that minor patch updates are transparently 
-#  used, we need to pull the latest API & initializer images
-echo "Pulling latest versions of API & initializer image..."
-if ! docker pull "${INITIALIZER_IMAGE}"; then
-    echo "WARN: An error occurred pulling the latest version of the initializer image (${INITIALIZER_IMAGE}); you may be running an out-of-date version" >&2
-else
-    echo "Successfully pulled latest version of initializer image"
-fi
-if ! docker pull "${API_IMAGE}"; then
-    echo "WARN: An error occurred pulling the latest version of the API image (${API_IMAGE}); you may be running an out-of-date version" >&2
-else
-    echo "Successfully pulled latest version of API image"
-fi
+# ============================================================================================
 
 # Kurtosis needs a Docker volume to store its execution data in
 # To learn more about volumes, see: https://docs.docker.com/storage/volumes/
@@ -198,6 +187,13 @@ if ! mkdir -p "${KURTOSIS_DIRPATH}"; then
     exit 1
 fi
 
+# The client ID & secret should only be used within CI, i.e. non-interactive
+if [ -z "${client_id}" ] && [ -z "${client_secret}" ]; then
+    is_interactive=true
+else
+    is_interactive=false
+fi
+
 docker run \
     `# The Kurtosis initializer runs inside a Docker container, but needs to access to the Docker engine; this is how to do it` \
     `# For more info, see the bottom of: http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/` \
@@ -209,6 +205,11 @@ docker run \
     \
     `# The Kurtosis initializer image requires the volume for storing suite execution data to be mounted at the special "/suite-execution" path` \
     --mount "type=volume,source=${suite_execution_volume},target=/suite-execution" \
+    \
+    `# The initializer container needs to access the host machine, so it can test for free ports` \
+    `# The host machine's IP is available at 'host.docker.internal' in Docker for Windows & Mac by default, but in Linux we need to add this flag to enable it` \
+    `# However, non-interactive shells (e.g. CI) will choke on this so we only set it with interactive shells` \
+    $(if "${is_interactive_mode}"; then echo -n "--add-host=host.docker.internal:host-gateway"; fi) \
     \
     `# Keep these sorted alphabetically` \
     --env CLIENT_ID="${client_id}" \

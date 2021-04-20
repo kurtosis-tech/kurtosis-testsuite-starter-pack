@@ -276,6 +276,22 @@ pub struct StartServiceArgs {
     pub files_artifact_mount_dirpaths:
         ::std::collections::HashMap<::prost::alloc::string::String, ::prost::alloc::string::String>,
 }
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct StartServiceResponse {
+    /// Mapping of used_ports_provided_in_input_args -> ip_and_port_on_host_where_port_is_bound (in ip:port form)
+    /// Ports will only be in this map if they were successfully bound to a host port; if no ports were bound, then
+    /// this map will be empty
+    #[prost(map = "string, message", tag = "1")]
+    pub used_ports_host_port_bindings:
+        ::std::collections::HashMap<::prost::alloc::string::String, PortBinding>,
+}
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct PortBinding {
+    #[prost(string, tag = "1")]
+    pub interface_ip: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub interface_port: ::prost::alloc::string::String,
+}
 /// ==============================================================================================
 ///                                        Remove Service
 /// ==============================================================================================
@@ -482,7 +498,7 @@ pub mod test_execution_service_client {
         pub async fn start_service(
             &mut self,
             request: impl tonic::IntoRequest<super::StartServiceArgs>,
-        ) -> Result<tonic::Response<()>, tonic::Status> {
+        ) -> Result<tonic::Response<super::StartServiceResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
                     tonic::Code::Unknown,
@@ -603,7 +619,7 @@ pub mod test_execution_service_server {
         async fn start_service(
             &self,
             request: tonic::Request<super::StartServiceArgs>,
-        ) -> Result<tonic::Response<()>, tonic::Status>;
+        ) -> Result<tonic::Response<super::StartServiceResponse>, tonic::Status>;
         #[doc = " Instructs the API container to remove the given service"]
         async fn remove_service(
             &self,
@@ -845,7 +861,7 @@ pub mod test_execution_service_server {
                         tonic::server::UnaryService<super::StartServiceArgs>
                         for StartServiceSvc<T>
                     {
-                        type Response = ();
+                        type Response = super::StartServiceResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
