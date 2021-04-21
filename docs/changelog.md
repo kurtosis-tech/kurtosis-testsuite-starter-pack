@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.22.0
 ### Features
 * The `kurtosis.sh` script now takes in a `--debug` argument that will, among other things, instruct Kurtosis to bind all the ports used by any service in `ContainerCreationConfig.usedPorts` to a port on the user's local machine, so the user can make queries to the services inside Kurtosis directly
     * Full information is available by passing in the `--help` flag
