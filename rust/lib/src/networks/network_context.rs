@@ -7,7 +7,7 @@ use tokio::runtime::Runtime;
 use tonic::{transport::Channel};
 use anyhow::{anyhow, Context, Result};
 
-use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, container_config_factory::ContainerConfigFactory, service::{Service, ServiceId}, service_context::ServiceContext}};
+use crate::{core_api_bindings::api_container_api::{PartitionConnectionInfo, PartitionConnections, PartitionServices, PortBinding, RegisterServiceArgs, RemoveServiceArgs, RepartitionArgs, StartServiceArgs, test_execution_service_client::TestExecutionServiceClient}, services::{availability_checker::AvailabilityChecker, container_config_factory::ContainerConfigFactory, service::{Service, ServiceId}, service_context::ServiceContext}};
 
 use super::network::Network;
 
@@ -40,14 +40,14 @@ impl NetworkContext {
     }
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn add_service<S: Service>(&mut self, service_id: &ServiceId, config_factory: &dyn ContainerConfigFactory<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
-		let (service_ptr, availability_checker) = self.add_service_to_partition(service_id, &DEFAULT_PARTITION_ID_STR.to_owned(), config_factory)
+    pub fn add_service<S: Service>(&mut self, service_id: &ServiceId, config_factory: &dyn ContainerConfigFactory<S>) -> Result<(Rc<S>, HashMap<String, PortBinding>, AvailabilityChecker)> {
+		let (service_ptr, host_port_bindings, availability_checker) = self.add_service_to_partition(service_id, &DEFAULT_PARTITION_ID_STR.to_owned(), config_factory)
 			.context(format!("An error occurred adding service '{}' to the network in the default partition", service_id))?;
-		return Ok((service_ptr, availability_checker));
+		return Ok((service_ptr, host_port_bindings, availability_checker));
 	}
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
-    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &ServiceId, partition_id: &PartitionId, config_factory: &dyn ContainerConfigFactory<S>) -> Result<(Rc<S>, AvailabilityChecker)> {
+    pub fn add_service_to_partition<S: Service>(&mut self, service_id: &ServiceId, partition_id: &PartitionId, config_factory: &dyn ContainerConfigFactory<S>) -> Result<(Rc<S>, HashMap<String, PortBinding>, AvailabilityChecker)> {
 		trace!("Registering new service ID with Kurtosis API...");
 		let args = RegisterServiceArgs{
 		    service_id: service_id.to_owned(),
@@ -122,11 +122,10 @@ impl NetworkContext {
 		    files_artifact_mount_dirpaths: artifact_url_to_mount_dirpath,
 		};
 		let start_service_req = tonic::Request::new(start_service_args);
-		self.async_runtime.block_on(self.client.start_service(start_service_req))
+		let resp = self.async_runtime.block_on(self.client.start_service(start_service_req))
 			.context("An error occurred starting the service with the Kurtosis API")?
 			.into_inner();
 		trace!("Successfully started service with Kurtosis API");
-
 
 		trace!("Creating service interface...");
 		let result_service_ptr = container_creation_config.get_service_creating_func()(service_context);
@@ -137,7 +136,7 @@ impl NetworkContext {
 
 		let availability_checker = AvailabilityChecker::new(service_id, casted_result_service_rc.clone());
 
-		return Ok((casted_result_service_rc, availability_checker));
+		return Ok((casted_result_service_rc, resp.used_ports_host_port_bindings, availability_checker));
     }
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation

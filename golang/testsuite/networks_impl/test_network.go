@@ -57,7 +57,7 @@ func (network *TestNetwork) AddDatastore() error {
 	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
 	}
-	logrus.Debugf("Added datastore service with host port bindings: %+v", hostPortBindings)
+	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 	castedDatastore := uncastedDatastore.(*datastore.DatastoreService)
 	network.datastoreService = castedDatastore
 	return nil
@@ -84,7 +84,7 @@ func (network *TestNetwork) AddApiService() (services.ServiceID, error) {
 	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
 	}
-	logrus.Debugf("Added API service with host port bindings: %+v", hostPortBindings)
+	logrus.Infof("Added API service with host port bindings: %+v", hostPortBindings)
 	castedApiService := uncastedApiService.(*api.ApiService)
 	network.apiServices[serviceId] = castedApiService
 	return serviceId, nil
