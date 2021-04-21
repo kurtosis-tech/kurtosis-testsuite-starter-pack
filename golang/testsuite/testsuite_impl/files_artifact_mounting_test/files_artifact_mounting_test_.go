@@ -11,6 +11,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/nginx_static"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -47,13 +48,14 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
-	_, availabilityChecker, err := networkCtx.AddService(fileServerServiceId, configFactory)
+	_, hostPortBindings, availabilityChecker, err := networkCtx.AddService(fileServerServiceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
 	if err := availabilityChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxRetries); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the file server service to start")
 	}
+	logrus.Infof("Added file server service with host port bindings: %+v", hostPortBindings)
 	return networkCtx, nil
 }
 

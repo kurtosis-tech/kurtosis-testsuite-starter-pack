@@ -35,10 +35,11 @@ impl Test for BasicDatastoreTest {
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
 		let initializer = DatastoreContainerConfigFactory::new(self.datastore_image.clone());
-		let (_, availability_checker) = network_ctx.borrow_mut().add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
+		let (_, host_port_bindings, availability_checker) = network_ctx.borrow_mut().add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
 			.context("An error occurred adding the datastore service")?;
 		availability_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_POLLS)
 			.context("An error occurred waiting for the datastore service to become available")?;
+		info!("Added datastore service with host port bindings: {:?}", host_port_bindings);
 		return Ok(Box::new(network_ctx));
 	}
 

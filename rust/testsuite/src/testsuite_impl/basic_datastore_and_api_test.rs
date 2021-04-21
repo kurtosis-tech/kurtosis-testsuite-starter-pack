@@ -36,16 +36,18 @@ impl Test for BasicDatastoreAndApiTest {
 
     fn setup(&mut self, mut network_ctx: NetworkContext) -> Result<Box<NetworkContext>> {
         let datastore_initializer = DatastoreContainerConfigFactory::new(self.datastore_image.clone());
-        let (datastore_service, datastore_checker) = network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &datastore_initializer)
+        let (datastore_service, datastore_svc_host_port_bindings, datastore_checker) = network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &datastore_initializer)
             .context("An error occurred adding the datastore service")?;
         datastore_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
+        info!("Added datastore service with host port bindings: {:?}", datastore_svc_host_port_bindings);
 
         let api_initializer = ApiContainerConfigFactory::new(self.api_image.clone(), &datastore_service);
-        let (_, api_checker) = network_ctx.add_service(&API_SERVICE_ID.to_owned(), &api_initializer)
+        let (_, api_svc_host_port_bindings, api_checker) = network_ctx.add_service(&API_SERVICE_ID.to_owned(), &api_initializer)
             .context("An error occurred adding the API service")?;
         api_checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the API service to start")?;
+        info!("Added API service with host port bindings: {:?}", api_svc_host_port_bindings);
         return Ok(Box::new(network_ctx));
     }
 
@@ -86,6 +88,7 @@ impl Test for BasicDatastoreAndApiTest {
                 person.books_read,
             ));
         }
+
         return Ok(());
     }
 }

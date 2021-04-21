@@ -2,6 +2,15 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.22.0
+### Features
+* The `kurtosis.sh` script now takes in a `--debug` argument that will, among other things, instruct Kurtosis to bind all the ports used by any service in `ContainerCreationConfig.usedPorts` to a port on the user's local machine, so the user can make queries to the services inside Kurtosis directly
+    * Full information is available by passing in the `--help` flag
+
+### Breaking Changes
+* Upgraded Kurtosis Core to version 1.12 (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
+* `NetworkContext.addService` and `NetworkContext.addServiceToPartition` now return an extra argument, which contains the interface IP & port on the Docker host machine where the service's ports have been bound
+
 # 1.21.1
 ### Fixes
 * Bootstrap-validating CircleCI job was running before the Rust libs & Docker image were pushed and failing, so added a dependency on them to prevent this

@@ -61,24 +61,24 @@ func NewNetworkContext(
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) AddService(
 		serviceId services.ServiceID,
-		configFactory services.ContainerConfigFactory) (services.Service, services.AvailabilityChecker, error) {
+		configFactory services.ContainerConfigFactory) (services.Service, map[string]*core_api_bindings.PortBinding, services.AvailabilityChecker, error) {
 	// Go mutexes aren't re-entrant, so we lock the mutex inside this call
-	service, availabilityChecker, err := networkCtx.AddServiceToPartition(
+	service, hostPortBindings, availabilityChecker, err := networkCtx.AddServiceToPartition(
 		serviceId,
 		defaultPartitionId,
 		configFactory)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred adding service '%v' to the network in the default partition", serviceId)
+		return nil, nil, nil, stacktrace.Propagate(err, "An error occurred adding service '%v' to the network in the default partition", serviceId)
 	}
 
-	return service, availabilityChecker, nil
+	return service, hostPortBindings, availabilityChecker, nil
 }
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 func (networkCtx *NetworkContext) AddServiceToPartition(
 		serviceId services.ServiceID,
 		partitionId PartitionID,
-		configFactory services.ContainerConfigFactory) (services.Service, services.AvailabilityChecker, error) {
+		configFactory services.ContainerConfigFactory) (services.Service, map[string]*core_api_bindings.PortBinding, services.AvailabilityChecker, error) {
 	networkCtx.mutex.Lock()
 	defer networkCtx.mutex.Unlock()
 
@@ -92,7 +92,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	registerServiceResp, err := networkCtx.client.RegisterService(ctx, registerServiceArgs)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(
+		return nil, nil, nil, stacktrace.Propagate(
 			err,
 			"An error occurred registering service with ID '%v' with the Kurtosis API",
 			serviceId)
@@ -100,7 +100,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	serviceIpAddr := registerServiceResp.IpAddr
 	containerCreationConfig, err := configFactory.GetCreationConfig(serviceIpAddr)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred getting the container creation config")
+		return nil, nil, nil, stacktrace.Propagate(err, "An error occurred getting the container creation config")
 	}
 	serviceContext := services.NewServiceContext(
 		networkCtx.client,
@@ -117,23 +117,23 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	}
 	generatedFileFilepaths, err := serviceContext.GenerateFiles(filesToGenerate)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred generating the files needed for service startup")
+		return nil, nil, nil, stacktrace.Propagate(err, "An error occurred generating the files needed for service startup")
 	}
 	generatedFileAbsFilepathsOnService := map[string]string{}
 	for fileId, initializingFunc := range containerCreationConfig.GetFileGeneratingFuncs() {
 		filepaths, found := generatedFileFilepaths[fileId]
 		if !found {
-			return nil, nil, stacktrace.Propagate(
+			return nil, nil, nil, stacktrace.Propagate(
 				err,
 				"Needed to initialize file for file ID '%v', but no generated file filepaths were found for that file ID; this is a Kurtosis bug",
 				fileId)
 		}
 		fp, err := os.Create(filepaths.AbsoluteFilepathOnTestsuiteContainer)
 		if err != nil {
-			return nil, nil, stacktrace.Propagate(err, "An error occurred opening file pointer for file '%v'", fileId)
+			return nil, nil, nil, stacktrace.Propagate(err, "An error occurred opening file pointer for file '%v'", fileId)
 		}
 		if err := initializingFunc(fp); err != nil {
-			return nil, nil, stacktrace.Propagate(err, "The function to initialize file with ID '%v' returned an error", fileId)
+			return nil, nil, nil, stacktrace.Propagate(err, "The function to initialize file with ID '%v' returned an error", fileId)
 		}
 		generatedFileAbsFilepathsOnService[fileId] = filepaths.AbsoluteFilepathOnServiceContainer
 	}
@@ -141,7 +141,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 
 	containerRunConfig, err := configFactory.GetRunConfig(serviceIpAddr, generatedFileAbsFilepathsOnService)
 	if err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred getting the container run config")
+		return nil, nil, nil, stacktrace.Propagate(err, "An error occurred getting the container run config")
 	}
 
 	logrus.Tracef("Creating files artifact URL -> mount dirpaths map...")
@@ -149,7 +149,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 	for filesArtifactId, mountDirpath := range containerCreationConfig.GetFilesArtifactMountpoints() {
 		artifactUrl, found := networkCtx.filesArtifactUrls[filesArtifactId]
 		if !found {
-			return nil, nil, stacktrace.Propagate(
+			return nil, nil, nil, stacktrace.Propagate(
 				err,
 				"Service requested file artifact '%v', but the network" +
 					"context doesn't have a URL for that file artifact; this is a bug with Kurtosis itself",
@@ -170,8 +170,9 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 		SuiteExecutionVolMntDirpath: containerCreationConfig.GetTestVolumeMountpoint(),
 		FilesArtifactMountDirpaths:  artifactUrlToMountDirpath,
 	}
-	if _, err := networkCtx.client.StartService(ctx, startServiceArgs); err != nil {
-		return nil, nil, stacktrace.Propagate(err, "An error occurred starting the service with the Kurtosis API")
+	resp, err := networkCtx.client.StartService(ctx, startServiceArgs)
+	if err != nil {
+		return nil, nil, nil, stacktrace.Propagate(err, "An error occurred starting the service with the Kurtosis API")
 	}
 	logrus.Tracef("Successfully started service with Kurtosis API")
 
@@ -183,7 +184,7 @@ func (networkCtx *NetworkContext) AddServiceToPartition(
 
 	availabilityChecker := services.NewDefaultAvailabilityChecker(serviceId, service)
 
-	return service, availabilityChecker, nil
+	return service, resp.UsedPortsHostPortBindings, availabilityChecker, nil
 }
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
