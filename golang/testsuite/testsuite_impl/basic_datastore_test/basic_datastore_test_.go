@@ -39,13 +39,14 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	_, availabilityChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	_, hostPortBindings, availabilityChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 	if err := availabilityChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxPolls); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
+	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 	return networkCtx, nil
 }
 

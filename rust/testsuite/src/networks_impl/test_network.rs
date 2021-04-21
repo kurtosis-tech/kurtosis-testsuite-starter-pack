@@ -40,10 +40,11 @@ impl TestNetwork {
         }
 
         let initializer = DatastoreContainerConfigFactory::new(self.datastore_service_image.clone());
-        let (service, checker) = self.network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
+        let (service, host_port_bindings, checker) = self.network_ctx.add_service(&DATASTORE_SERVICE_ID_STR.to_owned(), &initializer)
             .context("An error occurred adding the datastore service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the datastore service to start")?;
+        info!("Added datastore service with host port bindings: {:?}", host_port_bindings);
         self.datastore_service = Some(service);
         return Ok(());
     }
@@ -62,10 +63,11 @@ impl TestNetwork {
         let service_id: ServiceId = format!("{}{}", API_SERVICE_ID_PREFIX, self.next_api_service_id);
         self.next_api_service_id += 1;
 
-        let (api_service, checker) = self.network_ctx.add_service(&service_id, &initializer)
+        let (api_service, host_port_bindings, checker) = self.network_ctx.add_service(&service_id, &initializer)
             .context("An error occurred adding the API service")?;
         checker.wait_for_startup(&WAIT_FOR_STARTUP_TIME_BETWEEN_POLLS, WAIT_FOR_STARTUP_MAX_NUM_POLLS)
             .context("An error occurred waiting for the API service to start")?;
+        info!("Added API service with host port bindings: {:?}", host_port_bindings);
         self.api_services.insert(service_id.clone(), api_service);
         return Ok(service_id.clone());
     }

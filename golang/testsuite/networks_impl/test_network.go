@@ -11,6 +11,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/api"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 	"strconv"
 	"time"
 )
@@ -49,13 +50,14 @@ func (network *TestNetwork) AddDatastore() error {
 	}
 
 	configFactory := datastore.NewDatastoreContainerConfigFactory(network.datastoreServiceImage)
-	uncastedDatastore, checker, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
+	uncastedDatastore, hostPortBindings, checker, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
 	}
+	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 	castedDatastore := uncastedDatastore.(*datastore.DatastoreService)
 	network.datastoreService = castedDatastore
 	return nil
@@ -75,13 +77,14 @@ func (network *TestNetwork) AddApiService() (services.ServiceID, error) {
 	serviceId := services.ServiceID(serviceIdStr)
 
 	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreService)
-	uncastedApiService, checker, err := network.networkCtx.AddService(serviceId, configFactory)
+	uncastedApiService, hostPortBindings, checker, err := network.networkCtx.AddService(serviceId, configFactory)
 	if err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
 	}
+	logrus.Infof("Added API service with host port bindings: %+v", hostPortBindings)
 	castedApiService := uncastedApiService.(*api.ApiService)
 	network.apiServices[serviceId] = castedApiService
 	return serviceId, nil

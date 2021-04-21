@@ -53,13 +53,14 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
-	uncastedDatastoreSvc, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	uncastedDatastoreSvc, datastoreSvcHostPortBindings, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 	if err := datastoreChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
 	}
+	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
 	// Go doesn't have generics so we need to do this cast
 	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
@@ -168,13 +169,14 @@ func (test NetworkPartitionTest) addApiService(
 		partitionId networks.PartitionID,
 		datastoreSvc *datastore.DatastoreService) (*api.ApiService, error) {
 	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreSvc)
-	uncastedApiSvc, apiChecker, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
+	uncastedApiSvc, hostPortBindings, apiChecker, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 	if err := apiChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
 	}
+	logrus.Infof("Added API service '%v' with host port bindings: %+v", serviceId, hostPortBindings)
 	return uncastedApiSvc.(*api.ApiService), nil
 }
 
