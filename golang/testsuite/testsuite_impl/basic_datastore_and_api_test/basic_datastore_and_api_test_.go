@@ -112,8 +112,5 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 		)
 	}
 
-	// TODO DEBUGGING
-	time.Sleep(9999 * time.Second)
-
 	return nil
 }
