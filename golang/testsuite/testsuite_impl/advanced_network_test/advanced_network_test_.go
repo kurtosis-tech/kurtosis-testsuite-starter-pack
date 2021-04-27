@@ -41,8 +41,14 @@ func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (net
 
 func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	castedNetwork := network.(*networks_impl.TestNetwork)
-	personModifier := castedNetwork.GetPersonModifyingApiService()
-	personRetriever := castedNetwork.GetPersonRetrievingApiService()
+	personModifier, err := castedNetwork.GetPersonModifyingApiService()
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred getting the person-modifying API service")
+	}
+	personRetriever, err := castedNetwork.GetPersonRetrievingApiService()
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service")
+	}
 
 	logrus.Infof("Adding test person via person-modifying API service...")
 	if err := personModifier.AddPerson(testPersonId); err != nil {

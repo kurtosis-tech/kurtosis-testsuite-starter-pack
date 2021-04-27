@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Refactored the example `Network` implementation, `TestNetwork`, to provide a better example by more closely aligning with what we've seen in the real world - a single `Setup` method intended for use inside `Test.Setup`, and several getters to retrieve the values created during setup
 
 # 1.22.0
 ### Features

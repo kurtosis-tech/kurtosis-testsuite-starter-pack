@@ -87,11 +87,17 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 
 //  Custom network implementations will also usually have getters, to retrieve information about the
 //   services created during setup
-func (network TestNetwork) GetPersonModifyingApiService() *api.ApiService {
-	return network.personModifyingApiService
+func (network TestNetwork) GetPersonModifyingApiService() (*api.ApiService, error) {
+	if network.personModifyingApiService == nil {
+		return nil, stacktrace.NewError("No person-modifying API service exists")
+	}
+	return network.personModifyingApiService, nil
 }
-func (network TestNetwork) GetPersonRetrievingApiService() *api.ApiService {
-	return network.personRetrievingApiService
+func (network TestNetwork) GetPersonRetrievingApiService() (*api.ApiService, error) {
+	if network.personRetrievingApiService == nil {
+		return nil, stacktrace.NewError("No person-retrieving API service exists")
+	}
+	return network.personRetrievingApiService, nil
 }
 
 
