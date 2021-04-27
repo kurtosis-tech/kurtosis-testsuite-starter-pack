@@ -4,6 +4,9 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 ### Changes
 * Refactored the example `Network` implementation, `TestNetwork`, to provide a better example by more closely aligning with what we've seen in the real world - a single `Setup` method intended for use inside `Test.Setup`, and several getters to retrieve the values created during setup
 
+### Fixes
+* Corrected broken link in README
+
 # 1.22.0
 ### Features
 * The `kurtosis.sh` script now takes in a `--debug` argument that will, among other things, instruct Kurtosis to bind all the ports used by any service in `ContainerCreationConfig.usedPorts` to a port on the user's local machine, so the user can make queries to the services inside Kurtosis directly

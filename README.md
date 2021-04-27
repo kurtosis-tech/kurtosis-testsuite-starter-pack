@@ -20,7 +20,7 @@ Quickstart steps:
 
 If you see error messages after running your new testsuite, check out [the guide for debugging failed tests](./debugging-failed-tests.md) which contains solutions to common issues. If this still doesn't resolve your issue, feel free to ask for help in [the Kurtosis Discord server](https://discord.gg/6Jjp9c89z9).
 
-If all tests are passing, you can [proceed to customizing your testsuite](https://docs.kurtosistech.com/testsuite-customization.html).
+If all tests are passing, you can [proceed to customizing your testsuite](https://docs.kurtosistech.com/kurtosis-core/testsuite-customization).
 
 Developing On This Repo
 -----------------------
