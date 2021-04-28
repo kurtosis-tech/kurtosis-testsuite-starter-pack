@@ -55,6 +55,8 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 	logrus.Info("Regular dial to '%v' succeeded")
 	testConn.Close()
 
+	time.Sleep(9999 * time.Second)
+
 	timeoutContext, cancelFunc := context.WithTimeout(context.Background(), apiContainerConnTimeout)
 	defer cancelFunc()
 	conn, err := grpc.DialContext(
