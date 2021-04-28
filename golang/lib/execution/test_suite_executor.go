@@ -47,6 +47,7 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 	}
 
 	// TODO DEBUGGING
+	logrus.Infof("Starting regular dial test....")
 	testConn, err := net.Dial("tcp", executor.kurtosisApiSocket)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred with normal dialling of '%v'", executor.kurtosisApiSocket)
