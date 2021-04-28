@@ -20,6 +20,8 @@ import (
 const (
 	maxSuiteRegistrationRetries = 20
 	timeBetweenSuiteRegistrationRetries = 500 * time.Millisecond
+
+	apiContainerConnTimeout = 30 * time.Second
 )
 
 type TestSuiteExecutor struct {
@@ -43,8 +45,15 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 	}
 
-	// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
-	conn, err := grpc.Dial(executor.kurtosisApiSocket, grpc.WithInsecure())
+	timeoutContext, cancelFunc := context.WithTimeout(context.Background(), apiContainerConnTimeout)
+	defer cancelFunc()
+	conn, err := grpc.DialContext(
+		// Bit weird that the dial timeout is configured via a context, but that's what the docs instruct
+		timeoutContext,
+		executor.kurtosisApiSocket,
+		grpc.WithInsecure(), // TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
+		grpc.WithBlock(),	// This is required for the timeout context to take effect
+	)
 	if err != nil {
 		return stacktrace.Propagate(
 			err,
