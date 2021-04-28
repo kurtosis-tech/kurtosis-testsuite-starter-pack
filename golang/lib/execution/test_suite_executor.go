@@ -14,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"net"
 	"time"
 )
 
@@ -44,6 +45,14 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 	}
+
+	// TODO DEBUGGING
+	testConn, err := net.Dial("tcp", executor.kurtosisApiSocket)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred with normal dialling of '%v'", executor.kurtosisApiSocket)
+	}
+	logrus.Info("Regular dial to '%v' succeeded")
+	testConn.Close()
 
 	timeoutContext, cancelFunc := context.WithTimeout(context.Background(), apiContainerConnTimeout)
 	defer cancelFunc()
