@@ -1,11 +1,17 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Upgraded Kurtosis Core to 1.13, which gives descriptive names to Docker containers started by Kurtosis
+
 ### Changes
 * Refactored the example `Network` implementation, `TestNetwork`, to provide a better example by more closely aligning with what we've seen in the real world - a single `Setup` method intended for use inside `Test.Setup`, and several getters to retrieve the values created during setup
 
 ### Fixes
 * Corrected broken link in README
+
+### Breaking Changes
+* Upgraded to Kurtosis Core 1.13 (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
 
 # 1.22.0
 ### Features
