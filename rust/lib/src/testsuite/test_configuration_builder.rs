@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use super::test_configuration::TestConfiguration;
 
 // vvvvvvvvv Update the docs if you change these vvvvvvvvvvv
-const DEFAULT_SETUP_TIMEOUT_SECONDS: u32 = 60;
-const DEFAULT_RUN_TIMEOUT_SECONDS: u32 = 60;
+const DEFAULT_SETUP_TIMEOUT_SECONDS: u32 = 180;
+const DEFAULT_RUN_TIMEOUT_SECONDS: u32 = 180;
 const DEFAULT_IS_PARTITIONING_ENABLED: bool = false;
 // ^^^^^^^^^ Update the docs if you change these ^^^^^^^^^^^
 
