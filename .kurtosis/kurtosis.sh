@@ -1,3 +1,6 @@
+# Copyright (c) 2020 - present Kurtosis Technologies LLC.
+# All Rights Reserved.
+
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #
 #      Do not modify this file! It will get overwritten when you upgrade Kurtosis!
@@ -15,7 +18,7 @@ set -euo pipefail
 # Can make this configurable if needed
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-KURTOSIS_CORE_TAG="1.12"
+KURTOSIS_CORE_TAG="1.13"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_TAG}"
 API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_TAG}"
@@ -207,7 +210,15 @@ if ! mkdir -p "${KURTOSIS_DIRPATH}"; then
     exit 1
 fi
 
+if ! execution_uuid="$(uuidgen)"; then
+    echo "ERROR: Failed to generate a UUID for identifying this run of Kurtosis"
+    exit 1
+fi
+execution_uuid="${execution_uuid^^}"
+
 docker run \
+    --name "${execution_uuid}__initializer" \
+    \
     `# The Kurtosis initializer runs inside a Docker container, but needs to access to the Docker engine; this is how to do it` \
     `# For more info, see the bottom of: http://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/` \
     --mount "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock" \
@@ -229,6 +240,7 @@ docker run \
     --env CLIENT_SECRET="${client_secret}" \
     --env CUSTOM_PARAMS_JSON="${custom_params_json}" \
     --env DO_LIST="${do_list}" \
+    --env EXECUTION_UUID="${execution_uuid}" \
     --env IS_DEBUG_MODE="${is_debug_mode}" \
     --env KURTOSIS_API_IMAGE="${API_IMAGE}" \
     --env KURTOSIS_LOG_LEVEL="${kurtosis_log_level}" \
