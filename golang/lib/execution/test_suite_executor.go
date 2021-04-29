@@ -46,25 +46,9 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 	}
 
-	// TODO DEBUGGING
-	logrus.Infof("Starting regular dial test....")
-	testConn, err := net.Dial("tcp", executor.kurtosisApiSocket)
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred with normal dialling of '%v'", executor.kurtosisApiSocket)
-	}
-	logrus.Info("Regular dial to '%v' succeeded")
-	testConn.Close()
-
-	time.Sleep(9999 * time.Second)
-
-	timeoutContext, cancelFunc := context.WithTimeout(context.Background(), apiContainerConnTimeout)
-	defer cancelFunc()
-	conn, err := grpc.DialContext(
-		// Bit weird that the dial timeout is configured via a context, but that's what the docs instruct
-		timeoutContext,
+	conn, err := grpc.Dial(
 		executor.kurtosisApiSocket,
 		grpc.WithInsecure(), // TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
-		grpc.WithBlock(),	// This is required for the timeout context to take effect
 	)
 	if err != nil {
 		return stacktrace.Propagate(
@@ -104,6 +88,20 @@ func (executor *TestSuiteExecutor) Run(ctx context.Context) error {
 		}
 		return nil
 	case core_api_bindings.SuiteAction_EXECUTE_TEST:
+		// TODO DEBUGGING
+		logrus.Info("Want to send to '%v'", executor.kurtosisApiSocket)
+		time.Sleep(9999 * time.Second)
+
+		logrus.Infof("Starting regular dial test....")
+		testConn, err := net.Dial("tcp", executor.kurtosisApiSocket)
+		if err != nil {
+			return stacktrace.Propagate(err, "An error occurred with normal dialling of '%v'", executor.kurtosisApiSocket)
+		}
+		logrus.Info("Regular dial to '%v' succeeded")
+		testConn.Close()
+
+
+
 		if err := runTestExecutionFlow(ctx, suite, conn); err != nil {
 			return stacktrace.Propagate(err, "An error occurred running the test execution flow")
 		}
