@@ -186,18 +186,3 @@ func runTestExecutionFlow(ctx context.Context, suite testsuite.TestSuite, conn *
 	return nil
 }
 
-// Little helper function that runs the test and captures panics on test failures, returning them as errors
-func runTest(test testsuite.Test, untypedNetwork interface{}) (resultErr error) {
-	// See https://medium.com/@hussachai/error-handling-in-go-a-quick-opinionated-guide-9199dd7c7f76 for details
-	defer func() {
-		if recoverResult := recover(); recoverResult != nil {
-			logrus.Tracef("Caught panic while running test: %v", recoverResult)
-			resultErr = recoverResult.(error)
-		}
-	}()
-	if err := test.Run(untypedNetwork); err != nil {
-		return stacktrace.Propagate(err, "The test returned an error")
-	}
-	logrus.Tracef("Test completed successfully")
-	return
-}
