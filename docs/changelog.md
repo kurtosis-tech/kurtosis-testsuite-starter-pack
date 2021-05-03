@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.23.0
 ### Features
 * Upgraded Kurtosis Core to 1.13, which gives descriptive names to Docker containers started by Kurtosis
 
