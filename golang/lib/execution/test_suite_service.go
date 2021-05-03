@@ -90,7 +90,7 @@ func (service *TestSuiteService) SetupTest(ctx context.Context, args *bindings.S
 		return nil, stacktrace.Propagate(err, "An error occurred during test setup")
 	}
 	service.network = userNetwork
-	logrus.Info("Successfully set up test network for test '%v'", testName)
+	logrus.Infof("Successfully set up test network for test '%v'", testName)
 
 	return &emptypb.Empty{}, nil
 }
