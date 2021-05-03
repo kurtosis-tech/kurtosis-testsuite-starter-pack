@@ -24,7 +24,7 @@ GO_MOD_FILE_MODULE_KEYWORD="module"
 # -------------------------------------------- Rust -----------------------------------------------
 RUST_DIRNAME="rust"
 RUST_BINDING_GENERATOR_CMD="rust-protobuf-binding-generator"
-ERRONEOUS_GENERATED_FILE="google.protobuf.rs"
+ERRONEOUS_GENERATED_FILENAME="google.protobuf.rs"
 RUST_MOD_FILENAME="mod.rs"
 RUST_FILE_EXT=".rs"
 
@@ -97,7 +97,6 @@ generate_golang_bindings() {
 }
 
 # -------------------------------------------- Rust -----------------------------------------------
-# TODO TODO TODO PATCH THIS UP
 generate_rust_bindings() {
     input_abs_dirpath="${1}"
     output_rel_dirpath="${2}"
@@ -107,11 +106,15 @@ generate_rust_bindings() {
         return 1
     fi
 
-    "${RUST_BINDING_GENERATOR_CMD}" "${input_dirpath}" "${output_dirpath}" "${@}"
+    output_abs_dirpath="${root_dirpath}/${RUST_DIRNAME}/${output_rel_dirpath}"
+    if ! "${RUST_BINDING_GENERATOR_CMD}" "${input_abs_dirpath}" "${output_abs_dirpath}" $(find "${input_abs_dirpath}" -type f -name "*${PROTOBUF_FILE_EXT}"); then
+        echo "Error: An error occurred generating Rust bindings from Protobufs in '${input_abs_dirpath}' to '${output_abs_dirpath}'" >&2
+        exit 1
+    fi
 
     # Due to https://github.com/danburkert/prost/issues/228#event-4306587537 , an erroneous empty file gets generated
     # We remove it so as not to confuse the user
-    erroneous_filepath="${output_dirpath}/${ERRONEOUS_GENERATED_FILE}"
+    erroneous_filepath="${output_abs_dirpath}/${ERRONEOUS_GENERATED_FILENAME}"
     if [ -f "${erroneous_filepath}" ]; then
         if ! rm "${erroneous_filepath}"; then
             echo "Warning: Could not remove erroneous file '${erroneous_filepath}'"
@@ -119,13 +122,13 @@ generate_rust_bindings() {
     fi
 
     # Regenerate mod.rs file
-    mod_filepath="${output_dirpath}/${RUST_MOD_FILENAME}"
+    mod_filepath="${output_abs_dirpath}/${RUST_MOD_FILENAME}"
     if [ -f "${mod_filepath}" ]; then
         if ! rm "${mod_filepath}"; then
-            echo "Warning: Could not remove ${RUST_MOD_FILENAME} file for output directory '${output_dirpath}'"
+            echo "Warning: Could not remove ${RUST_MOD_FILENAME} file for output directory '${output_abs_dirpath}'"
         fi
     fi
-    for generated_filepath in $(find "${output_dirpath}" -name "*${RUST_FILE_EXT}" -maxdepth 1); do
+    for generated_filepath in $(find "${output_abs_dirpath}" -name "*${RUST_FILE_EXT}" -maxdepth 1); do
         generated_filename="$(basename "${generated_filepath}")"
         generated_module="${generated_filename%%${RUST_FILE_EXT}}"
         echo "pub mod ${generated_module};" >> "${mod_filepath}"
@@ -149,15 +152,15 @@ for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
     input_abs_dirpath="${root_dirpath}/${input_rel_dirpath}"
 
     for lang in "${!FILE_EXTENSIONS[@]}"; do
-        # TODO DEBUGGING
-        if [ "${lang}" == "${RUST_DIRNAME}" ]; then
-            continue
-        fi
-
         file_ext="${FILE_EXTENSIONS["${lang}"]}"
 
         eval 'output_rel_dirpath="${'${output_rel_dirpaths_var_name}'["'${lang}'"]}"'
         output_abs_dirpath="${root_dirpath}/${lang}/${output_rel_dirpath}"
+
+        if ! mkdir -p "${output_abs_dirpath}"; then
+            echo "Error: Couldn't create ${lang} bindings output directory '${output_abs_dirpath}'" >&2
+            exit 1
+        fi
 
         if [ "${output_abs_dirpath}/" == "/" ]; then
             echo "Error: ${lang} output dirpath for input '${input_abs_dirpath}' must not be empty!" >&2
@@ -179,7 +182,7 @@ for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
         #  3) Tying the protoc inside the Dockerfile and the protoc on the user's machine together using a protoc version check
         #  4) Adding the locally-generated Go output files to .gitignore
         #  5) Adding the locally-generated Go output files to .dockerignore (since they'll get generated inside Docker)
-        if ! "${bindings_gen_func}" "${input_abs_dirpath}" "${output_rel_dirpath}"; then
+        if ! "${generator_func}" "${input_abs_dirpath}" "${output_rel_dirpath}"; then
             echo "Error: An error occurred generating ${lang} bindings from input directory '${input_abs_dirpath}' to output directory '${output_abs_dirpath}'" >&2           
             exit 1
         fi
