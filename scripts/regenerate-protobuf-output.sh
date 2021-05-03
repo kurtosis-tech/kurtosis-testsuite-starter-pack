@@ -167,7 +167,7 @@ for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
             exit 1
         fi
 
-        if ! echo find "${output_abs_dirpath}" -name "*${file_ext}" -delete; then
+        if ! find "${output_abs_dirpath}" -name "*${file_ext}" -delete; then
             echo "Error: An error occurred removing the existing ${lang} bindings at '${output_abs_dirpath}'" >&2
             exit 1
         fi
@@ -188,46 +188,4 @@ for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
         fi
 
     done
-done
-
-# TODO DEBUGGING
-exit 999
-
-input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"
-for lang in "${!generators[@]}"; do
-    lang_config_str="${generators["${lang}"]}"
-    IFS='|' read -r -a lang_config_arr < <(echo "${lang_config_str}")
-
-    rel_output_dirpath="${lang_config_arr[0]}"
-    generated_files_selectors="${lang_config_arr[1]}"
-    bindings_gen_func="${lang_config_arr[2]}"
-
-    abs_output_dirpath="${root_dirpath}/${lang}/${rel_output_dirpath}"
-
-    if [ "${abs_output_dirpath}/" == "/" ]; then
-        echo "Error: output dirpath must not be empty!" >&2
-        exit 1
-    fi
-
-    if ! find "${abs_output_dirpath}" ${generated_files_selectors} -delete; then
-        echo "Error: An error occurred removing the existing protobuf-generated code" >&2
-        exit 1
-    fi
-
-    # NOTE: When multiple people start developing on this, we won't be able to rely on using the user's local environment for generating bindings because the environments
-    # might differ across users
-    # We'll need to standardize by:
-    #  1) Using protoc inside the API container Dockerfile to generate the output Go files (standardizes the output files for Docker)
-    #  2) Using the user's protoc to generate the output Go files on the local machine, so their IDEs will work
-    #  3) Tying the protoc inside the Dockerfile and the protoc on the user's machine together using a protoc version check
-    #  4) Adding the locally-generated Go output files to .gitignore
-    #  5) Adding the locally-generated Go output files to .dockerignore (since they'll get generated inside Docker)
-    input_filepaths="$(find "${input_dirpath}" -name "*.proto")"
-    if ! "${bindings_gen_func}" "${input_dirpath}" "${abs_output_dirpath}" ${input_filepaths}; then
-        echo "Error: An error occurred generating ${lang} bindings in directory '${abs_output_dirpath}' for files:" >&2
-        for input_filepath in ${input_filepaths}; do
-            echo " - ${input_filepath}" >&2
-        done
-        exit 1
-    fi
 done
