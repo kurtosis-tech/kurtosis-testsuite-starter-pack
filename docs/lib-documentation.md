@@ -317,8 +317,8 @@ TestConfigurationBuilder
 ------------------------
 Builder for creating a [TestConfiguration][testconfiguration] object, which you should manipulate in your test's [Test.configure][test_configure] function. The functions on this builder will correspond to the properties on the [TestConfiguration][testconfiguration] object, in the form `withProperyName` (e.g. `withSetupTimeoutSeconds` sets the test timeout in seconds). If not set, the default values for the properties are as follows:
 
-* **Test setup timeout seconds:** 60
-* **Test run timeout seconds:** 60
+* **Test setup timeout seconds:** 180
+* **Test run timeout seconds:** 180
 * **Partioning enabled:** false
 * **Files artifact URLS:** none
 

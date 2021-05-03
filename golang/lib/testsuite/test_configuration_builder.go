@@ -4,8 +4,8 @@ import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 
 const (
 	// vvvvvvvvv Update the docs if you change these vvvvvvvvvvv
-	defaultSetupTimeoutSeconds = 60;
-	defaultRunTimeoutSeconds = 60;
+	defaultSetupTimeoutSeconds = 180;
+	defaultRunTimeoutSeconds = 180;
 	defaultPartitioningEnabled = false;
 	// ^^^^^^^^^ Update the docs if you change these ^^^^^^^^^^^
 )

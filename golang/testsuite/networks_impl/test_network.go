@@ -24,12 +24,15 @@ const (
 	waitForStartupMaxNumPolls = 15
 )
 
+//  A custom Network implementation is intended to make test-writing easier by wrapping low-level
+//    NetworkContext calls with custom higher-level business logic
 type TestNetwork struct {
 	networkCtx            *networks.NetworkContext
 	datastoreServiceImage string
 	apiServiceImage       string
 	datastoreService      *datastore.DatastoreService
-	apiServices           map[services.ServiceID]*api.ApiService
+	personModifyingApiService *api.ApiService
+	personRetrievingApiService *api.ApiService
 	nextApiServiceId      int
 }
 
@@ -39,14 +42,20 @@ func NewTestNetwork(networkCtx *networks.NetworkContext, datastoreServiceImage s
 		datastoreServiceImage: datastoreServiceImage,
 		apiServiceImage:       apiServiceImage,
 		datastoreService:      nil,
-		apiServices:           map[services.ServiceID]*api.ApiService{},
+		personModifyingApiService: nil,
+		personRetrievingApiService: nil,
 		nextApiServiceId:      0,
 	}
 }
 
-func (network *TestNetwork) AddDatastore() error {
-	if (network.datastoreService != nil) {
+//  Custom network implementations usually have a "setup" method (possibly parameterized) that is used
+//   in the Test.Setup function of each test
+func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
+	if network.datastoreService != nil {
 		return stacktrace.NewError("Cannot add datastore service to network; datastore already exists!")
+	}
+	if network.personModifyingApiService != nil || network.personRetrievingApiService != nil {
+		return stacktrace.NewError("Cannot add API services to network; one or more API services already exists")
 	}
 
 	configFactory := datastore.NewDatastoreContainerConfigFactory(network.datastoreServiceImage)
@@ -60,16 +69,44 @@ func (network *TestNetwork) AddDatastore() error {
 	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 	castedDatastore := uncastedDatastore.(*datastore.DatastoreService)
 	network.datastoreService = castedDatastore
+
+	personModifyingApiService, err := network.addApiService()
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred adding the person-modifying API service")
+	}
+	network.personModifyingApiService = personModifyingApiService
+
+	personRetrievingApiServiceId, err := network.addApiService()
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred adding the person-retrieving API service")
+	}
+	network.personRetrievingApiService = personRetrievingApiServiceId
+
 	return nil
 }
 
-func (network *TestNetwork) GetDatastore() *datastore.DatastoreService {
-	return network.datastoreService
+//  Custom network implementations will also usually have getters, to retrieve information about the
+//   services created during setup
+func (network TestNetwork) GetPersonModifyingApiService() (*api.ApiService, error) {
+	if network.personModifyingApiService == nil {
+		return nil, stacktrace.NewError("No person-modifying API service exists")
+	}
+	return network.personModifyingApiService, nil
+}
+func (network TestNetwork) GetPersonRetrievingApiService() (*api.ApiService, error) {
+	if network.personRetrievingApiService == nil {
+		return nil, stacktrace.NewError("No person-retrieving API service exists")
+	}
+	return network.personRetrievingApiService, nil
 }
 
-func (network *TestNetwork) AddApiService() (services.ServiceID, error) {
-	if (network.datastoreService == nil) {
-		return "", stacktrace.NewError("Cannot add API service to network; no datastore service exists")
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+func (network *TestNetwork) addApiService() (*api.ApiService, error) {
+	if network.datastoreService == nil {
+		return nil, stacktrace.NewError("Cannot add API service to network; no datastore service exists")
 	}
 
 	serviceIdStr := apiServiceIdPrefix + strconv.Itoa(network.nextApiServiceId)
@@ -79,21 +116,13 @@ func (network *TestNetwork) AddApiService() (services.ServiceID, error) {
 	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreService)
 	uncastedApiService, hostPortBindings, checker, err := network.networkCtx.AddService(serviceId, configFactory)
 	if err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred adding the API service")
+		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
 	}
 	logrus.Infof("Added API service with host port bindings: %+v", hostPortBindings)
 	castedApiService := uncastedApiService.(*api.ApiService)
-	network.apiServices[serviceId] = castedApiService
-	return serviceId, nil
+	return castedApiService, nil
 }
 
-func (network *TestNetwork) GetApiService(serviceId services.ServiceID) (*api.ApiService, error) {
-	service, found := network.apiServices[serviceId]
-	if !found {
-		return nil, stacktrace.NewError("No API service with ID '%v' has been added", serviceId)
-	}
-	return service, nil
-}

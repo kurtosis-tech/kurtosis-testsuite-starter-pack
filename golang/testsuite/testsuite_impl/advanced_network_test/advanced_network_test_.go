@@ -7,7 +7,6 @@ package advanced_network_test
 
 import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"
@@ -21,9 +20,6 @@ const (
 type AdvancedNetworkTest struct {
 	datastoreServiceImage string
 	apiServiceImage string
-
-	personModifyingApiServiceId services.ServiceID
-	personRetrievingApiServiceId services.ServiceID
 }
 
 func NewAdvancedNetworkTest(datastoreServiceImage string, apiServiceImage string) *AdvancedNetworkTest {
@@ -36,33 +32,20 @@ func (test *AdvancedNetworkTest) Configure(builder *testsuite.TestConfigurationB
 
 func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	network := networks_impl.NewTestNetwork(networkCtx, test.datastoreServiceImage, test.apiServiceImage)
-
-	if err := network.AddDatastore(); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore")
+	// Note how setup logic has been pushed into a custom Network implementation, to make test-writing easy
+	if err := network.SetupDatastoreAndTwoApis(); err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred setting up the network")
 	}
-
-	personModifyingApiServiceId, err := network.AddApiService()
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the person-modifying API service")
-	}
-	test.personModifyingApiServiceId = personModifyingApiServiceId
-
-	personRetrievingApiServiceId, err := network.AddApiService()
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the person-retrieving API service")
-	}
-	test.personRetrievingApiServiceId = personRetrievingApiServiceId
-
 	return network, nil
 }
 
 func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	castedNetwork := network.(*networks_impl.TestNetwork)
-	personModifier, err := castedNetwork.GetApiService(test.personModifyingApiServiceId)
+	personModifier, err := castedNetwork.GetPersonModifyingApiService()
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the person-modifying API service")
 	}
-	personRetriever, err := castedNetwork.GetApiService(test.personRetrievingApiServiceId)
+	personRetriever, err := castedNetwork.GetPersonRetrievingApiService()
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service")
 	}

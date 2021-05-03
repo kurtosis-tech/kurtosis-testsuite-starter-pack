@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 
-use kurtosis_rust_lib::{networks::network_context::NetworkContext, services::service::ServiceId, testsuite::{test::Test}};
+use kurtosis_rust_lib::{networks::network_context::NetworkContext, testsuite::{test::Test}};
 
 use crate::networks_impl::test_network::TestNetwork;
 
@@ -9,9 +9,6 @@ const TEST_PERSON_ID: u32 = 46;
 pub struct AdvancedNetworkTest {
     datastore_service_image: String,
     api_service_image: String,
-
-    person_modifying_api_service_id: Option<ServiceId>,
-    person_retrieving_api_service_id: Option<ServiceId>,
 }
 
 impl AdvancedNetworkTest {
@@ -19,8 +16,6 @@ impl AdvancedNetworkTest {
         return AdvancedNetworkTest{
             datastore_service_image,
             api_service_image,
-            person_modifying_api_service_id: None,
-            person_retrieving_api_service_id: None,
         }
     }
 }
@@ -35,41 +30,16 @@ impl Test for AdvancedNetworkTest {
 
     fn setup(&mut self, network_ctx: NetworkContext) -> Result<Box<TestNetwork>> {
         let mut network = TestNetwork::new(network_ctx, self.datastore_service_image.clone(), self.api_service_image.clone());
-
-        network.add_datastore()
-            .context("An error occurred adding the datastore")?;
-
-        let person_modifying_api_service_id = network.add_api_service()
-            .context("An error occurred adding the person-modifying API service")?;
-        self.person_modifying_api_service_id = Some(person_modifying_api_service_id);
-
-        let person_retrieving_api_service_id = network.add_api_service()
-            .context("An error occurred adding the person-retrieving API service")?;
-        self.person_retrieving_api_service_id = Some(person_retrieving_api_service_id);
-
+        // Note how setup logic has been pushed into a custom Network implementation, to make test-writing easy
+        network.setup_datastore_and_two_api_services()
+            .context("An error occurred setting up the network")?;
         return Ok(Box::new(network));
     }
 
     fn run(&self, network: Box<TestNetwork>) -> anyhow::Result<()> {
-        let person_modifying_service_id;
-        match self.person_modifying_api_service_id {
-            Some(ref service_id) => person_modifying_service_id = service_id,
-            None => return Err(anyhow!(
-                "No person-modifying service ID exists; this is a code bug"
-            )),
-        };
-        let person_modifier = network.get_api_service(person_modifying_service_id)
+        let person_modifier = network.get_person_modifying_api_service()
             .context("An error occurred getting the person-modifying API service")?;
-
-
-        let person_retrieving_service_id;
-        match self.person_retrieving_api_service_id {
-            Some(ref service_id) => person_retrieving_service_id = service_id,
-            None => return Err(anyhow!(
-                "No person-retrieving service ID exists; this is a code bug"
-            )),
-        }
-        let person_retriever = network.get_api_service(person_retrieving_service_id)
+        let person_retriever = network.get_person_retrieving_api_service()
             .context("An error occurred getting the person-retrieving API service")?;
 
         info!("Adding test person via person-modifying API service...");
