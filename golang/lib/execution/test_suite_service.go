@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/suite_api_bindings"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -21,10 +21,16 @@ type TestSuiteService struct {
 	kurtosisApiClient core_api_bindings.ApiContainerServiceClient
 }
 
-// TODO Constructor
+func NewTestSuiteService(suite testsuite.TestSuite, kurtosisApiClient core_api_bindings.ApiContainerServiceClient) *TestSuiteService {
+	return &TestSuiteService{
+		suite: suite,
+		network: nil,
+		kurtosisApiClient: kurtosisApiClient,
+	}
+}
 
-func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty *emptypb.Empty) (*suite_api_bindings.TestSuiteMetadata, error) {
-	allTestMetadata := map[string]*suite_api_bindings.TestMetadata{}
+func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty *emptypb.Empty) (*bindings.TestSuiteMetadata, error) {
+	allTestMetadata := map[string]*bindings.TestMetadata{}
 	for testName, test := range service.suite.GetTests() {
 		testConfigBuilder := testsuite.NewTestConfigurationBuilder()
 		test.Configure(testConfigBuilder)
@@ -33,7 +39,7 @@ func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty 
 		for _, artifactUrl := range testConfig.FilesArtifactUrls {
 			usedArtifactUrls[artifactUrl] = true
 		}
-		testMetadata := &suite_api_bindings.TestMetadata{
+		testMetadata := &bindings.TestMetadata{
 			IsPartitioningEnabled: testConfig.IsPartitioningEnabled,
 			UsedArtifactUrls:      usedArtifactUrls,
 			TestSetupTimeoutInSeconds: testConfig.SetupTimeoutSeconds,
@@ -43,7 +49,7 @@ func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty 
 	}
 
 	networkWidthBits := service.suite.GetNetworkWidthBits()
-	testSuiteMetadata := &suite_api_bindings.TestSuiteMetadata{
+	testSuiteMetadata := &bindings.TestSuiteMetadata{
 		TestMetadata:     allTestMetadata,
 		NetworkWidthBits: networkWidthBits,
 	}
@@ -51,7 +57,7 @@ func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty 
 	return testSuiteMetadata, nil
 }
 
-func (service *TestSuiteService) SetupTest(ctx context.Context, args *suite_api_bindings.SetupTestArgs) (*emptypb.Empty, error) {
+func (service *TestSuiteService) SetupTest(ctx context.Context, args *bindings.SetupTestArgs) (*emptypb.Empty, error) {
 	if service.kurtosisApiClient == nil {
 		return nil, stacktrace.NewError("Received a request to setup the test, but the Kurtosis API container client is nil")
 	}
@@ -89,7 +95,7 @@ func (service *TestSuiteService) SetupTest(ctx context.Context, args *suite_api_
 	return &emptypb.Empty{}, nil
 }
 
-func (service TestSuiteService) RunTest(ctx context.Context, args *suite_api_bindings.RunTestArgs) (*emptypb.Empty, error) {
+func (service TestSuiteService) RunTest(ctx context.Context, args *bindings.RunTestArgs) (*emptypb.Empty, error) {
 	if service.kurtosisApiClient == nil {
 		return nil, stacktrace.NewError("Received a request to setup the test, but the Kurtosis API container client is nil")
 	}

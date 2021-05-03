@@ -41,8 +41,8 @@ CORE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/core_api_bindings"
 
 # Per-lang output locations for suite API bindings
 declare -A SUITE_API_OUTPUT_REL_DIRPATHS
-SUITE_API_OUTPUT_REL_DIRPATHS["${GOLANG_DIRNAME}"]="lib/suite_api_bindings"
-SUITE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/suite_api_bindings"
+SUITE_API_OUTPUT_REL_DIRPATHS["${GOLANG_DIRNAME}"]="lib/rpc_api/bindings"
+SUITE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/rpc_api/bindings"
 
 # Maps path to directories containing Protobuf files RELATIVE TO REPO ROOT -> the name of the map variable containing the per-lang output directories
 declare -A INPUT_REL_DIRPATHS

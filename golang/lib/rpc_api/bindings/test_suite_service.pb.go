@@ -4,7 +4,7 @@
 // 	protoc        v3.14.0
 // source: test_suite_service.proto
 
-package suite_api_bindings
+package bindings
 
 import (
 	context "context"

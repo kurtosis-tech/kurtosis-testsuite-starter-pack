@@ -6,7 +6,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/execution"
@@ -46,7 +45,7 @@ func main() {
 	// >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
 
 	suiteExecutor := execution.NewTestSuiteExecutor(*kurtosisApiSocketArg, *logLevelArg, *customParamsJsonArg, configurator)
-	if err := suiteExecutor.Run(context.Background()); err != nil {
+	if err := suiteExecutor.Run(); err != nil {
 		logrus.Errorf("An error occurred running the test suite executor:")
 		fmt.Fprintln(logrus.StandardLogger().Out, err)
 		os.Exit(failureExitCode)

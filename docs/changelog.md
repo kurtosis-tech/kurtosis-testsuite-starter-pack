@@ -6,6 +6,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 ### Breaking Changes
 * Upgraded to Kurtosis Core TODOOOOOOOOOO (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
+* For Go testsuites, `TestSuiteExecutor.Run` no longer takes in a `Context` object
 
 # 1.23.0
 ### Features
