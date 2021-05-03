@@ -1,6 +1,11 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Upgraded Kurtosis Core to TODOOOOOOOOO, which contains backend changes in preparation for some new upcoming features
+
+### Breaking Changes
+* Upgraded to Kurtosis Core TODOOOOOOOOOO (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
 
 # 1.23.0
 ### Features

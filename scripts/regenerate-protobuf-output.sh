@@ -18,16 +18,34 @@ PROTOC_CMD="protoc"
 GOLANG_DIRNAME="golang"
 GO_MOD_FILENAME="go.mod"
 GO_MOD_FILE_MODULE_KEYWORD="module"
-GO_RELATIVE_OUTPUT_DIRPATH="lib/core_api_bindings"   # Relative to the root of the lang dir!
 
 # -------------------------------------------- Rust -----------------------------------------------
 RUST_DIRNAME="rust"
 RUST_BINDING_GENERATOR_CMD="rust-protobuf-binding-generator"
-RUST_RELATIVE_OUTPUT_DIRPATH="lib/src/core_api_bindings"
 ERRONEOUS_GENERATED_FILE="google.protobuf.rs"
 RUST_MOD_FILENAME="mod.rs"
 RUST_FILE_EXT=".rs"
 
+# -------------------------------------------- Shared -----------------------------------------------
+# Each language's file extension so we know what files need deleting before we regenerate bindings
+declare -A FILE_EXTENSIONS
+FILE_EXTENSIONS["${GOLANG_DIRNAME}"]=".go"
+FILE_EXTENSIONS["${RUST_DIRNAME}"]="${RUST_FILE_EXT}"
+
+# Per-lang output locations for core API bindings
+declare -A CORE_API_OUTPUT_REL_DIRPATHS
+CORE_API_OUTPUT_REL_DIRPATHS["${GOLANG_DIRNAME}"]="lib/core_api_bindings"
+CORE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/core_api_bindings"
+
+# Per-lang output locations for suite API bindings
+declare -A SUITE_API_OUTPUT_REL_DIRPATHS
+SUITE_API_OUTPUT_REL_DIRPATHS["${GOLANG_DIRNAME}"]="lib/suite_api_bindings"
+SUITE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/suite_api_bindings"
+
+# Maps relative path to directories containing Protobuf files -> the name of the map variable containing the per-lang output directories
+declare -A INPUT_REL_DIRPATHS
+INPUT_REL_DIRPATHS["core-api"]="CORE_API_OUTPUT_REL_DIRPATHS"
+INPUT_REL_DIRPATHS["suite-api"]="SUITE_API_OUTPUT_REL_DIRPATHS"
 
 # ==================================================================================================
 #                                           Main Logic
@@ -43,7 +61,6 @@ if [ "${go_module}" == "" ]; then
     echo "Error: Could not extract Go module from file '${go_mod_filepath}'" >&2
     exit 1
 fi
-go_bindings_pkg="${go_module}/${GO_RELATIVE_OUTPUT_DIRPATH}"
 
 generate_golang_bindings() {
     input_dirpath="${1}"
@@ -120,9 +137,39 @@ generate_rust_bindings() {
 # Schema of the "object" that's the value of this map:
 # relativeOutputDirpath|findSelectorMatchingGeneratedFiles|bindingGenerationFunc
 # NOTE: the binding-generating function signature is as follows: input_dirpath output_dirpath input_filepath1 [input_filepath2...]
-declare -A generators
-generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|-name '*.go'|generate_golang_bindings"
-generators["${RUST_DIRNAME}"]="${RUST_RELATIVE_OUTPUT_DIRPATH}|-name '*${RUST_FILE_EXT}'|generate_rust_bindings"
+# declare -A generators
+# generators["${GOLANG_DIRNAME}"]="${GO_RELATIVE_OUTPUT_DIRPATH}|-name '*.go'|generate_golang_bindings"
+# generators["${RUST_DIRNAME}"]="${RUST_RELATIVE_OUTPUT_DIRPATH}|-name '*${RUST_FILE_EXT}'|generate_rust_bindings"
+
+
+
+
+for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
+    # Name of array containing per-lang output directories where the bindings should be generated
+    output_rel_dirpaths_var_name="${INPUT_REL_DIRPATHS["${input_rel_dirpath}"]}"
+
+    input_abs_dirpath="${root_dirpath}/${input_rel_dirpath}"
+
+    for lang in "${!FILE_EXTENSIONS[@]}"; do
+        file_ext="${FILE_EXTENSIONS["${lang}"]}"
+
+        eval 'output_rel_dirpath="${'${output_rel_dirpaths_var_name}'["'${lang}'"]}"'
+        output_abs_dirpath="${root_dirpath}/${output_rel_dirpath}"
+
+        if [ "${output_abs_dirpath}/" == "/" ]; then
+            echo "Error: Output dirpath must not be empty!" >&2
+            exit 1
+        fi
+
+        if ! echo find "${output_abs_dirpath}" -name "*${file_ext}" -delete; then
+            echo "Error: An error occurred removing the existing protobuf-generated code" >&2
+            exit 1
+        fi
+    done
+done
+
+# TODO DEBUGGING
+exit 999
 
 input_dirpath="${root_dirpath}/${INPUT_RELATIVE_DIRPATH}"
 for lang in "${!generators[@]}"; do
@@ -135,13 +182,13 @@ for lang in "${!generators[@]}"; do
 
     abs_output_dirpath="${root_dirpath}/${lang}/${rel_output_dirpath}"
 
-    if [ "${abs_output_dirpath}/" != "/" ]; then
-        if ! find "${abs_output_dirpath}" ${generated_files_selectors} -delete; then
-            echo "Error: An error occurred removing the existing protobuf-generated code" >&2
-            exit 1
-        fi
-    else
+    if [ "${abs_output_dirpath}/" == "/" ]; then
         echo "Error: output dirpath must not be empty!" >&2
+        exit 1
+    fi
+
+    if ! find "${abs_output_dirpath}" ${generated_files_selectors} -delete; then
+        echo "Error: An error occurred removing the existing protobuf-generated code" >&2
         exit 1
     fi
 
