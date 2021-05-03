@@ -187,5 +187,6 @@ for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
             exit 1
         fi
 
+        echo "Successfully generated ${lang} bindings for ${PROTOBUF_FILE_EXT} files in '${input_abs_dirpath}' to '${output_abs_dirpath}'"
     done
 done
