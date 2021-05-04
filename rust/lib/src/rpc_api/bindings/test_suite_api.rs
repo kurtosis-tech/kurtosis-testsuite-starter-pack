@@ -29,16 +29,6 @@ pub struct SetupTestArgs {
     #[prost(string, tag = "1")]
     pub test_name: ::prost::alloc::string::String,
 }
-/// ====================================================================================================
-///                                        RunTest
-/// ====================================================================================================
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RunTestArgs {
-    /// Not strictly required since we *must* setup a test before running and setup specifies the name
-    ///  of the test to setup, but we include it here for consistency
-    #[prost(string, tag = "1")]
-    pub test_name: ::prost::alloc::string::String,
-}
 #[doc = r" Generated client implementations."]
 pub mod test_suite_service_client {
     #![allow(unused_variables, dead_code, missing_docs)]
@@ -103,9 +93,11 @@ pub mod test_suite_service_client {
                 http::uri::PathAndQuery::from_static("/test_suite_api.TestSuiteService/SetupTest");
             self.inner.unary(request.into_request(), path, codec).await
         }
+        #[doc = " We don't need args dictating what test to run because SetupTest already indicates it (and it wouldn't make"]
+        #[doc = "  sense to setup one test and run another)"]
         pub async fn run_test(
             &mut self,
-            request: impl tonic::IntoRequest<super::RunTestArgs>,
+            request: impl tonic::IntoRequest<()>,
         ) -> Result<tonic::Response<()>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -147,9 +139,11 @@ pub mod test_suite_service_server {
             &self,
             request: tonic::Request<super::SetupTestArgs>,
         ) -> Result<tonic::Response<()>, tonic::Status>;
+        #[doc = " We don't need args dictating what test to run because SetupTest already indicates it (and it wouldn't make"]
+        #[doc = "  sense to setup one test and run another)"]
         async fn run_test(
             &self,
-            request: tonic::Request<super::RunTestArgs>,
+            request: tonic::Request<()>,
         ) -> Result<tonic::Response<()>, tonic::Status>;
     }
     #[derive(Debug)]
@@ -247,13 +241,10 @@ pub mod test_suite_service_server {
                 "/test_suite_api.TestSuiteService/RunTest" => {
                     #[allow(non_camel_case_types)]
                     struct RunTestSvc<T: TestSuiteService>(pub Arc<T>);
-                    impl<T: TestSuiteService> tonic::server::UnaryService<super::RunTestArgs> for RunTestSvc<T> {
+                    impl<T: TestSuiteService> tonic::server::UnaryService<()> for RunTestSvc<T> {
                         type Response = ();
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::RunTestArgs>,
-                        ) -> Self::Future {
+                        fn call(&mut self, request: tonic::Request<()>) -> Self::Future {
                             let inner = self.0.clone();
                             let fut = async move { (*inner).run_test(request).await };
                             Box::pin(fut)

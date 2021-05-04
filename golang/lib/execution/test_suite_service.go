@@ -14,8 +14,9 @@ import (
 type TestSuiteService struct {
 	suite testsuite.TestSuite
 
-	// This will only be non-nil after SetupTest is called
+	// These will only be non-empty after SetupTest is called
 	network networks.Network
+	testName string
 
 	// Will only be non-nil if an IP:port to a Kurtosis API container was provided
 	kurtosisApiClient core_api_bindings.ApiContainerServiceClient
@@ -23,8 +24,9 @@ type TestSuiteService struct {
 
 func NewTestSuiteService(suite testsuite.TestSuite, kurtosisApiClient core_api_bindings.ApiContainerServiceClient) *TestSuiteService {
 	return &TestSuiteService{
-		suite: suite,
-		network: nil,
+		suite:             suite,
+		network:           nil,
+		testName:          "",
 		kurtosisApiClient: kurtosisApiClient,
 	}
 }
@@ -90,20 +92,21 @@ func (service *TestSuiteService) SetupTest(ctx context.Context, args *bindings.S
 		return nil, stacktrace.Propagate(err, "An error occurred during test setup")
 	}
 	service.network = userNetwork
+	service.testName = testName
 	logrus.Infof("Successfully set up test network for test '%v'", testName)
 
 	return &emptypb.Empty{}, nil
 }
 
-func (service TestSuiteService) RunTest(ctx context.Context, args *bindings.RunTestArgs) (*emptypb.Empty, error) {
+func (service TestSuiteService) RunTest(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
 	if service.kurtosisApiClient == nil {
-		return nil, stacktrace.NewError("Received a request to setup the test, but the Kurtosis API container client is nil")
+		return nil, stacktrace.NewError("Received a request to run the test, but the Kurtosis API container client is nil")
 	}
-	if service.network == nil {
-		return nil, stacktrace.NewError("Received a request to setup the test, but the test network doesn't exist (indicating that setup hasn't been run)")
+	if service.network == nil || service.testName == "" {
+		return nil, stacktrace.NewError("Received a request to run the test, but the test hasn't been set up yet")
 	}
 
-	testName := args.TestName
+	testName := service.testName
 
 	allTests := service.suite.GetTests()
 	test, found := allTests[testName]
