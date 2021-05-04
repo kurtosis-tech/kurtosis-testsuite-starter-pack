@@ -1,22 +1,17 @@
 package execution
 
 import (
-	"fmt"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/rpc_api_consts"
+	"github.com/kurtosis-tech/minimal-grpc-server/server"
 	"github.com/palantir/stacktrace"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
 const (
-	grpcServerStopGracePeriod = 10 * time.Second
+	grpcServerStopGracePeriod = 5 * time.Second
 )
 
 type TestSuiteExecutor struct {
@@ -57,58 +52,21 @@ func (executor TestSuiteExecutor) Run() error {
 	}
 
 	testsuiteService := NewTestSuiteService(suite, apiContainerService)
-
-	// TODO all the code below here is almost entirely duplicated with KUrtosis Core - extract as a library!
-	grpcServer := grpc.NewServer()
-
-	bindings.RegisterTestSuiteServiceServer(grpcServer, testsuiteService)
-
-	listenAddressStr := fmt.Sprintf(":%v", rpc_api_consts.ListenPort)
-	listener, err := net.Listen(rpc_api_consts.ListenProtocol, listenAddressStr)
-	if err != nil {
-		return stacktrace.Propagate(
-			err,
-			"An error occurred creating the listener on %v/%v",
-			rpc_api_consts.ListenProtocol,
-			listenAddressStr,
-		)
+	testsuiteServiceRegistrationFunc := func(grpcServer *grpc.Server) {
+		bindings.RegisterTestSuiteServiceServer(grpcServer, testsuiteService)
 	}
 
-	// Docker will send SIGTERM to end the process, and we need to catch it to stop gracefully
-	termSignalChan := make(chan os.Signal, 1)
-	signal.Notify(termSignalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	grpcServerResultChan := make(chan error)
-
-	go func() {
-		var resultErr error = nil
-		if err := grpcServer.Serve(listener); err != nil {
-			resultErr = stacktrace.Propagate(err, "The gRPC server exited with an error")
-		}
-		grpcServerResultChan <- resultErr
-	}()
-
-	// Wait until we get a shutdown signal
-	<- termSignalChan
-
-	serverStoppedChan := make(chan interface{})
-	go func() {
-		grpcServer.GracefulStop()
-		serverStoppedChan <- nil
-	}()
-	select {
-	case <- serverStoppedChan:
-		logrus.Info("gRPC server has exited gracefully")
-	case <- time.After(grpcServerStopGracePeriod):
-		logrus.Warnf("gRPC server failed to stop gracefully after %v; hard-stopping now...", grpcServerStopGracePeriod)
-		grpcServer.Stop()
-		logrus.Info("gRPC server was forcefully stopped")
-	}
-	if err := <- grpcServerResultChan; err != nil {
-		// Technically this doesn't need to be an error, but we make it so to fail loudly
-		return stacktrace.Propagate(err, "gRPC server returned an error after it was done serving")
+	testsuiteServer := server.NewMinimalGRPCServer(
+		rpc_api_consts.ListenPort,
+		rpc_api_consts.ListenProtocol,
+		grpcServerStopGracePeriod,
+		[]func(desc *grpc.Server) {
+			testsuiteServiceRegistrationFunc,
+		},
+	)
+	if err := testsuiteServer.Run(); err != nil {
+		return stacktrace.Propagate(err, "An error occurred running the testsuite server")
 	}
 
 	return nil
-
 }
