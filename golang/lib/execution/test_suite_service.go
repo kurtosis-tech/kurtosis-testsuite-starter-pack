@@ -9,14 +9,21 @@ import (
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"sync"
 )
+
+type testSetupInfo struct {
+	network networks.Network
+	testName string
+}
 
 type TestSuiteService struct {
 	suite testsuite.TestSuite
 
-	// These will only be non-empty after SetupTest is called
-	network networks.Network
-	testName string
+	// This will only be non-empty after SetupTest is called
+	testSetupInfo *testSetupInfo
+
+	testSetupInfoMutex *sync.Mutex
 
 	// Will only be non-nil if an IP:port to a Kurtosis API container was provided
 	kurtosisApiClient core_api_bindings.ApiContainerServiceClient
@@ -24,10 +31,10 @@ type TestSuiteService struct {
 
 func NewTestSuiteService(suite testsuite.TestSuite, kurtosisApiClient core_api_bindings.ApiContainerServiceClient) *TestSuiteService {
 	return &TestSuiteService{
-		suite:             suite,
-		network:           nil,
-		testName:          "",
-		kurtosisApiClient: kurtosisApiClient,
+		suite:              suite,
+		testSetupInfo:      nil,
+		testSetupInfoMutex: &sync.Mutex{},
+		kurtosisApiClient:  kurtosisApiClient,
 	}
 }
 
@@ -60,6 +67,9 @@ func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty 
 }
 
 func (service *TestSuiteService) SetupTest(ctx context.Context, args *bindings.SetupTestArgs) (*emptypb.Empty, error) {
+	service.testSetupInfoMutex.Lock()
+	defer service.testSetupInfoMutex.Unlock()
+
 	if service.kurtosisApiClient == nil {
 		return nil, stacktrace.NewError("Received a request to setup the test, but the Kurtosis API container client is nil")
 	}
@@ -91,22 +101,28 @@ func (service *TestSuiteService) SetupTest(ctx context.Context, args *bindings.S
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred during test setup")
 	}
-	service.network = userNetwork
-	service.testName = testName
+	service.testSetupInfo = &testSetupInfo{
+		network:  userNetwork,
+		testName: testName,
+	}
 	logrus.Infof("Successfully set up test network for test '%v'", testName)
 
 	return &emptypb.Empty{}, nil
 }
 
 func (service TestSuiteService) RunTest(ctx context.Context, empty *emptypb.Empty) (*emptypb.Empty, error) {
+	service.testSetupInfoMutex.Lock()
+	defer service.testSetupInfoMutex.Unlock()
+
 	if service.kurtosisApiClient == nil {
 		return nil, stacktrace.NewError("Received a request to run the test, but the Kurtosis API container client is nil")
 	}
-	if service.network == nil || service.testName == "" {
+	if service.testSetupInfo == nil {
 		return nil, stacktrace.NewError("Received a request to run the test, but the test hasn't been set up yet")
 	}
 
-	testName := service.testName
+	network := service.testSetupInfo.network
+	testName := service.testSetupInfo.testName
 
 	allTests := service.suite.GetTests()
 	test, found := allTests[testName]
@@ -119,7 +135,7 @@ func (service TestSuiteService) RunTest(ctx context.Context, empty *emptypb.Empt
 	}
 
 	logrus.Infof("Running test logic for test '%v'...", testName)
-	if err := runTest(test, service.network); err != nil {
+	if err := runTest(test, network); err != nil {
 		return nil, stacktrace.NewError(
 			"An error occurred running test '%v'",
 			testName,

@@ -16,6 +16,7 @@ path = "src/lib.rs"
 
 [dependencies]
 anyhow = "1.0.38"
+async-trait = "0.1.50"
 dashmap = "4.0.2"
 downcast-rs = "1.2.0"
 log = "0.4"
