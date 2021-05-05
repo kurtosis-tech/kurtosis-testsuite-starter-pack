@@ -15,13 +15,6 @@ CHANGELOG_TBD_LINE="# TBD"
 CHANGELOG_TBD_LINE_PATTERN="^${CHANGELOG_TBD_LINE}$"
 EXPECTED_NUM_VERSION_FRAGMENTS=3   # We expected X.Y.Z versions
 
-# Rust
-RUST_LANG_DIRNAME="rust"
-RUST_LIB_PACKAGE_DIRNAME="lib"
-RUST_TESTSUITE_PACKAGE_DIRNAME="testsuite"
-CARGO_TOML_FILENAME="Cargo.toml"
-CARGO_TOML_VERSION_LINE_PATTERN='^version = ".*$'
-
 
 
 # ==========================================================================================
@@ -50,25 +43,6 @@ if [ "${num_tbd_lines}" -eq 0 ] || [ "${num_tbd_lines}" -gt 1 ]; then
     exit 1
 fi
 
-# -------------------------------------------- Rust ----------------------------------------
-# Verify that the Cargo.toml files have the line we expect
-rust_lang_root_dirpath="${root_dirpath}/${RUST_LANG_DIRNAME}"
-rust_cargo_toml_filepaths=(
-    "${rust_lang_root_dirpath}/${RUST_LIB_PACKAGE_DIRNAME}/${CARGO_TOML_FILENAME}"
-    "${rust_lang_root_dirpath}/${RUST_TESTSUITE_PACKAGE_DIRNAME}/${CARGO_TOML_FILENAME}"
-)
-for filepath in "${rust_cargo_toml_filepaths[@]}"; do
-    if ! [ -f "${filepath}" ]; then
-        echo "Error: Missing expected ${CARGO_TOML_FILENAME} at '${lib_cargo_toml_filepath}'" >&2
-        exit 1
-    fi
-    num_version_lines="$(grep -c "${CARGO_TOML_VERSION_LINE_PATTERN}" "${filepath}" || true)"
-    if [ "${num_version_lines}" -eq 0 ] || [ "${num_version_lines}" -gt 1 ]; then
-        echo "Error: Expected exactly one line matching pattern '${CARGO_TOML_VERSION_LINE_PATTERN}' in '${filepath}' but found ${num_version_lines}" >&2
-        exit 1
-    fi
-done
-
 
 
 # ==========================================================================================
@@ -86,23 +60,9 @@ function make_shared_pre_release_modifications() {
     fi
 }
 
-function make_rust_pre_release_modifications() {
-    new_version="${1}"
-
-    # Frustratingly, Rust ONLY allows you to specify a crate's version in the Cargo.toml which means we need to 'sed' that file on every release
-    new_version_line="version = \"${new_version}\"  # Do not modify; gets automatically updated during release!"
-    for filepath in "${rust_cargo_toml_filepaths[@]}"; do
-        if ! sed -i '' "s/${CARGO_TOML_VERSION_LINE_PATTERN}/${new_version_line}/" "${filepath}"; then
-            echo "Error: Could not sed '${CARGO_TOML_VERSION_LINE_PATTERN}' -> '${new_version_line}' in ${CARGO_TOML_FILENAME} file '${filepath}'" >&2
-            exit 1
-        fi
-    done
-}
-
 # NOTE: Go doesn't have any pre-release steps
 pre_release_functions=(
     "make_shared_pre_release_modifications"
-    "make_rust_pre_release_modifications"
 )
 
 
