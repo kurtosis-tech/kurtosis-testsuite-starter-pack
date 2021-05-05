@@ -29,7 +29,7 @@ const (
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type NetworkContext struct {
-	client core_api_bindings.TestExecutionServiceClient
+	client core_api_bindings.ApiContainerServiceClient
 
 	filesArtifactUrls map[services.FilesArtifactID]string
 
@@ -48,7 +48,7 @@ Args:
 	filesArtifactUrls: The mapping of filesArtifactId -> URL for the artifacts that the testsuite will use
 */
 func NewNetworkContext(
-		client core_api_bindings.TestExecutionServiceClient,
+		client core_api_bindings.ApiContainerServiceClient,
 		filesArtifactUrls map[services.FilesArtifactID]string) *NetworkContext {
 	return &NetworkContext{
 		mutex: &sync.Mutex{},

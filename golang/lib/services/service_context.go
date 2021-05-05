@@ -15,7 +15,7 @@ type GeneratedFileFilepaths struct {
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type ServiceContext struct {
-	client                                   core_api_bindings.TestExecutionServiceClient
+	client                                   core_api_bindings.ApiContainerServiceClient
 	serviceId                                ServiceID
 	ipAddress                                string
 	testVolumeMountpointOnTestsuiteContainer string
@@ -23,7 +23,7 @@ type ServiceContext struct {
 }
 
 func NewServiceContext(
-		client core_api_bindings.TestExecutionServiceClient,
+		client core_api_bindings.ApiContainerServiceClient,
 		serviceId ServiceID,
 		ipAddress string,
 		testVolumeMountpointOnTestsuiteContainer string,
