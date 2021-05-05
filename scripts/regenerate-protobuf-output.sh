@@ -21,28 +21,18 @@ GOLANG_DIRNAME="golang"
 GO_MOD_FILENAME="go.mod"
 GO_MOD_FILE_MODULE_KEYWORD="module"
 
-# -------------------------------------------- Rust -----------------------------------------------
-RUST_DIRNAME="rust"
-RUST_BINDING_GENERATOR_CMD="rust-protobuf-binding-generator"
-ERRONEOUS_GENERATED_FILENAME="google.protobuf.rs"
-RUST_MOD_FILENAME="mod.rs"
-RUST_FILE_EXT=".rs"
-
 # -------------------------------------------- Shared -----------------------------------------------
 # Each language's file extension so we know what files need deleting before we regenerate bindings
 declare -A FILE_EXTENSIONS
 FILE_EXTENSIONS["${GOLANG_DIRNAME}"]=".go"
-FILE_EXTENSIONS["${RUST_DIRNAME}"]="${RUST_FILE_EXT}"
 
 # Per-lang output locations for core API bindings, RELATIVE TO THE LANG ROOT!
 declare -A CORE_API_OUTPUT_REL_DIRPATHS
 CORE_API_OUTPUT_REL_DIRPATHS["${GOLANG_DIRNAME}"]="lib/core_api_bindings"
-CORE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/core_api_bindings"
 
 # Per-lang output locations for suite API bindings
 declare -A SUITE_API_OUTPUT_REL_DIRPATHS
 SUITE_API_OUTPUT_REL_DIRPATHS["${GOLANG_DIRNAME}"]="lib/rpc_api/bindings"
-SUITE_API_OUTPUT_REL_DIRPATHS["${RUST_DIRNAME}"]="lib/src/rpc_api/bindings"
 
 # Maps path to directories containing Protobuf files RELATIVE TO REPO ROOT -> the name of the map variable containing the per-lang output directories
 declare -A INPUT_REL_DIRPATHS
@@ -96,46 +86,6 @@ generate_golang_bindings() {
     done
 }
 
-# -------------------------------------------- Rust -----------------------------------------------
-generate_rust_bindings() {
-    input_abs_dirpath="${1}"
-    output_rel_dirpath="${2}"
-
-    if ! command -v "${RUST_BINDING_GENERATOR_CMD}" > /dev/null; then
-        echo "Error: No '${RUST_BINDING_GENERATOR_CMD}' command found; you'll need to install it from https://github.com/kurtosis-tech/rust-protobuf-binding-generator" >&2
-        return 1
-    fi
-
-    output_abs_dirpath="${root_dirpath}/${RUST_DIRNAME}/${output_rel_dirpath}"
-    if ! "${RUST_BINDING_GENERATOR_CMD}" "${input_abs_dirpath}" "${output_abs_dirpath}" $(find "${input_abs_dirpath}" -type f -name "*${PROTOBUF_FILE_EXT}"); then
-        echo "Error: An error occurred generating Rust bindings from Protobufs in '${input_abs_dirpath}' to '${output_abs_dirpath}'" >&2
-        exit 1
-    fi
-
-    # Due to https://github.com/danburkert/prost/issues/228#event-4306587537 , an erroneous empty file gets generated
-    # We remove it so as not to confuse the user
-    erroneous_filepath="${output_abs_dirpath}/${ERRONEOUS_GENERATED_FILENAME}"
-    if [ -f "${erroneous_filepath}" ]; then
-        if ! rm "${erroneous_filepath}"; then
-            echo "Warning: Could not remove erroneous file '${erroneous_filepath}'"
-        fi
-    fi
-
-    # Regenerate mod.rs file
-    mod_filepath="${output_abs_dirpath}/${RUST_MOD_FILENAME}"
-    if [ -f "${mod_filepath}" ]; then
-        if ! rm "${mod_filepath}"; then
-            echo "Warning: Could not remove ${RUST_MOD_FILENAME} file for output directory '${output_abs_dirpath}'"
-        fi
-    fi
-    for generated_filepath in $(find "${output_abs_dirpath}" -name "*${RUST_FILE_EXT}" -maxdepth 1); do
-        generated_filename="$(basename "${generated_filepath}")"
-        generated_module="${generated_filename%%${RUST_FILE_EXT}}"
-        echo "pub mod ${generated_module};" >> "${mod_filepath}"
-    done
-}
-
-
 # ------------------------------------------ Shared Code-----------------------------------------------
 # "Schema" of the function provided as a value of this map:
 # generate_XXX_bindings(input_abs_dirpath, output_rel_dirpath) where:
@@ -143,7 +93,6 @@ generate_rust_bindings() {
 #  2. The output_rel_dirpath is a path (relative to the LANG root!!!) where the bindings should be generated
 declare -A generators
 generators["${GOLANG_DIRNAME}"]="generate_golang_bindings"
-generators["${RUST_DIRNAME}"]="generate_rust_bindings"
 
 for input_rel_dirpath in "${!INPUT_REL_DIRPATHS[@]}"; do
     # Name of array containing per-lang output directories where the bindings should be generated

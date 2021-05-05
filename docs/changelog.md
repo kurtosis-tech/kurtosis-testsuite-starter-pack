@@ -3,8 +3,11 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Changes
 * Upgraded Kurtosis Core to TODOOOOOOOOO, which contains backend changes in preparation for some new upcoming features
+* Dropped support for Rust because it's a large burden to maintain and not currently being used
+    * NOTE: This can be resurrected quite quickly if needed
 
 ### Breaking Changes
+* Dropped support for Rust
 * Upgraded to Kurtosis Core TODOOOOOOOOOO (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/))
 * For Go testsuites, `TestSuiteExecutor.Run` no longer takes in a `Context` object
 

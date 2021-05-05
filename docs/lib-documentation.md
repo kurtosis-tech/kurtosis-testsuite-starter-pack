@@ -276,7 +276,7 @@ return customNetwork;
 A [Network][network] implementation that will be passed to [Test.run][test_run]. If you don't have a custom implementation, you can return the [NetworkContext][networkcontext] (which implements [Network][network]).
 
 ### run(N network)
-Executes test logic after [Test.setup][test_setup] has completed. For languages that have explicit error return types (e.g. Go, Rust), returning an error from this function indicates a failure; for languages that don't (e.g. Java), throwing an exception indicates the same. These will be marked in the individual languages' APIs.
+Executes test logic after [Test.setup][test_setup] has completed. For languages that have explicit error return types (e.g. Go), returning an error from this function indicates a failure; for languages that don't (e.g. Java), throwing an exception indicates the same. These will be marked in the individual languages' APIs.
 
 **Args**
 
