@@ -6,12 +6,12 @@ use tonic::transport::Channel;
 use crate::{core_api_bindings::api_container_api::api_container_service_client::ApiContainerServiceClient, networks::network::Network, testsuite::testsuite::TestSuite};
 
 struct TestSetupInfo {
-    network: Rc<dyn Network>,
+    network: Arc<dyn Network>,
     test_name: String,
 }
 
-struct TestSuiteService {
-    suite: Arc<dyn TestSuite>,
+struct TestSuiteService<'obj> {
+    suite: &'obj dyn TestSuite,
 
     // This will only be non-empty after setup is called
     test_setup_info: Arc<Mutex<Option<TestSetupInfo>>>,
@@ -20,8 +20,8 @@ struct TestSuiteService {
     kurtosis_api_client: Option<ApiContainerServiceClient<Channel>>,
 }
 
-impl TestSuiteService {
-    pub fn new(suite: Box<dyn TestSuite>, kurtosis_api_client: Option<ApiContainerServiceClient<Channel>>) -> TestSuiteService {
+impl<'obj> TestSuiteService<'obj> {
+    pub fn new(suite: &'obj dyn TestSuite, kurtosis_api_client: Option<ApiContainerServiceClient<Channel>>) -> TestSuiteService {
         return TestSuiteService{
             suite,
             test_setup_info: Arc::new(Mutex::new(None)),
