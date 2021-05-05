@@ -3,6 +3,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Fixes
 * Fixed bug in bootstrapper script when providing a relative output directory
+* Fixed broken link in quickstart instructions in README
 
 # 1.23.0
 ### Features
