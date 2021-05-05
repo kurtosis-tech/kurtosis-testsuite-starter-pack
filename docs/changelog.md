@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Fixes
+* Fixed bug in bootstrapper script when providing a relative output directory
 
 # 1.23.0
 ### Features

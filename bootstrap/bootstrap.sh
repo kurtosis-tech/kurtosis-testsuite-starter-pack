@@ -208,7 +208,7 @@ if ! git init; then
     echo "Error: Could not initialize the new repo as a Git repository" >&2
     exit 1
 fi
-if ! git add . "${output_dirpath}"; then
+if ! git add .; then
     echo "Error: Could not stage files in new repo for committing" >&2
     exit 1
 fi
