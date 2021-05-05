@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.24.0
 ### Changes
 * Upgraded Kurtosis Core to 1.14, which contains backend changes in preparation for some new upcoming features
 * Dropped support for Rust because it's a large burden to maintain and not currently being used
