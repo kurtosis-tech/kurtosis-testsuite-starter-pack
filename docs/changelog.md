@@ -2,6 +2,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.24.1
+### Fixes
+* Fixed bug in bootstrapper script when providing a relative output directory
+
 # 1.24.0
 ### Changes
 * Upgraded Kurtosis Core to 1.14, which contains backend changes in preparation for some new upcoming features
