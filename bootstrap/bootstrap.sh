@@ -48,8 +48,9 @@ done < "${supported_langs_filepath}"
 
 show_help_and_exit() {
     echo ""
-    echo "Usage: $(basename "${0}") lang new_repo_dirpath"
+    echo "Usage: $(basename "${0}") lang new_repo_dirpath testsuite_image_name"
     echo ""
+    # NOTE: We *could* extract the arg names to variables since they're repeated, but then we wouldn't be able to visually align the indentation here
     echo "  lang                  Language that the new testsuite repo should be in ($(paste -sd '|' "${supported_langs_filepath}"))"
     echo "  new_repo_dirpath      Path to new dirpath where the testsuite repo should be created"
     echo "  testsuite_image_name  Name of the Docker image that will be built to contain the testsuite (must match regex [${ALLOWED_IMAGE_NAME_CHARS}]+, e.g. 'my-test-image')"
@@ -217,4 +218,6 @@ if ! git commit -m "Initial commit" > /dev/null; then
     exit 1
 fi
 
-echo "Bootstrap successful! Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
+echo "Bootstrap successful!"
+echo " - Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
+echo " - To continue with the quickstart, head back to the quickstart steps: https://github.com/kurtosis-tech/kurtosis-libs/tree/master#testsuite-quickstart"
