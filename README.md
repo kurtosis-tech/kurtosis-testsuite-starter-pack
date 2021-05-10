@@ -14,7 +14,7 @@ Prerequisites:
 * `docker` installed on your machine
 
 Quickstart steps:
-1. Clone this repo's `master` branch: `git clone --single-branch --branch master $THIS_REPO_URL`
+1. Clone this repo's `master` branch: `git clone --single-branch --branch master git@github.com:kurtosis-tech/kurtosis-libs.git`
 1. View [the supported languages](https://github.com/kurtosis-tech/kurtosis-libs/blob/master/supported-languages.txt) and choose the language you'd like your testsuite in
 1. Run `bootstrap/bootstrap.sh` and follow the helptext instructions to bootstrap your repo
 1. If you see error messages after running your new testsuite, check out [the guide for debugging failed tests](https://docs.kurtosistech.com/kurtosis-core/debugging-failed-tests) which contains solutions to common issues. If this still doesn't resolve your issue, feel free to ask for help in [the Kurtosis Discord server](https://discord.gg/6Jjp9c89z9)
