@@ -4,6 +4,11 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 ### Features
 * Added a CI check to verify that all the links in Markdown files point to the correct location
 
+### Fixes
+* Fixed an issue with the bootstrap helptext missing a flag
+* Made bootstrap point back to the quickstart flow
+* Simplified the quickstart flow to include error-checking and proceeding to testsuite customization
+
 # 1.24.1
 ### Fixes
 * Fixed bug in bootstrapper script when providing a relative output directory
