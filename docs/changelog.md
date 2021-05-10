@@ -1,6 +1,9 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Made the `git clone` command in the quickstart copy-pasteable by filling in `$THIS_REPO_URL`
+
 ### Features
 * Added a CI check to verify that all the links in Markdown files point to the correct location
 
