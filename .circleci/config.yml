@@ -64,6 +64,12 @@ workflows:
               ignore:
                 - develop
                 - master
+      - check_docs:
+          filters:
+            branches:
+              ignore:
+                - develop
+                - master
 
       # ============== Jobs that run upon release ==================
       # Bootstrap validation needs to happen upon release because bootstrapping
