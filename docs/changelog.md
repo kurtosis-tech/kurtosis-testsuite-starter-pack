@@ -11,6 +11,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 * Fixed an issue with the bootstrap helptext missing a flag
 * Made bootstrap point back to the quickstart flow
 * Simplified the quickstart flow to include error-checking and proceeding to testsuite customization
+* Added clarification to the previously-terse descriptions of the bootstrap script args
 
 # 1.24.1
 ### Fixes
