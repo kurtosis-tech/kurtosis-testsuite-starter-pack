@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added a CI check to verify that all the links in Markdown files point to the correct location
 
 # 1.24.1
 ### Fixes
