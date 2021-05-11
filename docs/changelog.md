@@ -1,6 +1,9 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Harden `validate-all-bootstraps` error-checking
+
 ### Fixes
 * Fix an error with bootstrap script where it would pull an old version of `kurtosis-libs` if a new version had just been released
 * Fix an error in `validate-all-bootstraps` script
