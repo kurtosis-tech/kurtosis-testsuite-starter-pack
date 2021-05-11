@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.24.3
 ### Changes
 * Harden `validate-all-bootstraps` error-checking
 
