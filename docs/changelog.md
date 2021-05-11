@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.24.2
 ### Changes
 * Made the `git clone` command in the quickstart copy-pasteable by filling in `$THIS_REPO_URL`
 * Make the command to run the new testsuite after a bootstrap use `parallelism=1`, so the user can get immediate feedback that things are running
