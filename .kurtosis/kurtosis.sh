@@ -18,7 +18,7 @@ set -euo pipefail
 # Can make this configurable if needed
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-KURTOSIS_CORE_TAG="mieubrisse_fix-intermittent-failure"
+KURTOSIS_CORE_TAG="1.14"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_TAG}"
 API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_TAG}"
@@ -211,10 +211,13 @@ if ! mkdir -p "${KURTOSIS_DIRPATH}"; then
 fi
 
 if ! execution_uuid="$(uuidgen)"; then
-    echo "ERROR: Failed to generate a UUID for identifying this run of Kurtosis"
+    echo "ERROR: Failed to generate a UUID for identifying this run of Kurtosis" >&2
     exit 1
 fi
-execution_uuid="${execution_uuid^^}"
+if ! execution_uuid="$(echo "${execution_uuid}" | tr '[:lower:]' '[:upper:]')"; then
+    echo "ERROR: Failed to uppercase execution instance UUID" >&2
+    exit 1
+fi
 
 docker run \
     --name "${execution_uuid}__initializer" \

@@ -9,6 +9,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 * Added a CI check to verify that all the links in Markdown files point to the correct location
 
 ### Fixes
+* Upgraded `kurtosis.sh` to latest version to fix bug with UUID uppercasing failing in Zshell
 * Fixed an occasional failure due to the initializer trying to connect to the testsuite container before it's ready
 * Fixed an issue with the bootstrap helptext missing a flag
 * Made bootstrap point back to the quickstart flow
