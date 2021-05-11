@@ -15,6 +15,9 @@ KURTOSIS_LIB_MODULE="github.com/kurtosis-tech/kurtosis-libs/golang"
 # Instead, we add this suffix and delete the backup files after
 SED_INPLACE_FILE_SUFFIX=".sedreplace"
 
+# If we don't specify this, sometimes 'go get' inexplicably gets old versions
+KURTOSIS_LIBS_MODULE_BRANCH="master"
+
 # =============================================================================
 #                             Arg-Parsing & Validation
 # =============================================================================
@@ -84,7 +87,7 @@ fi
 
 # TODO Just modify the go.mod file, so that we don't need 'go' installed on the machine
 # Lastly, depend on the actual Kurtosis library
-if ! ( cd "${output_dirpath}" && go get "${KURTOSIS_LIB_MODULE}" ); then
+if ! ( cd "${output_dirpath}" && go get "${KURTOSIS_LIB_MODULE}@master" ); then
     echo "Error: Failed to pull Kurtosis Go lib dependency '${KURTOSIS_LIB_MODULE}'" >&2
     exit 1
 fi
