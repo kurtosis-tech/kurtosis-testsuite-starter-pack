@@ -38,6 +38,10 @@ func NewTestSuiteService(suite testsuite.TestSuite, kurtosisApiClient core_api_b
 	}
 }
 
+func (service TestSuiteService) IsAvailable(_ context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
+}
+
 func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty *emptypb.Empty) (*bindings.TestSuiteMetadata, error) {
 	allTestMetadata := map[string]*bindings.TestMetadata{}
 	for testName, test := range service.suite.GetTests() {
