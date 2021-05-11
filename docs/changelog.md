@@ -3,6 +3,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Changes
 * Made the `git clone` command in the quickstart copy-pasteable by filling in `$THIS_REPO_URL`
+* Make the command to run the new testsuite after a bootstrap use `parallelism=1`, so the user can get immediate feedback that things are running
 
 ### Features
 * Added a CI check to verify that all the links in Markdown files point to the correct location

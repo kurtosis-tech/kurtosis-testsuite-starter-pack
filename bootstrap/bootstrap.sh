@@ -223,5 +223,6 @@ if ! git commit -m "Initial commit" > /dev/null; then
 fi
 
 echo "Bootstrap successful!"
-echo " - Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
+# NOTE: We use parallelism=1 so that users get live-streaming log feedback, and are reassured that the testsuite is running
+echo " - Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all --parallelism 1'"
 echo " - To continue with the quickstart, head back to the quickstart steps: https://github.com/kurtosis-tech/kurtosis-libs/tree/master#testsuite-quickstart"
