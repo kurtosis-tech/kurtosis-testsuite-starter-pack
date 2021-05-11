@@ -2,6 +2,14 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.24.3
+### Changes
+* Harden `validate-all-bootstraps` error-checking
+
+### Fixes
+* Fix an error with bootstrap script where it would pull an old version of `kurtosis-libs` if a new version had just been released
+* Fix an error in `validate-all-bootstraps` script
+
 # 1.24.2
 ### Changes
 * Made the `git clone` command in the quickstart copy-pasteable by filling in `$THIS_REPO_URL`
