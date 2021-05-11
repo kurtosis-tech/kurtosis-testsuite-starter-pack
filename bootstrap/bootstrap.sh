@@ -48,11 +48,16 @@ done < "${supported_langs_filepath}"
 
 show_help_and_exit() {
     echo ""
-    echo "Usage: $(basename "${0}") lang new_repo_dirpath"
+    echo "Usage: $(basename "${0}") lang new_repo_dirpath testsuite_image_name"
     echo ""
-    echo "  lang                  Language that the new testsuite repo should be in ($(paste -sd '|' "${supported_langs_filepath}"))"
-    echo "  new_repo_dirpath      Path to new dirpath where the testsuite repo should be created"
-    echo "  testsuite_image_name  Name of the Docker image that will be built to contain the testsuite (must match regex [${ALLOWED_IMAGE_NAME_CHARS}]+, e.g. 'my-test-image')"
+    # NOTE: We *could* extract the arg names to variables since they're repeated, but then we wouldn't be able to visually align the indentation here
+    echo "  lang                  Language that you want to write your tests in (choices: $(paste -sd '|' "${supported_langs_filepath}"))."
+    echo "  new_repo_dirpath      Your new testsuite will be a repo of its own that you'll commit to your version control. This is the path where the bootstrap script"
+    echo "                        should create the new testsuite's repo directory. This path should either a) not exist or b) be an empty directory, as the "
+    echo "                        bootstrap will fill it."
+    echo "  testsuite_image_name  Every testsuite runs inside a Docker image, so building your testsuite means producing a Docker image containing your testsuite "
+    echo "                        code. This is the name of the Docker image that building your testsuite repo will produce. This image should not exist yet, as"
+    echo "                        building the testsuite will create it. The image name must match the regex [${ALLOWED_IMAGE_NAME_CHARS}]+ (e.g. 'my-test-image')."
     echo ""
     exit 1  # Exit with an error so CI fails if this was accidentally called
 }
@@ -217,4 +222,7 @@ if ! git commit -m "Initial commit" > /dev/null; then
     exit 1
 fi
 
-echo "Bootstrap successful! Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all'"
+echo "Bootstrap successful!"
+# NOTE: We use parallelism=1 so that users get live-streaming log feedback, and are reassured that the testsuite is running
+echo " - Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all --parallelism 1'"
+echo " - To continue with the quickstart, head back to the quickstart steps: https://github.com/kurtosis-tech/kurtosis-libs/tree/master#testsuite-quickstart"

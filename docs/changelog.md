@@ -2,6 +2,24 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.24.2
+### Changes
+* Made the `git clone` command in the quickstart copy-pasteable by filling in `$THIS_REPO_URL`
+* Make the command to run the new testsuite after a bootstrap use `parallelism=1`, so the user can get immediate feedback that things are running
+
+### Features
+* Added a CI check to verify that all the links in Markdown files point to the correct location
+
+### Fixes
+* Upgraded `kurtosis.sh` to latest version to fix bug with UUID uppercasing failing in Zshell
+* Fixed an occasional failure due to the initializer trying to connect to the testsuite container before it's ready
+* Fixed an issue with the bootstrap helptext missing a flag
+* Made bootstrap point back to the quickstart flow
+* Simplified the quickstart flow to include error-checking and proceeding to testsuite customization
+* Added clarification to the previously-terse descriptions of the bootstrap script args
+* Clarified that you shouldn't prefix `https://` when specifying the Go module
+* Fixed indentation bug in bootstrap script
+
 # 1.24.1
 ### Fixes
 * Fixed bug in bootstrapper script when providing a relative output directory
