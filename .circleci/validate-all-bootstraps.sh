@@ -62,7 +62,7 @@ if ! docker login -u "${docker_username}" -p "${docker_password_DO_NOT_LOG}"; th
 fi
 
 # Git needs to be initialized, since the bootstrap will create a new Git repo and commit to it
-if ! [ git config --list | grep "${GIT_USER_EMAIL_PROPERTY}" ] || ! [ git config --list | grep "${GIT_USER_NAME_PROPERTY}" ]; then
+if ! git config --list | grep "${GIT_USER_EMAIL_PROPERTY}" || ! git config --list | grep "${GIT_USER_NAME_PROPERTY}"; then
     git config --global "${GIT_USER_EMAIL_PROPERTY}" "bootstrap-tester@test.com"
     git config --global "${GIT_USER_NAME_PROPERTY}" "Bootstrap Tester"
 fi
