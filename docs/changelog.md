@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Added several clarifications to the bootstrap onboarding process after a user research session
 
 # 1.24.3
 ### Changes
