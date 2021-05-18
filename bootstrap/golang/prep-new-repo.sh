@@ -56,10 +56,9 @@ cp -r "${input_dirpath}/${TESTSUITE_IMPL_DIRNAME}" "${output_dirpath}/"
 # =============================================================================
 # Allow setting the module name programatically, for testing in CI
 new_module_name="${GO_NEW_MODULE_NAME:-}"
-echo "Below you'll enter the URL of the repo on Github that you will commit your new testsuite's code to, WITHOUT the"
-echo "  leading 'https://' - e.g. 'github.com/my-org/my-repo'."
-echo "If you haven't created a Github repo to contain your new testsuite, you should do so now so that you can enter"
-echo "  the value here."
+echo "Go uses Github as a its dependency management store. You'll now need to:"
+echo "  1) Create a new Github repo to contain your testsuite, if you don't have one already"
+echo "  2) Enter the URL of the repo on Github WITHOUT the leading 'https://' below (e.g. 'github.com/my-org/my-repo')"
 echo "NOTE: This value is technically the Go module name. If you're unfamiliar with what this is, you can read more here: https://golang.org/ref/mod"
 echo ""
 while [ -z "${new_module_name}" ]; do

@@ -52,9 +52,9 @@ show_help_and_exit() {
     echo ""
     # NOTE: We *could* extract the arg names to variables since they're repeated, but then we wouldn't be able to visually align the indentation here
     echo "  lang                  Language that you want to write your tests in (choices: $(paste -sd '|' "${supported_langs_filepath}"))."
-    echo "  new_repo_dirpath      Your new testsuite will be a repo of its own that you'll commit to your version control. This is the path where the bootstrap script"
-    echo "                        should create the new testsuite's repo directory. This path should either a) not exist or b) be an empty directory, as the "
-    echo "                        bootstrap will fill it."
+    echo "  new_repo_dirpath      Your new testsuite will be a repo of its own that you'll commit to your version control. This path is  where the bootstrap script"
+    echo "                        will create the directory to contain the new testsuite's repo, and you should put it wherever you keep your code repos (e.g. "
+    echo "                        /path/to/your/code/repos/my-new-testsuite). This path shouldn't exist yet, as the bootstrap will fill it."
     echo "  testsuite_image_name  Every testsuite runs inside a Docker image, so building your testsuite means producing a Docker image containing your testsuite "
     echo "                        code. This is the name of the Docker image that building your testsuite repo will produce. This image should not exist yet, as"
     echo "                        building the testsuite will create it. The image name must match the regex [${ALLOWED_IMAGE_NAME_CHARS}]+ (e.g. 'my-test-image')."
@@ -224,5 +224,5 @@ fi
 
 echo "Bootstrap successful!"
 # NOTE: We use parallelism=1 so that users get live-streaming log feedback, and are reassured that the testsuite is running
-echo " - Your new testsuite can be run with 'bash ${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME} all --parallelism 1'"
+echo " - Your new testsuite can be run with 'bash \"${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME}\" all --parallelism 1'"
 echo " - To continue with the quickstart, head back to the quickstart steps: https://github.com/kurtosis-tech/kurtosis-libs/tree/master#testsuite-quickstart"
