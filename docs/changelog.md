@@ -3,6 +3,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Changes
 * Added several clarifications to the bootstrap onboarding process after a user research session
+* Renamed --test-suite-log-level flag to kurtosis.sh to be --suite-log-level
+
+### Breaking Changes
+* The flag to set the testsuite's log level has been renamed from --test-suite-log-level -> --suite-log-level
 
 # 1.24.3
 ### Changes
