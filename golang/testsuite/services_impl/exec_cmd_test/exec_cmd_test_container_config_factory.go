@@ -1,6 +1,6 @@
 package exec_cmd_test
 
-import "github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+import "github.com/kurtosis-tech/kurtosis-client/golang/services"
 
 const (
 	testVolumeMountpoint = "/test-volume"

@@ -6,7 +6,7 @@
 package advanced_network_test
 
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"

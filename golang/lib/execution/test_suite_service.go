@@ -2,8 +2,8 @@ package execution
 
 import (
 	"context"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
+	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/palantir/stacktrace"
