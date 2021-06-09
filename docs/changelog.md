@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Extract communications with the API container into the [Kurtosis Client](https://github.com/kurtosis-tech/kurtosis-client) library
 
 # 1.25.0
 ### Changes
