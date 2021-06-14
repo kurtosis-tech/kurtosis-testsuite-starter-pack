@@ -12,7 +12,9 @@ fi
 action="${1:-}"
 shift 1
 
-### Add Docker images for the services you want to test to this map, as in "myCustomServiceImage"
+## NEW USER ONBOARDING:
+## - Add the Docker image tag for a service you want to test to this map by modifying "<image-tag-fill-me-in".
+## - Change "myCustomServiceImage" to a name that reflects your actual service.
 custom_params_json='{
     "myCustomServiceImage": "<image-tag-fill-me-in>",
     "apiServiceImage" :"'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_api",

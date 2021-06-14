@@ -44,7 +44,15 @@ func (t ExampleTestsuiteConfigurator) ParseParamsAndCreateSuite(paramsJsonStr st
 		return nil, stacktrace.Propagate(err, "An error occurred validating the deserialized testsuite params")
 	}
 
-	suite := testsuite_impl.NewExampleTestsuite(args.ApiServiceImage, args.DatastoreServiceImage, args.IsKurtosisCoreDevMode)
+	/*
+		NEW USER ONBOARDING:
+		- Change the "MyCustomServiceImage" argument here to your own actual custom service image.
+	*/
+	suite := testsuite_impl.NewExampleTestsuite(
+		args.MyCustomServiceImage,
+		args.ApiServiceImage,
+		args.DatastoreServiceImage,
+		args.IsKurtosisCoreDevMode)
 	return suite, nil
 }
 
@@ -55,6 +63,10 @@ func validateArgs(args ExampleTestsuiteArgs) error {
 	if strings.TrimSpace(args.DatastoreServiceImage) == "" {
 		return stacktrace.NewError("Datastore service image is empty")
 	}
+	/*
+		NEW USER ONBOARDING:
+		- Change the "MyCustomServiceImage" argument here to your own actual custom service image.
+	*/
 	if strings.TrimSpace(args.MyCustomServiceImage) == "" {
 		return stacktrace.NewError("Custom service image is empty.")
 	}

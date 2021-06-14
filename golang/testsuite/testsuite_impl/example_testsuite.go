@@ -16,13 +16,14 @@ import (
 )
 
 type ExampleTestsuite struct {
+	myCustomServiceImage string
 	apiServiceImage string
 	datastoreServiceImage string
 	isKurtosisCoreDevMode bool
 }
 
-func NewExampleTestsuite(apiServiceImage string, datastoreServiceImage string, isKurtosisCoreDevMode bool) *ExampleTestsuite {
-	return &ExampleTestsuite{apiServiceImage: apiServiceImage, datastoreServiceImage: datastoreServiceImage, isKurtosisCoreDevMode: isKurtosisCoreDevMode}
+func NewExampleTestsuite(myCustomServiceImage string, apiServiceImage string, datastoreServiceImage string, isKurtosisCoreDevMode bool) *ExampleTestsuite {
+	return &ExampleTestsuite{myCustomServiceImage: myCustomServiceImage, apiServiceImage: apiServiceImage, datastoreServiceImage: datastoreServiceImage, isKurtosisCoreDevMode: isKurtosisCoreDevMode}
 }
 
 func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
