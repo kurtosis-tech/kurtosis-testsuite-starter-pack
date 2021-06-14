@@ -12,9 +12,11 @@ fi
 action="${1:-}"
 shift 1
 
+### Add Docker images for the services you want to test to this map, as in "myCustomServiceImage"
 custom_params_json='{
     "apiServiceImage" :"'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_api",
     "datastoreServiceImage": "'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_datastore",
+    "myCustomServiceImage": "<image-tag-fill-me-in>",
     "isKurtosisCoreDevMode": true
 }'
 
