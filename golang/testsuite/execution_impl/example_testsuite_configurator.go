@@ -55,5 +55,8 @@ func validateArgs(args ExampleTestsuiteArgs) error {
 	if strings.TrimSpace(args.DatastoreServiceImage) == "" {
 		return stacktrace.NewError("Datastore service image is empty")
 	}
+	if strings.TrimSpace(args.MyCustomServiceImage) == "" {
+		return stacktrace.NewError("Custom service image is empty.")
+	}
 	return nil
 }

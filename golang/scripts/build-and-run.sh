@@ -17,7 +17,7 @@ custom_params_json='{
     "myCustomServiceImage": "<image-tag-fill-me-in>",
     "apiServiceImage" :"'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_api",
     "datastoreServiceImage": "'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_datastore",
-    "isKurtosisCoreDevMode": true
+    "isKurtosisCoreDevMode": false
 }'
 
 bash "${repo_root_dirpath}/.kurtosis/build-and-run-core.sh" \
