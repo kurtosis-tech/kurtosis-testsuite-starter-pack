@@ -12,10 +12,11 @@ fi
 action="${1:-}"
 shift 1
 
+## NEW USER ONBOARDING:
+## - Add the Docker image tag for a service you want to test to this map by modifying the placeholder 'nginx'".
+## - Change "myCustomServiceImage" to a name that reflects your actual service.
 custom_params_json='{
-    "apiServiceImage" :"'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_api",
-    "datastoreServiceImage": "'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_datastore",
-    "isKurtosisCoreDevMode": true
+    "myCustomServiceImage": "nginx"
 }'
 
 bash "${repo_root_dirpath}/.kurtosis/build-and-run-core.sh" \
