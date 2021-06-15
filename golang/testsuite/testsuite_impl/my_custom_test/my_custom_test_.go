@@ -2,6 +2,7 @@ package my_custom_test
 /*
 	NEW USER ONBOARDING:
 	- Rename this package, this file, and the containing directory to reflect the functionality of your custom test.
+	- Rename constants, structs, properties, and variables to reflect your new service name.
 */
 import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
