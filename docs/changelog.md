@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Added an empty example test with empty service for use in onboarding
 
 # 1.25.0
 ### Changes
