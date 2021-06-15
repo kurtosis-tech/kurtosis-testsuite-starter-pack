@@ -48,21 +48,11 @@ func (t ExampleTestsuiteConfigurator) ParseParamsAndCreateSuite(paramsJsonStr st
 		NEW USER ONBOARDING:
 		- Change the "MyCustomServiceImage" argument here to your own actual custom service image.
 	*/
-	suite := testsuite_impl.NewExampleTestsuite(
-		args.MyCustomServiceImage,
-		args.ApiServiceImage,
-		args.DatastoreServiceImage,
-		args.IsKurtosisCoreDevMode)
+	suite := testsuite_impl.NewExampleTestsuite(args.MyCustomServiceImage)
 	return suite, nil
 }
 
 func validateArgs(args ExampleTestsuiteArgs) error {
-	if strings.TrimSpace(args.ApiServiceImage) == "" {
-		return stacktrace.NewError("API service image is empty")
-	}
-	if strings.TrimSpace(args.DatastoreServiceImage) == "" {
-		return stacktrace.NewError("Datastore service image is empty")
-	}
 	/*
 		NEW USER ONBOARDING:
 		- Change the "MyCustomServiceImage" argument here to your own actual custom service image.

@@ -5,8 +5,8 @@ package my_custom_test
 	- Rename constants, structs, properties, and variables to reflect your new service name.
 */
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/networks"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/my_custom_service"
 	"github.com/palantir/stacktrace"
@@ -23,6 +23,10 @@ const (
 
 type MyCustomTest struct {
 	MyCustomServiceImage string
+}
+
+func NewMyCustomTest(image string) *MyCustomTest {
+	return &MyCustomTest{MyCustomServiceImage: image}
 }
 
 func (test MyCustomTest) Configure(builder *testsuite.TestConfigurationBuilder) {

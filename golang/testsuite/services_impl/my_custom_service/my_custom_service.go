@@ -6,7 +6,7 @@ package my_custom_service
 */
 
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/services"
+	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 )
 
 
