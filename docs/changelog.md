@@ -2,7 +2,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 ### Changes
-* Added an empty example test with empty service for use in onboarding
+* Extract communications with the API container into the [Kurtosis Client](https://github.com/kurtosis-tech/kurtosis-client) library
 
 # 1.25.0
 ### Changes
