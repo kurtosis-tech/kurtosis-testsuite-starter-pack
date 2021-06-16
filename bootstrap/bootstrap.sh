@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${0}")" && pwd)"
 repo_root_dirpath="$(dirname "${script_dirpath}")"
