@@ -1,7 +1,7 @@
 package execution
 
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/core_api_bindings"
+	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/rpc_api_consts"
 	"github.com/kurtosis-tech/minimal-grpc-server/server"

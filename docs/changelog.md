@@ -2,6 +2,13 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.25.1
+### Changes
+* Extract communications with the API container into the [Kurtosis Client](https://github.com/kurtosis-tech/kurtosis-client) library
+
+### Fixes
+* Added `#!/usr/bin/env bash` to shell scripts to fix Bash vs Zsh compatibility issues
+
 # 1.25.0
 ### Changes
 * Added several clarifications to the bootstrap onboarding process after a user research session
