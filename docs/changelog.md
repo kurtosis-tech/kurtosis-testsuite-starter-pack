@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Replaced the core of `regenerate-protobuf-bindings.sh` with the Protobuf generation script from the Kurtosis devtools repo
 
 # 1.25.1
 ### Changes
