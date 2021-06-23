@@ -1,6 +1,11 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Regenerate testsuite API Golang Protobuf bindings using latest generation method in `developer-tools` repo
+
+### Breaking Changes
+* Regenerated Protobuf bindings for testsuite API
 
 # 1.26.0
 ### Changes
