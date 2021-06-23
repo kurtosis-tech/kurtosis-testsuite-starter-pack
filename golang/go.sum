@@ -40,6 +40,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.3/go.mod h1:T0+1ngSBFLxv
 github.com/kurtosis-tech/kurtosis-client v0.0.0-20210609143139-cb8f6346f0ba h1:cVuIys4+TRWm4hnd6C2zueNnl+2xnvCb2QRT89w/sko=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210609143139-cb8f6346f0ba h1:c0NkBNta0t60tcdRnPqVSRyaoEp0KcLgKVuT0CE0DQk=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210609143139-cb8f6346f0ba/go.mod h1:degxAH35Ut7M3Ec4E2LtYk7Yun+kRqtROEzXJpzgyqM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210623231509-bb07b900f4cb h1:hSWT6ThlKT2RCBFrfLWnJTimYf3ns7Nf6wY8swbBaSc=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210623231509-bb07b900f4cb/go.mod h1:degxAH35Ut7M3Ec4E2LtYk7Yun+kRqtROEzXJpzgyqM=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182448-6e0cb7cfb568 h1:lGc2NaGKb5ypqwBEMT6QmuvEgckqL6khIkRKVgH1G5Y=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182448-6e0cb7cfb568/go.mod h1:/XcImLhsJTy+xD9xN9t6eV8ASM9s/OU5g/KqBb8DCEg=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b h1:nT5nOiGX2r02IYaQDQ81PHKcLssLcXuRNjzNCpGL6PU=

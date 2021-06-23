@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/golang/protobuf v1.5.2
 	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
-	github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210609143139-cb8f6346f0ba // indirect
+	github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210623231509-bb07b900f4cb // indirect
 	github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b // indirect
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/sirupsen/logrus v1.8.1
