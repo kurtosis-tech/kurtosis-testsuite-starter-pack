@@ -3,6 +3,14 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Changes
 * Replaced the core of `regenerate-protobuf-bindings.sh` with the Protobuf generation script from the Kurtosis devtools repo
+* Renames the `--test-suite-log-level` flag to `--suite-log-level`, for easier remembering
+
+### Fixes
+* Fixed a bug (via upgrade to Kurtosis Core 1.15) where tests that exceed the timeout would hang Kurtosis indefinitely
+
+### Breaking Changes
+* Renamed the `--test-suite-log-level` flag to `--suite-log-level`
+* Upgraded to Kurtosis Core 1.15 (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/)), which:
 
 # 1.25.1
 ### Changes
