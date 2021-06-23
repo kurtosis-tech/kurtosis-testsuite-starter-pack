@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.26.0
 ### Changes
 * Replaced the core of `regenerate-protobuf-bindings.sh` with the Protobuf generation script from the Kurtosis devtools repo
 * Renames the `--test-suite-log-level` flag to `--suite-log-level`, for easier remembering
