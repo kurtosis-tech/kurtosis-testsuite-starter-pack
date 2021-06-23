@@ -2,6 +2,11 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.26.1
+### Changes
+* Regenerate testsuite API Golang Protobuf bindings using latest generation method in `developer-tools` repo
+* Upgraded to Kurtosis Client 0.2.0
+
 # 1.26.0
 ### Changes
 * Replaced the core of `regenerate-protobuf-bindings.sh` with the Protobuf generation script from the Kurtosis devtools repo

@@ -18,6 +18,9 @@ type testSetupInfo struct {
 }
 
 type TestSuiteService struct {
+	// This embedding is required by gRPC
+	bindings.UnimplementedTestSuiteServiceServer
+
 	suite testsuite.TestSuite
 
 	// This will only be non-empty after SetupTest is called
