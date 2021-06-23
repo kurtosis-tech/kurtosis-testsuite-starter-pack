@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.26.1
 ### Changes
 * Regenerate testsuite API Golang Protobuf bindings using latest generation method in `developer-tools` repo
 * Upgraded to Kurtosis Client 0.2.0
