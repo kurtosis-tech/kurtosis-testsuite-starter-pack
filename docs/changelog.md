@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added new test `check_service_availability` in test suite. It uses a new client method to test service availability.
 
 # 1.26.1
 ### Changes
