@@ -6,20 +6,17 @@
 package basic_datastore_test
 
 import (
+	"github.com/kurtosis-tech/example-microservice/datastore/client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
-
-	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxPolls = 15
 
 	testKey = "test-key"
 	testValue = "test-value"
@@ -39,13 +36,20 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	_, hostPortBindings, availabilityChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	service, hostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
-	if err := availabilityChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxPolls); err != nil {
+
+	// Necessary again due to no Go generics
+	castedService := service.(*datastore.DatastoreService)
+
+	datastoreClient := client.NewDatastoreClient(castedService.GetIPAddress(), datastoreConfigFactory.GetPort())
+
+	if(!datastoreClient.IsAvailable()){
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
+
 	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 	return networkCtx, nil
 }
@@ -61,9 +65,11 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 
 	// Necessary again due to no Go generics
 	castedService := uncastedService.(*datastore.DatastoreService)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
+	datastoreClient := client.NewDatastoreClient(castedService.GetIPAddress(), datastoreConfigFactory.GetPort())
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
-	exists, err := castedService.Exists(testKey)
+	exists, err := datastoreClient.Exists(testKey)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred checking if the test key exists")
 	}
@@ -73,13 +79,13 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 	logrus.Infof("Confirmed that key '%v' doesn't already exist", testKey)
 
 	logrus.Infof("Inserting value '%v' at key '%v'...", testKey, testValue)
-	if err := castedService.Upsert(testKey, testValue); err != nil {
+	if err := datastoreClient.Upsert(testKey, testValue); err != nil {
 		return stacktrace.Propagate(err, "An error occurred upserting the test key")
 	}
 	logrus.Infof("Inserted value successfully")
 
 	logrus.Infof("Getting the key we just inserted to verify the value...")
-	value, err := castedService.Get(testKey)
+	value, err := datastoreClient.Get(testKey)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test key after upload")
 	}
