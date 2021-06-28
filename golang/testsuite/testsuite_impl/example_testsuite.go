@@ -10,10 +10,10 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/advanced_network_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/check_service_availability_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/exec_command_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/files_artifact_mounting_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/network_partition_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/wait_for_endpoint_availability_test"
 )
 
 type ExampleTestsuite struct {
@@ -37,7 +37,7 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
 		),
-		"checkServiceAvailabilityTest": check_service_availability_test.NewCheckServiceAvailabilityTest(suite.datastoreServiceImage),
+		"waitForEndpointAvailabilityTest": wait_for_endpoint_availability_test.NewWaitForEnpointAvailabilityTest(suite.datastoreServiceImage),
 	}
 
 	// This example Go testsuite is used internally, when developing on Kurtosis Core, to verify functionality

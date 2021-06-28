@@ -80,7 +80,7 @@ Repartitions the network so that the connections between services match the spec
 * `partitionConnections`: Definitions of the connection state between the new partitions. If a connection between two partitions isn't defined in this map, the default connection will be used. Connections are not directional, so an error will be thrown if the same connection is defined twice (e.g. `Map[A][B] = someConnectionInfo`, and `Map[B][A] = otherConnectionInfo`).
 * `defaultConnection`: The network state between two partitions that will be used if the connection isn't defined in the partition connections map.
 
-### checkServiceAvailability(ServiceID serviceId, uint32 port, String path, uint32 initialDelaySeconds, uint32 retries, uint32 retriesDelayMilliseconds, String bodyText)
+### waitForEndpointAvailability(ServiceID serviceId, uint32 port, String path, uint32 initialDelaySeconds, uint32 retries, uint32 retriesDelayMilliseconds, String bodyText)
 Checks if a service is available. It executes several HTTP calls to and specific endpoint that has to be set with the arguments
 
 **Args**

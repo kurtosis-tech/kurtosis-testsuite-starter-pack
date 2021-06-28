@@ -3,7 +3,7 @@
  * All Rights Reserved.
  */
 
-package check_service_availability_test
+package wait_for_endpoint_availability_test
 
 import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
@@ -12,7 +12,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"strconv"
 )
 const (
 	datastoreServiceId services.ServiceID = "datastore"
@@ -22,22 +21,23 @@ const (
 
 	waitForStartupTimeBetweenPolls = 1
 	waitForStartupMaxPolls = 15
+	waitInitialDelaySeconds = 1
 )
 
 
-type CheckServiceAvailabilityTest struct {
+type WaitForEndpointAbailabilityTest struct {
 	datastoreImage string
 }
 
-func NewCheckServiceAvailabilityTest(datastoreImage string) *CheckServiceAvailabilityTest {
-	return &CheckServiceAvailabilityTest{datastoreImage: datastoreImage}
+func NewWaitForEnpointAvailabilityTest(datastoreImage string) *WaitForEndpointAbailabilityTest {
+	return &WaitForEndpointAbailabilityTest{datastoreImage: datastoreImage}
 }
 
-func (test CheckServiceAvailabilityTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+func (test WaitForEndpointAbailabilityTest) Configure(builder *testsuite.TestConfigurationBuilder) {
 	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
 }
 
-func (test CheckServiceAvailabilityTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
+func (test WaitForEndpointAbailabilityTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
 	_, hostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
@@ -48,15 +48,14 @@ func (test CheckServiceAvailabilityTest) Setup(networkCtx *networks.NetworkConte
 	return networkCtx, nil
 }
 
-func (test CheckServiceAvailabilityTest) Run(network networks.Network) error {
+func (test WaitForEndpointAbailabilityTest) Run(network networks.Network) error {
 	// Necessary because Go doesn't have generics
 	castedNetwork := network.(*networks.NetworkContext)
 
-	//TODO i'm not pretty sure if this should be the right place to get the port
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	port := strconv.Itoa(datastoreConfigFactory.GetPort())
+	port := uint32(datastoreConfigFactory.GetPort())
 
-	if err := castedNetwork.CheckServiceAvailability(datastoreServiceId, port, healthCheckUrlSlug, 1, waitForStartupMaxPolls, waitForStartupTimeBetweenPolls, healthyValue); err != nil {
+	if err := castedNetwork.WaitForEndpointAvailability(datastoreServiceId, port, healthCheckUrlSlug, waitInitialDelaySeconds, waitForStartupMaxPolls, waitForStartupTimeBetweenPolls, healthyValue); err != nil {
 		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
 	logrus.Infof("Service: %v is available", datastoreServiceId)
