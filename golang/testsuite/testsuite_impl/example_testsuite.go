@@ -31,8 +31,7 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 		/*"advancedNetworkTest": advanced_network_test.NewAdvancedNetworkTest(
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
-		),
-		"waitForEndpointAvailabilityTest": wait_for_endpoint_availability_test.NewWaitForEnpointAvailabilityTest(suite.datastoreServiceImage),*/
+		),*/
 	}
 
 	// This example Go testsuite is used internally, when developing on Kurtosis Core, to verify functionality
@@ -46,6 +45,9 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 		)
 		tests["filesArtifactMountingTest"] = files_artifact_mounting_test.FilesArtifactMountingTest{}
 		tests["execCommandTest"] = exec_command_test.ExecCommandTest{}
+		tests["waitForEndpointAvailabilityTest"] = wait_for_endpoint_availability_test.NewWaitForEndpointAvailabilityTest(
+			suite.datastoreServiceImage,
+			)
 	}*/
 
 	return tests

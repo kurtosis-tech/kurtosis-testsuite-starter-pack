@@ -81,18 +81,17 @@ Repartitions the network so that the connections between services match the spec
 * `defaultConnection`: The network state between two partitions that will be used if the connection isn't defined in the partition connections map.
 
 ### waitForEndpointAvailability(ServiceID serviceId, uint32 port, String path, uint32 initialDelaySeconds, uint32 retries, uint32 retriesDelayMilliseconds, String bodyText)
-Checks if a service is available. It executes several HTTP calls to and specific endpoint that has to be set with the arguments
+Waits until a service endpoint is available by making requests to the endpoint using the given parameters. An error is thrown if the number of retries is exceeded.
 
 **Args**
 
 * `serviceId`: The ID of the service to check.
-* `port`: The port of the service to check. For instance 8080
-* `path`: The path of the service to check. It mustn't start with the first slash. For instance `service/health`
-* `initialDelaySeconds`: Number of seconds to wait until executing the first HTTP call`
-* `retries`: Max number of HTTP call attempts that this will execute until giving up and returning an error`
-* `retriesDelayMilliseconds`: Number of milliseconds to wait between retries`
-* `bodyText`: If the endpoint returns this value, the service will be marked as available (e.g. Hello World).
-
+* `port`: The port (e.g. 8080) of the endpoint to check.
+* `path`: The path of the service to check, which must not start with a slash (e.g. `service/health`).
+* `initialDelaySeconds`: Number of seconds to wait until executing the first HTTP call
+* `retries`: Max number of HTTP call attempts that this will execute until giving up and returning an error
+* `retriesDelayMilliseconds`: Number of milliseconds to wait between retries
+* `bodyText`: If this value is non-empty, the endpoint will not be marked as available until this value is returned (e.g. `Hello World`). If this value is emptystring, no body text comparison will be done.
 
 PartitionConnectionInfo
 -----------------------
