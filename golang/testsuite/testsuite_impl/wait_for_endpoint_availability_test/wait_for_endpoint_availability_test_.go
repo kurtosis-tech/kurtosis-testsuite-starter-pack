@@ -25,37 +25,35 @@ const (
 )
 
 
-type WaitForEndpointAbailabilityTest struct {
+type WaitForEndpointAvailabilityTest struct {
 	datastoreImage string
 }
 
-func NewWaitForEnpointAvailabilityTest(datastoreImage string) *WaitForEndpointAbailabilityTest {
-	return &WaitForEndpointAbailabilityTest{datastoreImage: datastoreImage}
+func NewWaitForEndpointAvailabilityTest(datastoreImage string) *WaitForEndpointAvailabilityTest {
+	return &WaitForEndpointAvailabilityTest{datastoreImage: datastoreImage}
 }
 
-func (test WaitForEndpointAbailabilityTest) Configure(builder *testsuite.TestConfigurationBuilder) {
+func (test WaitForEndpointAvailabilityTest) Configure(builder *testsuite.TestConfigurationBuilder) {
 	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
 }
 
-func (test WaitForEndpointAbailabilityTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	_, hostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
-	}
-
-	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
+func (test WaitForEndpointAvailabilityTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	return networkCtx, nil
 }
 
-func (test WaitForEndpointAbailabilityTest) Run(network networks.Network) error {
+func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error {
 	// Necessary because Go doesn't have generics
-	castedNetwork := network.(*networks.NetworkContext)
+	castedNetworkContext := network.(*networks.NetworkContext)
 
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
+	_, _, _, err := castedNetworkContext.AddService(datastoreServiceId, datastoreConfigFactory)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
+	}
+
 	port := uint32(datastoreConfigFactory.GetPort())
 
-	if err := castedNetwork.WaitForEndpointAvailability(datastoreServiceId, port, healthCheckUrlSlug, waitInitialDelaySeconds, waitForStartupMaxPolls, waitForStartupTimeBetweenPolls, healthyValue); err != nil {
+	if err := castedNetworkContext.WaitForEndpointAvailability(datastoreServiceId, port, healthCheckUrlSlug, waitInitialDelaySeconds, waitForStartupMaxPolls, waitForStartupTimeBetweenPolls, healthyValue); err != nil {
 		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
 	logrus.Infof("Service: %v is available", datastoreServiceId)
