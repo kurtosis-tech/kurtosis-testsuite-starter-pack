@@ -93,7 +93,6 @@ Checks if a service is available. It executes several HTTP calls to and specific
 * `retriesDelayMilliseconds`: Number of milliseconds to wait between retries`
 * `bodyText`: If the endpoint returns this value, the service will be marked as available (e.g. Hello World).
 
-
 PartitionConnectionInfo
 -----------------------
 This class is a plain old object defining the state between two partitions (e.g. whether network traffic is blocked or not). It is auto-generated from a gRPC API, so exploring it in code is the best way to view its properties.

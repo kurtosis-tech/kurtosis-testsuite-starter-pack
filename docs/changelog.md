@@ -2,7 +2,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 ### Features
-* Added new test `check_service_availability` in test suite. It uses a new client method to test service availability.
+* Added new test `wait_for_endpoint_availability_test` in test suite. It uses a new client method to test service availability.
 
 # 1.26.1
 ### Changes
