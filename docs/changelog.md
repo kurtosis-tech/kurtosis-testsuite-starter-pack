@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added new test `wait_for_endpoint_availability_test` in test suite that uses the new `WaitForEndpointAvailability` method to test service availability.
 
 # 1.26.1
 ### Changes
