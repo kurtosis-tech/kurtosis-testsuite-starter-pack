@@ -6,6 +6,7 @@
 package advanced_network_test
 
 import (
+	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/networks_impl"
@@ -50,20 +51,22 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service")
 	}
 
+	personModifierClient := api_service_client.NewAPIClient(personModifier.GetServiceContext().GetIPAddress(), personModifier.GetPort())
+	personRetrieverClient := api_service_client.NewAPIClient(personRetriever.GetServiceContext().GetIPAddress(), personRetriever.GetPort())
 	logrus.Infof("Adding test person via person-modifying API service...")
-	if err := personModifier.AddPerson(testPersonId); err != nil {
+	if err := personModifierClient.AddPerson(testPersonId); err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding test person")
 	}
 	logrus.Info("Test person added")
 
 	logrus.Infof("Incrementing test person's number of books read through person-modifying API service ...")
-	if err := personModifier.IncrementBooksRead(testPersonId); err != nil {
+	if err := personModifierClient.IncrementBooksRead(testPersonId); err != nil {
 		return stacktrace.Propagate(err, "An error occurred incrementing the number of books read")
 	}
 	logrus.Info("Incremented number of books read")
 
 	logrus.Info("Retrieving test person to verify number of books read person-retrieving API service...")
-	person, err := personRetriever.GetPerson(testPersonId)
+	person, err := personRetrieverClient.GetPerson(testPersonId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test person")
 	}

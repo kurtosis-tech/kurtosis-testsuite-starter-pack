@@ -14,7 +14,7 @@ func NewExecCmdTestService(serviceContext *services.ServiceContext) *ExecCmdTest
 }
 
 func (self ExecCmdTestService) IsAvailable() bool {
-	return true;
+	return true
 }
 
 func (self ExecCmdTestService) RunExecCmd(command []string) (int32, *[]byte, error) {

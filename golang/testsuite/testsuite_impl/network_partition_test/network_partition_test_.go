@@ -6,6 +6,7 @@
 package network_partition_test
 
 import (
+	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
@@ -70,10 +71,12 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 		return nil, stacktrace.Propagate(err, "An error occurred adding service '%v'", api1ServiceId)
 	}
 
-	if err := apiSvc.AddPerson(testPersonId); err != nil {
+	apiClient := api_service_client.NewAPIClient(apiSvc.GetServiceContext().GetIPAddress(), apiSvc.GetPort())
+
+	if err := apiClient.AddPerson(testPersonId); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the test person in preparation for the test")
 	}
-	if err := apiSvc.IncrementBooksRead(testPersonId); err != nil {
+	if err := apiClient.IncrementBooksRead(testPersonId); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred test person's books read in preparation for the test")
 	}
 
@@ -98,7 +101,8 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the API 1 service interface")
 	}
 	api1Service := uncastedApi1Service.(*api.ApiService) // Necessary because Go doesn't have generics
-	if err := api1Service.IncrementBooksRead(testPersonId); err == nil {
+	apiClient := api_service_client.NewAPIClient(api1Service.GetServiceContext().GetIPAddress(), api1Service.GetPort())
+	if err := apiClient.IncrementBooksRead(testPersonId); err == nil {
 		return stacktrace.NewError("Expected the book increment call via API 1 to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown")
 	} else {
@@ -121,8 +125,10 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Second API container added successfully")
 
+	apiClient2 := api_service_client.NewAPIClient(api2Service.GetServiceContext().GetIPAddress(), api2Service.GetPort())
+
 	logrus.Info("Incrementing books read via API 2 while partition is in place, to verify no comms are possible...")
-	if err := api2Service.IncrementBooksRead(testPersonId); err == nil {
+	if err := apiClient2.IncrementBooksRead(testPersonId); err == nil {
 		return stacktrace.NewError("Expected the book increment call via API 2 to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown")
 	} else {
@@ -138,7 +144,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 
 	logrus.Info("Making another call via API 1 to increment books read, to ensure the partition is open...")
 	// Use infinite timeout because we expect the partition healing to fix the issue
-	if err := api1Service.IncrementBooksRead(testPersonId); err != nil {
+	if err := apiClient.IncrementBooksRead(testPersonId); err != nil {
 		return stacktrace.Propagate(
 			err,
 			"An error occurred incrementing the number of books read via API 1, even though the partition should have been " +
@@ -149,7 +155,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 
 	logrus.Info("Making another call via API 2 to increment books read, to ensure the partition is open...")
 	// Use infinite timeout because we expect the partition healing to fix the issue
-	if err := api2Service.IncrementBooksRead(testPersonId); err != nil {
+	if err := apiClient2.IncrementBooksRead(testPersonId); err != nil {
 		return stacktrace.Propagate(
 			err,
 			"An error occurred incrementing the number of books read via API 2, even though the partition should have been " +

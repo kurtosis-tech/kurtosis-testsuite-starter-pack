@@ -7,6 +7,7 @@ package testsuite_impl
 
 import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
 )
 
@@ -23,11 +24,11 @@ func NewExampleTestsuite(apiServiceImage string, datastoreServiceImage string, i
 func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 	tests := map[string]testsuite.Test{
 		"basicDatastoreTest": basic_datastore_test.NewBasicDatastoreTest(suite.datastoreServiceImage),
-		/*"basicDatastoreAndApiTest": basic_datastore_and_api_test.NewBasicDatastoreAndApiTest(
+		"basicDatastoreAndApiTest": basic_datastore_and_api_test.NewBasicDatastoreAndApiTest(
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
 		),
-		"advancedNetworkTest": advanced_network_test.NewAdvancedNetworkTest(
+		/*"advancedNetworkTest": advanced_network_test.NewAdvancedNetworkTest(
 			suite.datastoreServiceImage,
 			suite.apiServiceImage,
 		),

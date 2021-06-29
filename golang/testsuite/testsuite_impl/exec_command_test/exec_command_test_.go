@@ -13,13 +13,13 @@ import (
 const (
 	execCmdTestImage      = "alpine:3.12.4"
 	inputForLogOutputTest = "hello"
-	expectedLogOutput = "hello\n"
+	expectedLogOutput     = "hello\n"
 	testServiceId         = "test"
 
 	successExitCode int32 = 0
 
 	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxPolls = 10
+	waitForStartupMaxPolls         = 10
 )
 
 var execCommandThatShouldWork = []string{
@@ -35,7 +35,7 @@ var execCommandThatShouldFail = []string{
 	"false",
 }
 
-type ExecCommandTest struct {}
+type ExecCommandTest struct{}
 
 func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) {
 	builder.WithSetupTimeoutSeconds(30).WithRunTimeoutSeconds(30)
@@ -77,7 +77,6 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 		return stacktrace.NewError("Exec command '%v' should work, but got unsuccessful exit code %v", execCommandThatShouldWork, shouldWorkExitCode)
 	}
 	logrus.Info("Exec command returned successful exit code as expected")
-
 
 	logrus.Infof("Running exec command '%v' that should return an error exit code...", execCommandThatShouldFail)
 	shouldFailExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldFail)

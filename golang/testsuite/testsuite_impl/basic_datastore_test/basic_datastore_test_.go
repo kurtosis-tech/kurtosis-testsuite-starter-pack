@@ -6,7 +6,7 @@
 package basic_datastore_test
 
 import (
-	"github.com/kurtosis-tech/example-microservice/datastore/client"
+	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
@@ -20,6 +20,9 @@ const (
 
 	testKey = "test-key"
 	testValue = "test-value"
+
+	waitForStartupDelayMilliseconds = 1000
+	waitForStartupMaxPolls = 15
 )
 
 type BasicDatastoreTest struct {
@@ -43,10 +46,10 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 
 	// Necessary again due to no Go generics
 	castedService := service.(*datastore.DatastoreService)
+	datastoreClient := datastore_service_client.NewDatastoreClient(castedService.GetServiceContext().GetIPAddress(), castedService.GetPort())
 
-	datastoreClient := client.NewDatastoreClient(castedService.GetIPAddress(), datastoreConfigFactory.GetPort())
-
-	if(!datastoreClient.IsAvailable()){
+	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
+	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
 
@@ -65,8 +68,7 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 
 	// Necessary again due to no Go generics
 	castedService := uncastedService.(*datastore.DatastoreService)
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	datastoreClient := client.NewDatastoreClient(castedService.GetIPAddress(), datastoreConfigFactory.GetPort())
+	datastoreClient := datastore_service_client.NewDatastoreClient(castedService.GetServiceContext().GetIPAddress(), castedService.GetPort())
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := datastoreClient.Exists(testKey)
