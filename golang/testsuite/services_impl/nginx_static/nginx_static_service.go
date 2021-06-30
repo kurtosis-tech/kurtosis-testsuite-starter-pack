@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 )
@@ -25,12 +26,13 @@ func NewNginxStaticService(serviceCtx *services.ServiceContext) *NginxStaticServ
 }
 
 func (self NginxStaticService) IsAvailable() bool {
-	_, err := http.Get(fmt.Sprintf("%v:%v", self.serviceCtx.GetIPAddress(), listenPort))
-	return err != nil
+	_, err := http.Get(fmt.Sprintf("http://%v:%v", self.serviceCtx.GetIPAddress(), listenPort))
+	logrus.Debugf("An error occurred checking if the Nginx service is available: %v", err)
+	return err == nil
 }
 
 func (self NginxStaticService) GetFileContents(filename string) (string, error) {
-	resp, err := http.Get(fmt.Sprintf("%v:%v/%v", self.serviceCtx.GetIPAddress(), listenPort, filename))
+	resp, err := http.Get(fmt.Sprintf("http://%v:%v/%v", self.serviceCtx.GetIPAddress(), listenPort, filename))
 	if err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred getting the contents of file '%v'", filename)
 	}
