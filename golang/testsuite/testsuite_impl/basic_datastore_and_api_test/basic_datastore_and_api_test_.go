@@ -71,7 +71,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")
 	}
 
 	logrus.Infof("Added API service with host port bindings: %+v", apiSvcHostPortBindings)

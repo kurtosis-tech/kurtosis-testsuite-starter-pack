@@ -43,3 +43,7 @@ func (factory NginxStaticContainerConfigFactory) GetCreationConfig(containerIpAd
 func (factory NginxStaticContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
 	return services.NewContainerRunConfigBuilder().Build(), nil
 }
+
+func (factory NginxStaticContainerConfigFactory) GetPort() int {
+	return listenPort
+}

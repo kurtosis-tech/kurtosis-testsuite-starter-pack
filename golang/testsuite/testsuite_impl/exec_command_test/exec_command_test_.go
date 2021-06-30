@@ -42,24 +42,21 @@ func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) 
 }
 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(execCmdTestImage)
-	_, _, checker, err := networkCtx.AddService(testServiceId, configFactory)
-	if err != nil {
-		return nil, stacktrace.Propagate(
-			err,
-			"An error occurred starting service '%v'",
-			testServiceId)
-	}
-	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxPolls); err != nil {
-		return nil, stacktrace.Propagate(
-			err,
-			"An error occurred waiting for service '%v' to start up",
-			testServiceId)
-	}
 	return networkCtx, nil
 }
 
 func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
+	// Necessary because Go doesn't have generics
+	castedNetworkContext := uncastedNetwork.(*networks.NetworkContext)
+	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(execCmdTestImage)
+	_, _, _, err := castedNetworkContext.AddService(testServiceId, configFactory)
+	if err != nil {
+		return stacktrace.Propagate(
+			err,
+			"An error occurred starting service '%v'",
+			testServiceId)
+	}
+
 	network := uncastedNetwork.(*networks.NetworkContext)
 
 	uncastedService, err := network.GetService(testServiceId)

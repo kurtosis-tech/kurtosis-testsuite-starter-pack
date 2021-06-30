@@ -12,14 +12,14 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/nginx_static"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
 	fileServerServiceId services.ServiceID = "file-server"
 
-	waitForStartupTimeBetweenPolls = 1 * time.Second
+	waitForStartupTimeBetweenPolls = 1
 	waitForStartupMaxRetries = 15
+	waitInitialDelaySeconds = 1
 
 	testFilesArtifactId  services.FilesArtifactID = "test-files-artifact"
 	testFilesArtifactUrl                          = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"
@@ -48,13 +48,20 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
-	_, hostPortBindings, availabilityChecker, err := networkCtx.AddService(fileServerServiceId, configFactory)
+	_, hostPortBindings, _, err := networkCtx.AddService(fileServerServiceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
-	if err := availabilityChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxRetries); err != nil {
+	/*if err := availabilityChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxRetries); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the file server service to start")
+	}*/
+
+	port := uint32(configFactory.GetPort())
+
+	if err := networkCtx.WaitForEndpointAvailability(fileServerServiceId, port, "", waitInitialDelaySeconds, waitForStartupMaxRetries, waitForStartupTimeBetweenPolls, ""); err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the file server service to become available")
 	}
+
 	logrus.Infof("Added file server service with host port bindings: %+v", hostPortBindings)
 	return networkCtx, nil
 }
