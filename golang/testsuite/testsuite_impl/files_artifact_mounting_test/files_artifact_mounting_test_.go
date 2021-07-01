@@ -28,8 +28,8 @@ const (
 	file1Filename = "file1.txt"
 	file2Filename = "file2.txt"
 
-	expectedFile1Contents = "file1"
-	expectedFile2Contents = "file2"
+	expectedFile1Contents = "file1\n"
+	expectedFile2Contents = "file2\n"
 )
 
 type FilesArtifactMountingTest struct {}
@@ -76,9 +76,9 @@ func (f FilesArtifactMountingTest) Run(network networks.Network) error {
 	}
 
 	// Only necessary because Go doesn't have generics
-	castedService, castErrOccurred := uncastedService.(*nginx_static.NginxStaticService)
-	if castErrOccurred {
-		return stacktrace.Propagate(err, "An error occurred casting the file server service API")
+	castedService, isCastSuccessful := uncastedService.(*nginx_static.NginxStaticService)
+	if !isCastSuccessful {
+		return stacktrace.NewError("An error occurred casting the file server service API")
 	}
 
 	file1Contents, err := castedService.GetFileContents(file1Filename)

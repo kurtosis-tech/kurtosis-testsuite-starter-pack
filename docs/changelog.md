@@ -1,8 +1,20 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Fixes
+* Fixed the following errors with the `FilesArtifactMountingTest`
+    * Cast to `NginxStaticService` returns true if successful, but was being treated like true if failed
+    * Incorrect usage of `stacktrace.Propagate` upon a failed cast, which was causing the test to erroneously look like it passed
+* Fixed the following errors with `NginxService`:
+    * `IsAvailable` returning true rather than false when an error occurred
+    * Listen port set to `8080` when it should be `80`, which wasn't caught due to the above bugs
+
+# 1.26.2
 ### Features
 * Added new test `wait_for_endpoint_availability_test` in test suite that uses the new `WaitForEndpointAvailability` method to test service availability.
+
+### Fixes
+* Fixed bug preventing errors that occur during the `Test.Run` from being displayed to the user
 
 # 1.26.1
 ### Changes

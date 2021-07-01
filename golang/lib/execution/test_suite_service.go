@@ -143,7 +143,8 @@ func (service TestSuiteService) RunTest(ctx context.Context, empty *emptypb.Empt
 
 	logrus.Infof("Running test logic for test '%v'...", testName)
 	if err := runTest(test, network); err != nil {
-		return nil, stacktrace.NewError(
+		return nil, stacktrace.Propagate(
+			err,
 			"An error occurred running test '%v'",
 			testName,
 		)
