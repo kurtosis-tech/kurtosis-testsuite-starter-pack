@@ -1,6 +1,11 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Imports datastore service and api service clients to interact with both services. 
+* Checks for services availability using two possibles ways: 1) a method from the client and in some tests and 2) the method `WaitForEndpointAvailability` from `NetworkContext` in others.
+* Reduces the size of services implementations some methods were moved to the tests
+
 ### Fixes
 * Fixed the following errors with the `FilesArtifactMountingTest`
     * Cast to `NginxStaticService` returns true if successful, but was being treated like true if failed
