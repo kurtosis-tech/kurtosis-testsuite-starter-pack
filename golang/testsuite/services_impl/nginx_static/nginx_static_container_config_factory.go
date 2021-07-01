@@ -8,7 +8,7 @@ import (
 const (
 	dockerImage = "flashspys/nginx-static"
 
-	listenPort = 8080
+	listenPort = 80
 
 	testVolumeMountpoint = "/test-volume"
 
