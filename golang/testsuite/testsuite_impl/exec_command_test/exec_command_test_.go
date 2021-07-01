@@ -3,6 +3,7 @@ package exec_command_test
 import (
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/exec_cmd_test"
 	"github.com/palantir/stacktrace"
@@ -66,7 +67,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	castedService := uncastedService.(*exec_cmd_test.ExecCmdTestService)
 
 	logrus.Infof("Running exec command '%v' that should return a successful exit code...", execCommandThatShouldWork)
-	shouldWorkExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldWork)
+	shouldWorkExitCode, _, err := runExecCmd(castedService.GetServiceContext(), execCommandThatShouldWork)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldWork)
 	}
@@ -76,7 +77,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	logrus.Info("Exec command returned successful exit code as expected")
 
 	logrus.Infof("Running exec command '%v' that should return an error exit code...", execCommandThatShouldFail)
-	shouldFailExitCode, _, err := castedService.RunExecCmd(execCommandThatShouldFail)
+	shouldFailExitCode, _, err := runExecCmd(castedService.GetServiceContext(), execCommandThatShouldFail)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail)
 	}
@@ -85,7 +86,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	}
 
 	logrus.Infof("Running exec command '%v' that should return log output...", execCommandThatShouldHaveLogOutput)
-	shouldHaveLogOutputExitCode, logOutput, err := castedService.RunExecCmd(execCommandThatShouldHaveLogOutput)
+	shouldHaveLogOutputExitCode, logOutput, err := runExecCmd(castedService.GetServiceContext(), execCommandThatShouldHaveLogOutput)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldHaveLogOutput)
 	}
@@ -99,4 +100,14 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	logrus.Info("Exec command returned error exit code as expected")
 
 	return nil
+}
+
+func runExecCmd(serviceContext *services.ServiceContext, command []string) (int32, *[]byte, error) {
+	exitCode, logOutput, err := serviceContext.ExecCommand(command)
+	if err != nil {
+		return 0, nil, stacktrace.Propagate(
+			err,
+			"An error occurred executing command '%v'", command)
+	}
+	return exitCode, logOutput, nil
 }

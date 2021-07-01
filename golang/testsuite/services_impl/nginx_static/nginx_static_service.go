@@ -20,12 +20,13 @@ func NewNginxStaticService(serviceCtx *services.ServiceContext) *NginxStaticServ
 	return &NginxStaticService{serviceCtx: serviceCtx}
 }
 
+func (self NginxStaticService) GetServiceContext() *services.ServiceContext {
+	return self.serviceCtx
+}
+
 func (self NginxStaticService) IsAvailable() bool {
 	return true
 }
 
-func (self NginxStaticService) GetServiceContext() *services.ServiceContext {
-	return self.serviceCtx
-}
 
 
