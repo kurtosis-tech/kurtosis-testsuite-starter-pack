@@ -6,20 +6,23 @@
 package files_artifact_mounting_test
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/nginx_static"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
 )
 
 const (
 	fileServerServiceId services.ServiceID = "file-server"
 
-	waitForStartupTimeBetweenPolls = 1
+	waitForStartupTimeBetweenPolls = 1000
 	waitForStartupMaxRetries = 15
-	waitInitialDelaySeconds = 1
+	waitInitialDelaySeconds = 0
 
 	testFilesArtifactId  services.FilesArtifactID = "test-files-artifact"
 	testFilesArtifactUrl                          = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"
@@ -47,41 +50,31 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 }
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
-	_, hostPortBindings, _, err := networkCtx.AddService(fileServerServiceId, configFactory)
-	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
-	}
-	/*if err := availabilityChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxRetries); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the file server service to start")
-	}*/
-
-	port := uint32(configFactory.GetPort())
-
-	if err := networkCtx.WaitForEndpointAvailability(fileServerServiceId, port, "", waitInitialDelaySeconds, waitForStartupMaxRetries, waitForStartupTimeBetweenPolls, ""); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the file server service to become available")
-	}
-
-	logrus.Infof("Added file server service with host port bindings: %+v", hostPortBindings)
 	return networkCtx, nil
 }
 
 func (f FilesArtifactMountingTest) Run(network networks.Network) error {
-	// Only necessary because Go doesn't have generics
-	castedNetwork := network.(*networks.NetworkContext)
+	// Necessary because Go doesn't have generics
+	castedNetworkContext := network.(*networks.NetworkContext)
 
-	uncastedService, err := castedNetwork.GetService(fileServerServiceId)
+	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
+	fileServerService, hostPortBindings, _, err := castedNetworkContext.AddService(fileServerServiceId, configFactory)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred retrieving the fileserver service")
+		return stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
 
-	// Only necessary because Go doesn't have generics
-	castedService, isCastSuccessful := uncastedService.(*nginx_static.NginxStaticService)
-	if !isCastSuccessful {
-		return stacktrace.NewError("An error occurred casting the file server service API")
+	// Necessary again due to no Go generics
+	castedService := fileServerService.(*nginx_static.NginxStaticService)
+
+	port := uint32(configFactory.GetPort())
+
+	if err := castedNetworkContext.WaitForEndpointAvailability(fileServerServiceId, port, file1Filename, waitInitialDelaySeconds, waitForStartupMaxRetries, waitForStartupTimeBetweenPolls, ""); err != nil {
+		return stacktrace.Propagate(err, "An error occurred waiting for the file server service to become available")
 	}
 
-	file1Contents, err := castedService.GetFileContents(file1Filename)
+	logrus.Infof("Added file server service with host port bindings: %+v", hostPortBindings)
+
+	file1Contents, err := getFileContents(castedService.GetServiceContext().GetIPAddress(), port, file1Filename)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting file 1's contents")
 	}
@@ -92,7 +85,7 @@ func (f FilesArtifactMountingTest) Run(network networks.Network) error {
 		)
 	}
 
-	file2Contents, err := castedService.GetFileContents(file2Filename)
+	file2Contents, err := getFileContents(castedService.GetServiceContext().GetIPAddress(), port, file2Filename)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting file 2's contents")
 	}
@@ -103,4 +96,21 @@ func (f FilesArtifactMountingTest) Run(network networks.Network) error {
 		)
 	}
 	return nil
+}
+
+func getFileContents(ipAddress string, port uint32, filename string) (string, error) {
+	resp, err := http.Get(fmt.Sprintf("http://%v:%v/%v", ipAddress, port, filename))
+	if err != nil {
+		return "", stacktrace.Propagate(err, "An error occurred getting the contents of file '%v'", filename)
+	}
+	body := resp.Body
+	defer body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		return "", stacktrace.Propagate(err, "An error occurred reading the response body when getting the contents of file '%v'", filename)
+	}
+
+	bodyStr := string(bodyBytes)
+	return bodyStr, nil
 }
