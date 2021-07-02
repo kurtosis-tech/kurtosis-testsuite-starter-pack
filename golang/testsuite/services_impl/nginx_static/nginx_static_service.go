@@ -25,7 +25,7 @@ func (self NginxStaticService) GetServiceContext() *services.ServiceContext {
 }
 
 func (self NginxStaticService) IsAvailable() bool {
-	return true
+	return false
 }
 
 

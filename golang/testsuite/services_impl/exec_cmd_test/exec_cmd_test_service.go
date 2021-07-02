@@ -17,6 +17,6 @@ func (self ExecCmdTestService) GetServiceContext() *services.ServiceContext {
 }
 
 func (self ExecCmdTestService) IsAvailable() bool {
-	return true
+	return false
 }
 

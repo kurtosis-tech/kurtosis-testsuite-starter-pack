@@ -27,7 +27,7 @@ func (service ApiService) GetServiceContext() *services.ServiceContext {
 }
 
 func (service ApiService) IsAvailable() bool {
-	return true
+	return false
 }
 
 func (service ApiService) GetPort() int{

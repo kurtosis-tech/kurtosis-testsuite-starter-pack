@@ -23,7 +23,7 @@ func (service DatastoreService) GetServiceContext() *services.ServiceContext {
 }
 
 func (service DatastoreService) IsAvailable() bool {
-	return true
+	return false
 }
 
 func (service DatastoreService) GetPort() int{
