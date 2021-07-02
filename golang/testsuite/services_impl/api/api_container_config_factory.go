@@ -36,9 +36,9 @@ func NewApiContainerConfigFactory(image string, datastore *datastore.DatastoreSe
 
 func (factory ApiContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	configInitializingFunc := func(fp *os.File) error {
-		logrus.Debugf("Datastore IP: %v , port: %v", factory.datastore.GetIPAddress(), factory.datastore.GetPort())
+		logrus.Debugf("Datastore IP: %v , port: %v", factory.datastore.GetServiceContext().GetIPAddress(), factory.datastore.GetPort())
 		configObj := config{
-			DatastoreIp:   factory.datastore.GetIPAddress(),
+			DatastoreIp:   factory.datastore.GetServiceContext().GetIPAddress(),
 			DatastorePort: factory.datastore.GetPort(),
 		}
 		configBytes, err := json.Marshal(configObj)

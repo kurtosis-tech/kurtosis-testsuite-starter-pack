@@ -6,6 +6,8 @@
 package networks_impl
 
 import (
+	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
+	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/api"
@@ -13,14 +15,13 @@ import (
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"strconv"
-	"time"
 )
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
 	apiServiceIdPrefix = "api-"
 
-	waitForStartupTimeBetweenPolls = 1 * time.Second
+	waitForStartupDelayMilliseconds = 1000
 	waitForStartupMaxNumPolls = 15
 )
 
@@ -59,15 +60,21 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 	}
 
 	configFactory := datastore.NewDatastoreContainerConfigFactory(network.datastoreServiceImage)
-	uncastedDatastore, hostPortBindings, checker, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
+	uncastedDatastore, hostPortBindings, _, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
-	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
-	}
-	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
+
 	castedDatastore := uncastedDatastore.(*datastore.DatastoreService)
+	datastoreClient := datastore_service_client.NewDatastoreClient(castedDatastore.GetServiceContext().GetIPAddress(), castedDatastore.GetPort())
+
+	err = datastoreClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
+	}
+
+	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
+
 	network.datastoreService = castedDatastore
 
 	personModifyingApiService, err := network.addApiService()
@@ -114,15 +121,20 @@ func (network *TestNetwork) addApiService() (*api.ApiService, error) {
 	serviceId := services.ServiceID(serviceIdStr)
 
 	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreService)
-	uncastedApiService, hostPortBindings, checker, err := network.networkCtx.AddService(serviceId, configFactory)
+	uncastedApiService, hostPortBindings, _, err := network.networkCtx.AddService(serviceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
-	if err := checker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
-	}
-	logrus.Infof("Added API service with host port bindings: %+v", hostPortBindings)
+
 	castedApiService := uncastedApiService.(*api.ApiService)
+	apiClient := api_service_client.NewAPIClient(castedApiService.GetServiceContext().GetIPAddress(), castedApiService.GetPort())
+
+	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")
+	}
+
+	logrus.Infof("Added API service with host port bindings: %+v", hostPortBindings)
 	return castedApiService, nil
 }
 
