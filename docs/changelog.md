@@ -1,6 +1,11 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Imports datastore service and api service clients from `example-microservices` to interact with both services. 
+* Checks for services availability using two possibles ways: 1) in some tests, a method from the API/datastore `example-microservices` client and 2) in others, the method `WaitForEndpointAvailability` from `NetworkContext`
+* Reduced the size of `Service` interface implementations by moving some methods into the tests where they were used
+
 ### Fixes
 * Fixed the following errors with the `FilesArtifactMountingTest`
     * Cast to `NginxStaticService` returns true if successful, but was being treated like true if failed
