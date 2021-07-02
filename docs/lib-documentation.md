@@ -74,6 +74,8 @@ Stops the container with the given service ID and removes it from the network.
 ### repartitionNetwork(Map\<PartitionID, Set\<ServiceID\>> partitionServices, Map\<PartitionID, Map\<PartitionID, [PartitionConnectionInfo][partitionconnectioninfo]\>> partitionConnections, [PartitionConnectionInfo][partitionconnectioninfo] defaultConnection)
 Repartitions the network so that the connections between services match the specified new state. All services currently in the network must be allocated to a new partition. 
 
+**NOTE: For this to work, partitioning must be turned on in the [Test.configure](test_configure) method.**
+
 **Args**
 
 * `partitionServices`: A definition of the new partitions in the network, and the services allocated to each partition. A service can only be allocated to a single partition.
@@ -95,7 +97,9 @@ Waits until a service endpoint is available by making requests to the endpoint u
 
 PartitionConnectionInfo
 -----------------------
-This class is a plain old object defining the state between two partitions (e.g. whether network traffic is blocked or not). It is auto-generated from a gRPC API, so exploring it in code is the best way to view its properties.
+This class is a plain old object defining the state between two partitions (e.g. whether network traffic is blocked or not). It is auto-generated from a gRPC API, so exploring it in code is the best way to view its properties. 
+
+**NOTE:** These objects will often have several gRPC-specific fields inside them, but which don't need to be considered; you can construct the object however you normally instantiate objects in your language of choice (e.g. `new` in Java, `PartitionConnectionInfo{....fields...}` in Go, etc.).
 
 AvailabilityChecker
 -------------------
