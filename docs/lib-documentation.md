@@ -74,7 +74,7 @@ Stops the container with the given service ID and removes it from the network.
 ### repartitionNetwork(Map\<PartitionID, Set\<ServiceID\>> partitionServices, Map\<PartitionID, Map\<PartitionID, [PartitionConnectionInfo][partitionconnectioninfo]\>> partitionConnections, [PartitionConnectionInfo][partitionconnectioninfo] defaultConnection)
 Repartitions the network so that the connections between services match the specified new state. All services currently in the network must be allocated to a new partition. 
 
-**NOTE: For this to work, partitioning must be turned on in the [Test.configure](test_configure) method.**
+**NOTE: For this to work, partitioning must be turned on in the [Test.configure][test_configure] method.**
 
 **Args**
 
