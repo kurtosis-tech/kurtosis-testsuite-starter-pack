@@ -1,6 +1,9 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
+* Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
 
 # 1.26.3
 ### Changes
