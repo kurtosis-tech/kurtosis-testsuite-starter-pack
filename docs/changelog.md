@@ -2,9 +2,9 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 ### Changes
-* Imports datastore service and api service clients to interact with both services. 
-* Checks for services availability using two possibles ways: 1) a method from the client and in some tests and 2) the method `WaitForEndpointAvailability` from `NetworkContext` in others.
-* Reduces the size of services implementations some methods were moved to the tests
+* Imports datastore service and api service clients from `example-microservices` to interact with both services. 
+* Checks for services availability using two possibles ways: 1) in some tests, a method from the API/datastore `example-microservices` client and 2) in others, the method `WaitForEndpointAvailability` from `NetworkContext`
+* Reduced the size of `Service` interface implementations by moving some methods into the tests where they were used
 
 ### Fixes
 * Fixed the following errors with the `FilesArtifactMountingTest`
