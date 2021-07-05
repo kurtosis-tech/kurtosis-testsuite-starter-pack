@@ -2,8 +2,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 ### Changes
-* Depend on Kurtosis Client vTODOOOOOOOOOOO
-* Depend on the latest version of Kurtosis Core which has a `ExecuteBulkCommands` endpoint for executing commands serialized as JSON
+* Depend on Kurtosis Client v0.2.2
 
 ### Features
 * Add a `BulkCommandExecutionTest` as part of the Kurtosis-internal testsuite for demonstrating and testing bulk command execution
