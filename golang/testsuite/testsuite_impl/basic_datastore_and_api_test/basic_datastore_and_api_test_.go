@@ -6,6 +6,8 @@
 package basic_datastore_and_api_test
 
 import (
+	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
+	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
@@ -13,15 +15,14 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"time"
 )
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
 	apiServiceId services.ServiceID = "api"
 
-	waitForStartupTimeBetweenPolls = 1 * time.Second
-	waitForStartupMaxNumPolls = 15
+	waitForStartupDelayMilliseconds = 1000
+	waitForStartupMaxPolls = 15
 
 	testPersonId = 23
 	testNumBooksRead = 3
@@ -42,26 +43,37 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
-	uncastedDatastoreSvc, datastoreSvcHostPortBindings, datastoreChecker, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	uncastedDatastoreSvc, datastoreSvcHostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
-	if err := datastoreChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to start")
-	}
-	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
 	// Go doesn't have generics so we need to do this cast
 	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreSvc.GetServiceContext().GetIPAddress(), datastoreSvc.GetPort())
+
+	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
+	}
+
+	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
 	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreSvc)
-	_, apiSvcHostPortBindings, apiChecker, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
+	uncastedApiService, apiSvcHostPortBindings, _, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
-	if err := apiChecker.WaitForStartup(waitForStartupTimeBetweenPolls, waitForStartupMaxNumPolls); err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the API service to start")
+
+	// Go doesn't have generics so we need to do this cast
+	apiSrvc := uncastedApiService.(*api.ApiService)
+	apiClient := api_service_client.NewAPIClient(apiSrvc.GetServiceContext().GetIPAddress(), apiSrvc.GetPort())
+
+	err = apiClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")
 	}
+
 	logrus.Infof("Added API service with host port bindings: %+v", apiSvcHostPortBindings)
 	return networkCtx, nil
 }
@@ -77,28 +89,30 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 	}
 	apiService := uncastedApiService.(*api.ApiService)
 
+	apiClient := api_service_client.NewAPIClient(apiService.GetServiceContext().GetIPAddress(), apiService.GetPort())
+
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
-	if _, err = apiService.GetPerson(testPersonId); err == nil {
+	if _, err = apiClient.GetPerson(testPersonId); err == nil {
 		return stacktrace.NewError("Expected an error trying to get a person who doesn't exist yet, but didn't receive one")
 	}
 	logrus.Infof("Verified that test person doesn't already exist")
 
 	logrus.Infof("Adding test person with ID '%v'...", testPersonId)
-	if err := apiService.AddPerson(testPersonId); err != nil {
+	if err := apiClient.AddPerson(testPersonId); err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding person with test ID '%v'", testPersonId)
 	}
 	logrus.Info("Test person added")
 
 	logrus.Infof("Incrementing test person's number of books read by %v...", testNumBooksRead)
 	for i := 0; i < testNumBooksRead; i++ {
-		if err := apiService.IncrementBooksRead(testPersonId); err != nil {
+		if err := apiClient.IncrementBooksRead(testPersonId); err != nil {
 			return stacktrace.Propagate(err, "An error occurred incrementing the number of books read")
 		}
 	}
 	logrus.Info("Incremented number of books read")
 
 	logrus.Info("Retrieving test person to verify number of books read...")
-	person, err := apiService.GetPerson(testPersonId)
+	person, err := apiClient.GetPerson(testPersonId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test person to verify the number of books read")
 	}

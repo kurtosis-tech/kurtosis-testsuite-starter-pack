@@ -6,11 +6,7 @@
 package nginx_static
 
 import (
-	"fmt"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
-	"github.com/palantir/stacktrace"
-	"io/ioutil"
-	"net/http"
 )
 
 /*
@@ -24,25 +20,13 @@ func NewNginxStaticService(serviceCtx *services.ServiceContext) *NginxStaticServ
 	return &NginxStaticService{serviceCtx: serviceCtx}
 }
 
+func (self NginxStaticService) GetServiceContext() *services.ServiceContext {
+	return self.serviceCtx
+}
+
 func (self NginxStaticService) IsAvailable() bool {
-	_, err := http.Get(fmt.Sprintf("%v:%v", self.serviceCtx.GetIPAddress(), listenPort))
-	return err != nil
+	return false
 }
 
-func (self NginxStaticService) GetFileContents(filename string) (string, error) {
-	resp, err := http.Get(fmt.Sprintf("%v:%v/%v", self.serviceCtx.GetIPAddress(), listenPort, filename))
-	if err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred getting the contents of file '%v'", filename)
-	}
-	body := resp.Body
-	defer body.Close()
 
-	bodyBytes, err := ioutil.ReadAll(body);
-	if err != nil {
-		return "", stacktrace.Propagate(err, "An error occurred reading the response body when getting the contents of file '%v'", filename)
-	}
-
-	bodyStr := string(bodyBytes)
-	return bodyStr, nil
-}
 

@@ -3,9 +3,25 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Changes
 * Depend on Kurtosis Client v0.2.2
+* Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
+* Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
 
 ### Features
 * Add a `BulkCommandExecutionTest` as part of the Kurtosis-internal testsuite for demonstrating and testing bulk command execution
+
+# 1.26.3
+### Changes
+* Imports datastore service and api service clients from `example-microservices` to interact with both services. 
+* Checks for services availability using two possibles ways: 1) in some tests, a method from the API/datastore `example-microservices` client and 2) in others, the method `WaitForEndpointAvailability` from `NetworkContext`
+* Reduced the size of `Service` interface implementations by moving some methods into the tests where they were used
+
+### Fixes
+* Fixed the following errors with the `FilesArtifactMountingTest`
+    * Cast to `NginxStaticService` returns true if successful, but was being treated like true if failed
+    * Incorrect usage of `stacktrace.Propagate` upon a failed cast, which was causing the test to erroneously look like it passed
+* Fixed the following errors with `NginxService`:
+    * `IsAvailable` returning true rather than false when an error occurred
+    * Listen port set to `8080` when it should be `80`, which wasn't caught due to the above bugs
 
 # 1.26.2
 ### Features
