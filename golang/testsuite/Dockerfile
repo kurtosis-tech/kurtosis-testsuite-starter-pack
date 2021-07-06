@@ -30,7 +30,8 @@ WORKDIR /run
 COPY --from=builder /build/testsuite.bin .
 
 # Copy local static files inside the testsuite image
-COPY testsuite/files /testsuite-static-files
+# NOTE: The testsuite will need to register these static files in the GetStaticFiles method
+COPY testsuite/files /static-files
 
 # TODO Switch to exec command form, wrapping arguments with double-quote
 CMD ./testsuite.bin \

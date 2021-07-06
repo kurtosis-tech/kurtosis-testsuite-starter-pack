@@ -61,6 +61,12 @@ github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210628122647-53f2d73c12
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210628122647-53f2d73c125c/go.mod h1:degxAH35Ut7M3Ec4E2LtYk7Yun+kRqtROEzXJpzgyqM=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210630141335-2305ec565d98 h1:oRLUuCk7RlnvKQlCS7MGagiO2JbFII26k1KaJ2H3YAk=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210630141335-2305ec565d98/go.mod h1:degxAH35Ut7M3Ec4E2LtYk7Yun+kRqtROEzXJpzgyqM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706194102-2759d132c317 h1:T6srNJk2coEgXmTKD5fszPoQ3/5tJHMsnHsiZNNOXjY=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706194102-2759d132c317/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706202829-95db6194213e h1:AF5Bx8CVQ2Qh512JsZ5DEpsFZrxAGcwOBkjr0Hi6EwM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706202829-95db6194213e/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706204804-ced547ff4a79 h1:HA7YjlftRUZxqlrp8D/rZfBXTKpE2YvhxxdD8tHxaDQ=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706204804-ced547ff4a79/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b h1:nT5nOiGX2r02IYaQDQ81PHKcLssLcXuRNjzNCpGL6PU=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b/go.mod h1:/XcImLhsJTy+xD9xN9t6eV8ASM9s/OU5g/KqBb8DCEg=
 github.com/labstack/echo v3.3.10+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=
@@ -86,6 +92,7 @@ github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81P
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=

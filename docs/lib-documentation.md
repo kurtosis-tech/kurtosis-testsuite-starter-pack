@@ -353,6 +353,8 @@ Map of test name -> test object.
 ### getNetworkWidthBits() -\> uint32
 Determines the width (in bits) of the Docker network that Kurtosis will create for each test. The maximum number of IP addresses that any test can use will be 2 ^ network_width_bits, which determines the maximum number of services that can be running at any given time in a testnet. This number should be set high enough that no test will run out of IP addresses, but low enough that the Docker environment doesn't run out of IP addresses (`8` is a good value to start with).
 
+### TODO TODO getStaticFiles
+
 ---
 
 _Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-libs/issues)!_

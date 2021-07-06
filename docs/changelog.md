@@ -1,9 +1,22 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added the ability to start services with static files packaged inside the testsuite container:
+    * The `ContainerCreationConfig` with the new `TestSuite.getStaticFiles()` function
+    * This function should return a mapping between user_defined_static_file_id -> filepath_on_testsuite_container
+    * Services can then be started with the new 
+
 ### Changes
 * Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
 * Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
+* Moved code defining the Docker API from Kurt Core into this repo
+* Updated to Kurt Client vTODOOTOOOOOOOO
+
+### Breaking Changes
+* Added a `GetStaticFiles` function to the `TestSuite` interface, which should return a mapping of user-defined static file ID -> filepath on the testsuite container where that static file lives
+* `ContainerConfigFactory.getRunConfig` now takes an extra map argument, `staticFileFilepaths`, whose keys correspond to the static file IDs defined in `ContainerCreationConfigBuilder.withStaticFiles` and whose values are the filepaths _on the service container_ where those static files can be found
+    * If your service needs static files, you can use this map to set your container's ENTRYPOINT, CMD, and environment variable parameters appropriately
 
 # 1.26.3
 ### Changes
