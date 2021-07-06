@@ -79,12 +79,18 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
 
-	serviceInfo, err := castedNetwork.GetServiceInfo(apiServiceId)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
+	datastoreServiceContext, err := castedNetwork.GetServiceContext(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the API service info")
+		return stacktrace.Propagate(err, "An error occurred getting the datastore service context")
+	}
+	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreServiceContext.GetIPAddress(), datastore.Port)
+	serviceContext, err := castedNetwork.GetServiceContext(apiServiceId, apiConfigFactory)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred getting the API service context")
 	}
 
-	apiClient := api_service_client.NewAPIClient(serviceInfo.GetIPAddress().String(), api.Port)
+	apiClient := api_service_client.NewAPIClient(serviceContext.GetIPAddress(), api.Port)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
 	if _, err = apiClient.GetPerson(testPersonId); err == nil {

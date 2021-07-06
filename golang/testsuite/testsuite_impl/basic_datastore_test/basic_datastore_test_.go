@@ -59,12 +59,13 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 	// Necessary because Go doesn't have generics
 	castedNetwork := network.(*networks.NetworkContext)
 
-	serviceInfo, err := castedNetwork.GetServiceInfo(datastoreServiceId)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
+	serviceContext, err := castedNetwork.GetServiceContext(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(serviceInfo.GetIPAddress().String(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastore.Port)
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := datastoreClient.Exists(testKey)

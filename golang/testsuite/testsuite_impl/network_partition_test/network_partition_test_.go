@@ -94,13 +94,20 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Repartition complete")
 
-	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
-	apiServiceInfo, err := castedNetwork.GetServiceInfo(api1ServiceId)
+	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
+	datastoreServiceContext, err := castedNetwork.GetServiceContext(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the API 1 service info")
+		return stacktrace.Propagate(err, "An error occurred getting the datastore service context")
+	}
+	apiConfigFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreServiceContext.GetIPAddress(), datastore.Port)
+
+	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
+	apiServiceContext, err := castedNetwork.GetServiceContext(api1ServiceId, apiConfigFactory)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred getting the API 1 service context")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress().String(), api.Port)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), api.Port)
 	if err := apiClient.IncrementBooksRead(testPersonId); err == nil {
 		return stacktrace.NewError("Expected the book increment call via API 1 to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown")
@@ -110,15 +117,12 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 
 	// Adding another API service while the partition is in place ensures that partitiong works even when you add a node
 	logrus.Info("Adding second API container, to ensure adding a network under partition works...")
-	datastoreServiceInfo, err := castedNetwork.GetServiceInfo(datastoreServiceId)
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
-	}
+
 	apiClient2, err := test.addApiService(
 		castedNetwork,
 		api2ServiceId,
 		apiPartitionId,
-		datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
+		datastoreServiceContext.GetIPAddress(), datastore.Port)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the second API service to the network")
 	}

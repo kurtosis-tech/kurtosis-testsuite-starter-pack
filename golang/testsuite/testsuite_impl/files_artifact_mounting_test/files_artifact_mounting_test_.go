@@ -68,12 +68,13 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 	// Necessary because Go doesn't have generics
 	network := uncastedNetwork.(*networks.NetworkContext)
 
-	fileServerServiceInfo, err := network.GetServiceInfo(fileServerServiceId)
+	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
+	fileServerServiceContext, err := network.GetServiceContext(fileServerServiceId, configFactory)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting service info with ID '%v'", fileServerServiceId)
+		return stacktrace.Propagate(err, "An error occurred getting service context with ID '%v'", fileServerServiceId)
 	}
 
-	file1Contents, err := getFileContents(fileServerServiceInfo.GetIPAddress().String(), nginx_static.ListenPort, file1Filename)
+	file1Contents, err := getFileContents(fileServerServiceContext.GetIPAddress(), nginx_static.ListenPort, file1Filename)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting file 1's contents")
 	}
@@ -84,7 +85,7 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 		)
 	}
 
-	file2Contents, err := getFileContents(fileServerServiceInfo.GetIPAddress().String(), nginx_static.ListenPort, file2Filename)
+	file2Contents, err := getFileContents(fileServerServiceContext.GetIPAddress(), nginx_static.ListenPort, file2Filename)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting file 2's contents")
 	}
