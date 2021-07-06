@@ -39,14 +39,12 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	service, hostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	serviceInfo, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	// Necessary again due to no Go generics
-	castedService := service.(*datastore.DatastoreService)
-	datastoreClient := datastore_service_client.NewDatastoreClient(castedService.GetServiceContext().GetIPAddress(), castedService.GetPort())
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceInfo.GetIPAddress().String(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -61,14 +59,12 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 	// Necessary because Go doesn't have generics
 	castedNetwork := network.(*networks.NetworkContext)
 
-	uncastedService, err := castedNetwork.GetService(datastoreServiceId)
+	serviceInfo, err := castedNetwork.GetServiceInfo(datastoreServiceId)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the datastore service")
+		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
 	}
 
-	// Necessary again due to no Go generics
-	castedService := uncastedService.(*datastore.DatastoreService)
-	datastoreClient := datastore_service_client.NewDatastoreClient(castedService.GetServiceContext().GetIPAddress(), castedService.GetPort())
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceInfo.GetIPAddress().String(), datastore.Port)
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := datastoreClient.Exists(testKey)

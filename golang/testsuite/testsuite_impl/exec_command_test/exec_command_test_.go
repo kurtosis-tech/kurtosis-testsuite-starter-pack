@@ -44,7 +44,7 @@ func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) 
 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(execCmdTestImage)
-	_, _, _, err := networkCtx.AddService(testServiceId, configFactory)
+	_, _, err := networkCtx.AddService(testServiceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(
 			err,
@@ -58,14 +58,8 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	// Necessary because Go doesn't have generics
 	network := uncastedNetwork.(*networks.NetworkContext)
 
-	uncastedService, err := network.GetService(testServiceId)
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting service with ID '%v'", testServiceId)
-	}
-	castedService := uncastedService.(*exec_cmd_test.ExecCmdTestService)
-
 	logrus.Infof("Running exec command '%v' that should return a successful exit code...", execCommandThatShouldWork)
-	shouldWorkExitCode, _, err := runExecCmd(castedService.GetServiceContext(), execCommandThatShouldWork)
+	shouldWorkExitCode, _, err := runExecCmd(network, testServiceId, execCommandThatShouldWork)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldWork)
 	}
@@ -75,7 +69,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	logrus.Info("Exec command returned successful exit code as expected")
 
 	logrus.Infof("Running exec command '%v' that should return an error exit code...", execCommandThatShouldFail)
-	shouldFailExitCode, _, err := runExecCmd(castedService.GetServiceContext(), execCommandThatShouldFail)
+	shouldFailExitCode, _, err := runExecCmd(network, testServiceId, execCommandThatShouldFail)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldFail)
 	}
@@ -84,7 +78,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	}
 
 	logrus.Infof("Running exec command '%v' that should return log output...", execCommandThatShouldHaveLogOutput)
-	shouldHaveLogOutputExitCode, logOutput, err := runExecCmd(castedService.GetServiceContext(), execCommandThatShouldHaveLogOutput)
+	shouldHaveLogOutputExitCode, logOutput, err := runExecCmd(network, testServiceId, execCommandThatShouldHaveLogOutput)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred running exec command '%v'", execCommandThatShouldHaveLogOutput)
 	}
@@ -100,8 +94,8 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	return nil
 }
 
-func runExecCmd(serviceContext *services.ServiceContext, command []string) (int32, *[]byte, error) {
-	exitCode, logOutput, err := serviceContext.ExecCommand(command)
+func runExecCmd(network *networks.NetworkContext, serviceId services.ServiceID, command []string) (int32, *[]byte, error) {
+	exitCode, logOutput, err := network.ExecCommand(serviceId, command)
 	if err != nil {
 		return 0, nil, stacktrace.Propagate(
 			err,

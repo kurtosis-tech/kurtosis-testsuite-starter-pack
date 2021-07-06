@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
 )
 
 const (
-	port = 2434
+	Port = 2434
 
 	configFileKey = "config-file"
 
@@ -20,26 +19,26 @@ const (
 
 // Fields are public so we can marshal them as JSON
 type config struct {
-	DatastoreIp string	`json:"datastoreIp"`
-	DatastorePort int	`json:"datastorePort"`
+	DatastoreIp   string `json:"datastoreIp"`
+	DatastorePort int    `json:"datastorePort"`
 }
 
 type ApiContainerConfigFactory struct {
-	image     string
-	datastore *datastore.DatastoreService
+	image              string
+	datastoreIPAddress string
+	datastorePort      int
 }
 
-func NewApiContainerConfigFactory(image string, datastore *datastore.DatastoreService) *ApiContainerConfigFactory {
-	return &ApiContainerConfigFactory{image: image, datastore: datastore}
+func NewApiContainerConfigFactory(image string, datastoreIPAddress string, datastorePort int) *ApiContainerConfigFactory {
+	return &ApiContainerConfigFactory{image: image, datastoreIPAddress: datastoreIPAddress, datastorePort: datastorePort}
 }
-
 
 func (factory ApiContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	configInitializingFunc := func(fp *os.File) error {
-		logrus.Debugf("Datastore IP: %v , port: %v", factory.datastore.GetServiceContext().GetIPAddress(), factory.datastore.GetPort())
+		logrus.Debugf("Datastore IP: %v , port: %v", factory.datastoreIPAddress, factory.datastorePort)
 		configObj := config{
-			DatastoreIp:   factory.datastore.GetServiceContext().GetIPAddress(),
-			DatastorePort: factory.datastore.GetPort(),
+			DatastoreIp:   factory.datastoreIPAddress,
+			DatastorePort: factory.datastorePort,
 		}
 		configBytes, err := json.Marshal(configObj)
 		if err != nil {
@@ -58,9 +57,8 @@ func (factory ApiContainerConfigFactory) GetCreationConfig(containerIpAddr strin
 	result := services.NewContainerCreationConfigBuilder(
 		factory.image,
 		testVolumeMountpoint,
-		func(serviceCtx *services.ServiceContext) services.Service { return NewApiService(serviceCtx, port) },
 	).WithUsedPorts(map[string]bool{
-		fmt.Sprintf("%v/tcp", port): true,
+		fmt.Sprintf("%v/tcp", Port): true,
 	}).WithGeneratedFiles(map[string]func(*os.File) error{
 		configFileKey: configInitializingFunc,
 	}).Build()

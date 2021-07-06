@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/kurtosis-tech/example-microservice v0.0.0-20210630122852-803468141c0e // indirect
-	github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210630141335-2305ec565d98
+	github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210706142532-6ac70d279284 // indirect
 	github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/sirupsen/logrus v1.8.1

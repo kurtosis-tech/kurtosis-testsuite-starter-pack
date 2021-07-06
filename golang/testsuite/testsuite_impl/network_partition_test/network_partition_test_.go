@@ -54,23 +54,21 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
-	uncastedDatastoreSvc, datastoreSvcHostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	datastoreServiceInfo, datastoreSvcHostPortBindings,  err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	// Go doesn't have generics so we need to do this cast
-	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreSvc.GetServiceContext().GetIPAddress(), datastoreSvc.GetPort())
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
 
-	apiClient, err := test.addApiService(networkCtx, api1ServiceId, defaultPartitionId, datastoreSvc)
+	apiClient, err := test.addApiService(networkCtx, api1ServiceId, defaultPartitionId, datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding service '%v'", api1ServiceId)
 	}
@@ -90,7 +88,6 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
 
-
 	logrus.Info("Partitioning API and datastore services off from each other...")
 	if err := repartitionNetwork(castedNetwork, true, false); err != nil {
 		return stacktrace.Propagate(err, "An error occurred repartitioning the network to block access between API <-> datastore")
@@ -98,12 +95,12 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	logrus.Info("Repartition complete")
 
 	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
-	uncastedApi1Service, err := castedNetwork.GetService(api1ServiceId)
+	apiServiceInfo, err := castedNetwork.GetServiceInfo(api1ServiceId)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the API 1 service interface")
+		return stacktrace.Propagate(err, "An error occurred getting the API 1 service info")
 	}
-	api1Service := uncastedApi1Service.(*api.ApiService) // Necessary because Go doesn't have generics
-	apiClient := api_service_client.NewAPIClient(api1Service.GetServiceContext().GetIPAddress(), api1Service.GetPort())
+
+	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress().String(), api.Port)
 	if err := apiClient.IncrementBooksRead(testPersonId); err == nil {
 		return stacktrace.NewError("Expected the book increment call via API 1 to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown")
@@ -113,15 +110,15 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 
 	// Adding another API service while the partition is in place ensures that partitiong works even when you add a node
 	logrus.Info("Adding second API container, to ensure adding a network under partition works...")
-	uncastedDatastoreSvc, err := castedNetwork.GetService(datastoreServiceId)
+	datastoreServiceInfo, err := castedNetwork.GetServiceInfo(datastoreServiceId)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the datastore service interface")
+		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
 	}
 	apiClient2, err := test.addApiService(
 		castedNetwork,
 		api2ServiceId,
 		apiPartitionId,
-		uncastedDatastoreSvc.(*datastore.DatastoreService))
+		datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the second API service to the network")
 	}
@@ -173,15 +170,14 @@ func (test NetworkPartitionTest) addApiService(
 		networkCtx *networks.NetworkContext,
 		serviceId services.ServiceID,
 		partitionId networks.PartitionID,
-		datastoreSvc *datastore.DatastoreService) (*api_service_client.APIClient, error, ) {
-	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreSvc)
-	uncastedApiSvc, hostPortBindings, _, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
+		datastoreIPAddress string, datastorePort int) (*api_service_client.APIClient, error, ) {
+	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreIPAddress, datastorePort)
+	apiServiceInfo, hostPortBindings, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiSrvc := uncastedApiSvc.(*api.ApiService)
-	apiClient := api_service_client.NewAPIClient(apiSrvc.GetServiceContext().GetIPAddress(), apiSrvc.GetPort())
+	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress().String(), api.Port)
 	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")
