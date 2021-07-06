@@ -43,12 +43,12 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
-	datastoreServiceInfo, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -57,13 +57,13 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
+	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreServiceContext.GetIPAddress(), datastore.Port)
 	apiServiceInfo, apiSvcHostPortBindings, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress().String(), api.Port)
+	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress(), api.Port)
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {

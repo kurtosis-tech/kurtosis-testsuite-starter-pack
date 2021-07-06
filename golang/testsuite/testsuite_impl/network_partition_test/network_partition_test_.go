@@ -54,21 +54,21 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
-	datastoreServiceInfo, datastoreSvcHostPortBindings,  err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	datastoreServiceContext, datastoreSvcHostPortBindings,  err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
 
-	apiClient, err := test.addApiService(networkCtx, api1ServiceId, defaultPartitionId, datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
+	apiClient, err := test.addApiService(networkCtx, api1ServiceId, defaultPartitionId, datastoreServiceContext.GetIPAddress(), datastore.Port)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding service '%v'", api1ServiceId)
 	}
@@ -172,12 +172,12 @@ func (test NetworkPartitionTest) addApiService(
 		partitionId networks.PartitionID,
 		datastoreIPAddress string, datastorePort int) (*api_service_client.APIClient, error, ) {
 	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreIPAddress, datastorePort)
-	apiServiceInfo, hostPortBindings, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
+	apiServiceContext, hostPortBindings, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress().String(), api.Port)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), api.Port)
 	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")

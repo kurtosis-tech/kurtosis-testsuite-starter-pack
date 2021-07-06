@@ -60,12 +60,12 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 	}
 
 	configFactory := datastore.NewDatastoreContainerConfigFactory(network.datastoreServiceImage)
-	datastoreServiceInfo, hostPortBindings, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
+	datastoreServiceContext, hostPortBindings, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceInfo.GetIPAddress().String(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -74,7 +74,7 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 
-	network.datastoreIPAddress = datastoreServiceInfo.GetIPAddress().String()
+	network.datastoreIPAddress = datastoreServiceContext.GetIPAddress()
 	network.datastorePort = datastore.Port
 
 	personModifyingApiClient, err := network.addApiService()
@@ -117,12 +117,12 @@ func (network *TestNetwork) addApiService() (*api_service_client.APIClient, erro
 	serviceId := services.ServiceID(serviceIdStr)
 
 	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreIPAddress, network.datastorePort)
-	apiServiceInfo, hostPortBindings, err := network.networkCtx.AddService(serviceId, configFactory)
+	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceInfo.GetIPAddress().String(), api.Port)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), api.Port)
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {

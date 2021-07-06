@@ -39,12 +39,12 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	serviceInfo, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	serviceContext, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(serviceInfo.GetIPAddress().String(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
