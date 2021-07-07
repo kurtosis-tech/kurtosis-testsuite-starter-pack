@@ -5,6 +5,9 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 * Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
 * Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
 
+### Changes
+* Replaces `Service` implementations to `ServiceContext` for get service info in the tests and to custom service's client to interact with the services
+
 # 1.26.3
 ### Changes
 * Imports datastore service and api service clients from `example-microservices` to interact with both services. 
