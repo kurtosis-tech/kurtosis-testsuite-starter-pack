@@ -2,7 +2,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 ### Changes
-* Depend on Kurtosis Client v0.2.2
+* Depend on Kurtosis Client v0.2.3
 * Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
 * Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
 
