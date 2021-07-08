@@ -50,6 +50,8 @@ github.com/kurtosis-tech/example-microservice v0.0.0-20210629204024-1a49cf713304
 github.com/kurtosis-tech/example-microservice v0.0.0-20210629204024-1a49cf713304/go.mod h1:KiXXUled3vCITYLTigmhDiXz0V9CFthPlv9C2B1ZfI8=
 github.com/kurtosis-tech/example-microservice v0.0.0-20210630122852-803468141c0e h1:is5qOE2cFKfJ+11ykD0XAdB3oDbBq+XOFCyERmjthl8=
 github.com/kurtosis-tech/example-microservice v0.0.0-20210630122852-803468141c0e/go.mod h1:KiXXUled3vCITYLTigmhDiXz0V9CFthPlv9C2B1ZfI8=
+github.com/kurtosis-tech/example-microservice v0.0.0-20210708183951-eef7284aab1f h1:+J7UTAo5IIxII33chTR9V/allL/eyvPHarQG6HMh0gI=
+github.com/kurtosis-tech/example-microservice v0.0.0-20210708183951-eef7284aab1f/go.mod h1:KiXXUled3vCITYLTigmhDiXz0V9CFthPlv9C2B1ZfI8=
 github.com/kurtosis-tech/kurtosis-client v0.0.0-20210705140240-c7a6ea5f8507 h1:ptCPOlJKrU6aI5xrVlgV9eRkMjcRffZU8uYhvgMdIZ4=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210623231509-bb07b900f4cb h1:hSWT6ThlKT2RCBFrfLWnJTimYf3ns7Nf6wY8swbBaSc=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210623231509-bb07b900f4cb/go.mod h1:degxAH35Ut7M3Ec4E2LtYk7Yun+kRqtROEzXJpzgyqM=

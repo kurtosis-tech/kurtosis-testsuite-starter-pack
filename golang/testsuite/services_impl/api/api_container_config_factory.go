@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -24,21 +25,20 @@ type config struct {
 }
 
 type ApiContainerConfigFactory struct {
-	image              string
-	datastoreIPAddress string
-	datastorePort      int
+	image           string
+	datastoreClient *datastore_service_client.DatastoreClient
 }
 
-func NewApiContainerConfigFactory(image string, datastoreIPAddress string, datastorePort int) *ApiContainerConfigFactory {
-	return &ApiContainerConfigFactory{image: image, datastoreIPAddress: datastoreIPAddress, datastorePort: datastorePort}
+func NewApiContainerConfigFactory(image string, datastoreClient *datastore_service_client.DatastoreClient) *ApiContainerConfigFactory {
+	return &ApiContainerConfigFactory{image: image, datastoreClient: datastoreClient}
 }
 
 func (factory ApiContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	configInitializingFunc := func(fp *os.File) error {
-		logrus.Debugf("Datastore IP: %v , port: %v", factory.datastoreIPAddress, factory.datastorePort)
+		logrus.Debugf("Datastore IP: %v , port: %v", factory.datastoreClient.IpAddr(), factory.datastoreClient.Port())
 		configObj := config{
-			DatastoreIp:   factory.datastoreIPAddress,
-			DatastorePort: factory.datastorePort,
+			DatastoreIp:   factory.datastoreClient.IpAddr(),
+			DatastorePort: factory.datastoreClient.Port(),
 		}
 		configBytes, err := json.Marshal(configObj)
 		if err != nil {

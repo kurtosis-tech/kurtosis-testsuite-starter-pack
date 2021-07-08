@@ -31,8 +31,7 @@ type TestNetwork struct {
 	networkCtx                *networks.NetworkContext
 	datastoreServiceImage     string
 	apiServiceImage           string
-	datastoreIPAddress        string
-	datastorePort             int
+	datastoreClient           *datastore_service_client.DatastoreClient
 	personModifyingApiClient  *api_service_client.APIClient
 	personRetrievingApiClient *api_service_client.APIClient
 	nextApiServiceId          int
@@ -43,8 +42,7 @@ func NewTestNetwork(networkCtx *networks.NetworkContext, datastoreServiceImage s
 		networkCtx:                networkCtx,
 		datastoreServiceImage:     datastoreServiceImage,
 		apiServiceImage:           apiServiceImage,
-		datastoreIPAddress:        "",
-		datastorePort:             0,
+		datastoreClient:           nil,
 		personModifyingApiClient:  nil,
 		personRetrievingApiClient: nil,
 		nextApiServiceId:          0,
@@ -54,6 +52,10 @@ func NewTestNetwork(networkCtx *networks.NetworkContext, datastoreServiceImage s
 //  Custom network implementations usually have a "setup" method (possibly parameterized) that is used
 //   in the Test.Setup function of each test
 func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
+
+	if network.datastoreClient != nil {
+		return stacktrace.NewError("Cannot add datastore client to network; datastore client already exists!")
+	}
 
 	if network.personModifyingApiClient != nil || network.personRetrievingApiClient != nil {
 		return stacktrace.NewError("Cannot add API services to network; one or more API services already exists")
@@ -74,8 +76,7 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
 
-	network.datastoreIPAddress = datastoreServiceContext.GetIPAddress()
-	network.datastorePort = datastore.Port
+	network.datastoreClient = datastoreClient
 
 	personModifyingApiClient, err := network.addApiService()
 	if err != nil {
@@ -112,11 +113,15 @@ func (network *TestNetwork) GetPersonRetrievingApiClient() (*api_service_client.
 // ====================================================================================================
 func (network *TestNetwork) addApiService() (*api_service_client.APIClient, error) {
 
+	if network.datastoreClient == nil {
+		return nil, stacktrace.NewError("Cannot add API service to network; no datastore client exists")
+	}
+
 	serviceIdStr := apiServiceIdPrefix + strconv.Itoa(network.nextApiServiceId)
 	network.nextApiServiceId = network.nextApiServiceId + 1
 	serviceId := services.ServiceID(serviceIdStr)
 
-	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreIPAddress, network.datastorePort)
+	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreClient)
 	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
