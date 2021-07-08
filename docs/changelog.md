@@ -2,6 +2,15 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.26.4
+### Changes
+* Depend on Kurtosis Client v0.2.3
+* Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
+* Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
+
+### Features
+* Add a `BulkCommandExecutionTest` as part of the Kurtosis-internal testsuite for demonstrating and testing bulk command execution
+
 # 1.26.3
 ### Changes
 * Imports datastore service and api service clients from `example-microservices` to interact with both services. 

@@ -10,6 +10,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/advanced_network_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/bulk_command_execution_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/exec_command_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/files_artifact_mounting_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/network_partition_test"
@@ -52,8 +53,9 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 		tests["execCommandTest"] = exec_command_test.ExecCommandTest{}
 		tests["waitForEndpointAvailabilityTest"] = wait_for_endpoint_availability_test.NewWaitForEndpointAvailabilityTest(
 			suite.datastoreServiceImage,
-			)
-	}
+		)
+		tests["bulkCommandExecutionTest"] = bulk_command_execution_test.NewBulkCommandExecutionTest(suite.datastoreServiceImage)
+}
 
 	return tests
 }
