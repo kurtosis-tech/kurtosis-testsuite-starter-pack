@@ -13,7 +13,9 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/exec_command_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/files_artifact_mounting_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/local_static_file_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/network_partition_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/static_file_consts"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/wait_for_endpoint_availability_test"
 	"path"
 )
@@ -22,8 +24,6 @@ const (
 
 	// Directory where static files live inside the testsuite container
 	staticFilesDirpath = "/static-files"
-
-	TestStaticFileID services.StaticFileID = "test-static-file"
 )
 
 type ExampleTestsuite struct {
@@ -63,6 +63,7 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 		tests["waitForEndpointAvailabilityTest"] = wait_for_endpoint_availability_test.NewWaitForEndpointAvailabilityTest(
 			suite.datastoreServiceImage,
 			)
+		tests["localStaticFileTest"] = local_static_file_test.LocalStaticFileTest{}
 	}
 
 	return tests
@@ -74,7 +75,7 @@ func (suite ExampleTestsuite) GetNetworkWidthBits() uint32 {
 
 func (suite ExampleTestsuite) GetStaticFiles() map[services.StaticFileID]string {
 	return map[services.StaticFileID]string{
-		TestStaticFileID: path.Join(staticFilesDirpath, "test-static-file.txt"),
+		static_file_consts.TestStaticFileID: path.Join(staticFilesDirpath, static_file_consts.TestStaticFileFilename),
 	}
 }
 

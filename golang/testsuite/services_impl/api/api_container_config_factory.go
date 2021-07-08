@@ -68,7 +68,7 @@ func (factory ApiContainerConfigFactory) GetCreationConfig(containerIpAddr strin
 	return result, nil
 }
 
-func (factory ApiContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
+func (factory ApiContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 	configFilepath, found := generatedFileFilepaths[configFileKey]
 	if !found {
 		return nil, stacktrace.NewError("No filepath found for config file key '%v'", configFileKey)

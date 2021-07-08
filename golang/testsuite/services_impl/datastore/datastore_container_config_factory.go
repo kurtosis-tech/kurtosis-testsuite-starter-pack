@@ -35,7 +35,7 @@ func (factory DatastoreContainerConfigFactory) GetCreationConfig(containerIpAddr
 	return result, nil
 }
 
-func (factory DatastoreContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
+func (factory DatastoreContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 	return services.NewContainerRunConfigBuilder().Build(), nil
 }
 

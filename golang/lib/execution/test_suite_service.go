@@ -71,9 +71,15 @@ func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty 
 	}
 
 	networkWidthBits := service.suite.GetNetworkWidthBits()
+	staticFiles := service.suite.GetStaticFiles()
+	staticFilesStrKeys := map[string]bool{}
+	for key := range staticFiles {
+		staticFilesStrKeys[string(key)] = true
+	}
 	testSuiteMetadata := &bindings.TestSuiteMetadata{
 		TestMetadata:     allTestMetadata,
 		NetworkWidthBits: networkWidthBits,
+		StaticFiles: staticFilesStrKeys,
 	}
 
 	return testSuiteMetadata, nil

@@ -20,27 +20,33 @@ A config factory implementation to launch an NginxStaticService pre-initialized 
 	the given files artifact
 */
 type NginxStaticContainerConfigFactory struct {
-	filesArtifactId services.FilesArtifactID
+	filesArtifactIdOpt services.FilesArtifactID
 }
 
-func NewNginxStaticContainerConfigFactory(filesArtifactId services.FilesArtifactID) *NginxStaticContainerConfigFactory {
-	return &NginxStaticContainerConfigFactory{filesArtifactId: filesArtifactId}
+// NOTE: The files artifact ID is optional; if it's emptystring then no files artifact will be extracted
+func NewNginxStaticContainerConfigFactory(filesArtifactIdOpt services.FilesArtifactID) *NginxStaticContainerConfigFactory {
+	return &NginxStaticContainerConfigFactory{filesArtifactIdOpt: filesArtifactIdOpt}
 }
 
 func (factory NginxStaticContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
-	result := services.NewContainerCreationConfigBuilder(
+	builder := services.NewContainerCreationConfigBuilder(
 		dockerImage,
 		testVolumeMountpoint,
 		func(serviceCtx *services.ServiceContext) services.Service { return NewNginxStaticService(serviceCtx) },
 	).WithUsedPorts(map[string]bool{
 		strconv.Itoa(listenPort): true,
-	}).WithFilesArtifacts(map[services.FilesArtifactID]string{
-		factory.filesArtifactId: nginxStaticFilesDirpath,
-	}).Build()
-	return result, nil
+	})
+
+	if factory.filesArtifactIdOpt != "" {
+		builder.WithFilesArtifacts(map[services.FilesArtifactID]string{
+			factory.filesArtifactIdOpt: nginxStaticFilesDirpath,
+		})
+	}
+
+	return builder.Build(), nil
 }
 
-func (factory NginxStaticContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
+func (factory NginxStaticContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 	return services.NewContainerRunConfigBuilder().Build(), nil
 }
 
