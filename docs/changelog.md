@@ -6,7 +6,18 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 * Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
 
 ### Changes
-* Replaces `Service` implementations to `ServiceContext` for get service info in the tests and to custom service's client to interact with the services
+* Removes all `Service` implementations
+* Switch to using `example-microservice` clients in example tests (rather than `Service` implementations)
+
+//TODO
+### Breaking Changes
+* Upgraded to Kurtosis Client vTODOOOOO, which:
+    * Removed `Service` interface; users should communicate with the service directly or use a custom client (e.g. ElasticsearchClient)
+    * Removed `GetService` from `NetworkContext` users can use `GetServiceContext` to get relevant service's information
+    * Removed `AvailabilityChecker` class in the returned values of `AddService` and `AddServiceToPartition`; users should either call the service directly to check availability or use the `NetworkContext.WaitForAvailability` method
+    * Removed `GetServiceCreatingFunc` from `ContainerCreationConfig`type
+    * Removed `serviceCreatingFunc` field and `GetServiceCreatingFunc` from ContainerCreationConfig type
+    * Replaced `Service` interface with `ServiceContext` type in the returned values of `AddService` and `AddServiceToPartition`
 
 # 1.26.3
 ### Changes

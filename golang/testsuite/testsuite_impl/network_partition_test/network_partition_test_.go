@@ -19,24 +19,23 @@ import (
 )
 
 const (
-	defaultPartitionId networks.PartitionID = ""
-	apiPartitionId networks.PartitionID = "api"
+	defaultPartitionId   networks.PartitionID = ""
+	apiPartitionId       networks.PartitionID = "api"
 	datastorePartitionId networks.PartitionID = "datastore"
 
 	datastoreServiceId services.ServiceID = "datastore"
 	api1ServiceId      services.ServiceID = "api1"
 	api2ServiceId      services.ServiceID = "api2"
 
-
 	waitForStartupDelayMilliseconds = 1000
-	waitForStartupMaxNumPolls = 15
+	waitForStartupMaxNumPolls       = 15
 
 	testPersonId = 46
 )
 
 type NetworkPartitionTest struct {
 	datstoreImage string
-	apiImage string
+	apiImage      string
 }
 
 func NewNetworkPartitionTest(datstoreImage string, apiImage string) *NetworkPartitionTest {
@@ -54,7 +53,7 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
-	datastoreServiceContext, datastoreSvcHostPortBindings,  err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -82,7 +81,6 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 
 	return networkCtx, nil
 }
-
 
 func (test NetworkPartitionTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
@@ -122,7 +120,9 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 		castedNetwork,
 		api2ServiceId,
 		apiPartitionId,
-		datastoreServiceContext.GetIPAddress(), datastore.Port)
+		datastoreServiceContext.GetIPAddress(),
+		datastore.Port,
+	)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the second API service to the network")
 	}
@@ -148,7 +148,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	if err := apiClient.IncrementBooksRead(testPersonId); err != nil {
 		return stacktrace.Propagate(
 			err,
-			"An error occurred incrementing the number of books read via API 1, even though the partition should have been " +
+			"An error occurred incrementing the number of books read via API 1, even though the partition should have been "+
 				"healed by the goroutine",
 		)
 	}
@@ -159,7 +159,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	if err := apiClient2.IncrementBooksRead(testPersonId); err != nil {
 		return stacktrace.Propagate(
 			err,
-			"An error occurred incrementing the number of books read via API 2, even though the partition should have been " +
+			"An error occurred incrementing the number of books read via API 2, even though the partition should have been "+
 				"healed by the goroutine",
 		)
 	}
@@ -171,10 +171,12 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 //                                     Private helper functions
 // ========================================================================================================
 func (test NetworkPartitionTest) addApiService(
-		networkCtx *networks.NetworkContext,
-		serviceId services.ServiceID,
-		partitionId networks.PartitionID,
-		datastoreIPAddress string, datastorePort int) (*api_service_client.APIClient, error, ) {
+	networkCtx *networks.NetworkContext,
+	serviceId services.ServiceID,
+	partitionId networks.PartitionID,
+	datastoreIPAddress string,
+	datastorePort int,
+	) (*api_service_client.APIClient, error, ) {
 	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreIPAddress, datastorePort)
 	apiServiceContext, hostPortBindings, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
 	if err != nil {
@@ -193,11 +195,11 @@ func (test NetworkPartitionTest) addApiService(
 
 /*
 Creates a repartitioner that will partition the network between the API & datastore services, with the connection between them configurable
- */
+*/
 func repartitionNetwork(
-		networkCtx *networks.NetworkContext,
-		isConnectionBlocked bool,
-		isApi2ServiceAddedYet bool) error {
+	networkCtx *networks.NetworkContext,
+	isConnectionBlocked bool,
+	isApi2ServiceAddedYet bool) error {
 	apiPartitionServiceIds := map[services.ServiceID]bool{
 		api1ServiceId: true,
 	}
@@ -229,5 +231,3 @@ func repartitionNetwork(
 	}
 	return nil
 }
-
-
