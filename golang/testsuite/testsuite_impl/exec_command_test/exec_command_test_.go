@@ -58,8 +58,7 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	// Necessary because Go doesn't have generics
 	network := uncastedNetwork.(*networks.NetworkContext)
 
-	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(execCmdTestImage)
-	testServiceContext, err := network.GetServiceContext(testServiceId, configFactory)
+	testServiceContext, err := network.GetServiceContext(testServiceId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test service context")
 	}

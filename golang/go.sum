@@ -80,6 +80,10 @@ github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210707174903-6a77e1929d
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210707174903-6a77e1929d60/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210707204912-e229688a4501 h1:/su8SmsppgKurttBNLIHWpOVYvF4orMzszfwlgo16VU=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210707204912-e229688a4501/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210708172211-f99c56aad34c h1:g15bfWHDHXV4kSgs6eFg0OWyBpAggSttt/H9+lcESw8=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210708172211-f99c56aad34c/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210708172715-fee6f7bff23a h1:zxl1GKDFMoqu7SxwKNAenuKnPDVHKgMInblzObfkwbo=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210708172715-fee6f7bff23a/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b h1:nT5nOiGX2r02IYaQDQ81PHKcLssLcXuRNjzNCpGL6PU=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b/go.mod h1:/XcImLhsJTy+xD9xN9t6eV8ASM9s/OU5g/KqBb8DCEg=
 github.com/labstack/echo v3.3.10+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=

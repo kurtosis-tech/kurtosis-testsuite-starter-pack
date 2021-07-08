@@ -59,8 +59,7 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 	// Necessary because Go doesn't have generics
 	castedNetwork := network.(*networks.NetworkContext)
 
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	serviceContext, err := castedNetwork.GetServiceContext(datastoreServiceId, datastoreConfigFactory)
+	serviceContext, err := castedNetwork.GetServiceContext(datastoreServiceId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
 	}

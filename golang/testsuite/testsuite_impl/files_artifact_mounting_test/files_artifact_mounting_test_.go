@@ -68,8 +68,7 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 	// Necessary because Go doesn't have generics
 	network := uncastedNetwork.(*networks.NetworkContext)
 
-	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
-	fileServerServiceContext, err := network.GetServiceContext(fileServerServiceId, configFactory)
+	fileServerServiceContext, err := network.GetServiceContext(fileServerServiceId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting service context with ID '%v'", fileServerServiceId)
 	}

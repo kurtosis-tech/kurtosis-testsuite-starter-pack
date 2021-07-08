@@ -92,15 +92,13 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Repartition complete")
 
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datstoreImage)
-	datastoreServiceContext, err := castedNetwork.GetServiceContext(datastoreServiceId, datastoreConfigFactory)
+	datastoreServiceContext, err := castedNetwork.GetServiceContext(datastoreServiceId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service context")
 	}
-	apiConfigFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreServiceContext.GetIPAddress(), datastore.Port)
 
 	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
-	apiServiceContext, err := castedNetwork.GetServiceContext(api1ServiceId, apiConfigFactory)
+	apiServiceContext, err := castedNetwork.GetServiceContext(api1ServiceId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the API 1 service context")
 	}

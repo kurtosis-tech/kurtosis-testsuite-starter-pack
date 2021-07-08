@@ -43,26 +43,26 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	castedNetwork := network.(*networks_impl.TestNetwork)
 	personModifierClient, err := castedNetwork.GetPersonModifyingApiClient()
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the person-modifying API service")
+		return stacktrace.Propagate(err, "An error occurred getting the person-modifying API client")
 	}
 	personRetrieverClient, err := castedNetwork.GetPersonRetrievingApiClient()
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API service")
+		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API client")
 	}
 
-	logrus.Infof("Adding test person via person-modifying API service...")
+	logrus.Infof("Adding test person via person-modifying API client...")
 	if err := personModifierClient.AddPerson(testPersonId); err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding test person")
 	}
 	logrus.Info("Test person added")
 
-	logrus.Infof("Incrementing test person's number of books read through person-modifying API service ...")
+	logrus.Infof("Incrementing test person's number of books read through person-modifying API client...")
 	if err := personModifierClient.IncrementBooksRead(testPersonId); err != nil {
 		return stacktrace.Propagate(err, "An error occurred incrementing the number of books read")
 	}
 	logrus.Info("Incremented number of books read")
 
-	logrus.Info("Retrieving test person to verify number of books read person-retrieving API service...")
+	logrus.Info("Retrieving test person to verify number of books read person-retrieving API client...")
 	person, err := personRetrieverClient.GetPerson(testPersonId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test person")
