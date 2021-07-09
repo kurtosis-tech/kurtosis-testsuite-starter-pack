@@ -57,7 +57,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreServiceContext.GetIPAddress(), datastore.Port)
+	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreClient)
 	apiServiceContext, apiSvcHostPortBindings, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")

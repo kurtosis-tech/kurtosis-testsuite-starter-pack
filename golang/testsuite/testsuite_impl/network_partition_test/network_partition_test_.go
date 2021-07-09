@@ -67,7 +67,7 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
 	}
 
-	apiClient, err := test.addApiService(networkCtx, api1ServiceId, defaultPartitionId, datastoreServiceContext.GetIPAddress(), datastore.Port)
+	apiClient, err := test.addApiService(networkCtx, api1ServiceId, defaultPartitionId, datastoreClient)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding service '%v'", api1ServiceId)
 	}
@@ -96,6 +96,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service context")
 	}
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
 
 	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
 	apiServiceContext, err := castedNetwork.GetServiceContext(api1ServiceId)
@@ -118,8 +119,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 		castedNetwork,
 		api2ServiceId,
 		apiPartitionId,
-		datastoreServiceContext.GetIPAddress(),
-		datastore.Port,
+		datastoreClient,
 	)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the second API service to the network")
@@ -169,13 +169,11 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 //                                     Private helper functions
 // ========================================================================================================
 func (test NetworkPartitionTest) addApiService(
-	networkCtx *networks.NetworkContext,
-	serviceId services.ServiceID,
-	partitionId networks.PartitionID,
-	datastoreIPAddress string,
-	datastorePort int,
-	) (*api_service_client.APIClient, error, ) {
-	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreIPAddress, datastorePort)
+		networkCtx *networks.NetworkContext,
+		serviceId services.ServiceID,
+		partitionId networks.PartitionID,
+		datastoreServiceClient *datastore_service_client.DatastoreClient) (*api_service_client.APIClient, error) {
+	configFactory := api.NewApiContainerConfigFactory(test.apiImage, datastoreServiceClient)
 	apiServiceContext, hostPortBindings, err := networkCtx.AddServiceToPartition(serviceId, partitionId, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
