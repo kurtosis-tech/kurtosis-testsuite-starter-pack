@@ -23,7 +23,6 @@ type NginxStaticContainerConfigFactory struct {
 	filesArtifactId services.FilesArtifactID
 }
 
-// NOTE: The files artifact ID is optional; if it's emptystring then no files artifact will be extracted
 func NewNginxStaticContainerConfigFactory(filesArtifactId services.FilesArtifactID) *NginxStaticContainerConfigFactory {
 	return &NginxStaticContainerConfigFactory{filesArtifactId: filesArtifactId}
 }

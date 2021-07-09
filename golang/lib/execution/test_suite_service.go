@@ -95,7 +95,10 @@ func (service *TestSuiteService) CopyStaticFilesToExecutionVolume(ctx context.Co
 		staticFileId := services.StaticFileID(staticFileIdStr)
 
 		// Sanity-check that the source filepath exists
-		srcAbsFilepath := allStaticFiles[staticFileId]
+		srcAbsFilepath, found := allStaticFiles[staticFileId]
+		if !found {
+			return nil, stacktrace.NewError("The Kurtosis API gave a relative filepath for static file '%v', but the testsuite didn't declare a static file with this key!", staticFileId)
+		}
 		if _, err := os.Stat(srcAbsFilepath); os.IsNotExist(err) {
 			return nil, stacktrace.NewError("Source filepath '%v' associated with static file '%v' doesn't exist", srcAbsFilepath, staticFileId)
 		}
