@@ -2,22 +2,26 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 ### Changes
-* Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
-* Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
-
-### Changes
 * Removes all `Service` implementations
 * Switch to using `example-microservice` clients in example tests (rather than `Service` implementations)
 
-//TODO
 ### Breaking Changes
-* Upgraded to Kurtosis Client vTODOOOOO, which:
+* Upgraded to Kurtosis Client v0.3.0, which:
     * Removed `Service` interface; users should communicate with the service directly or use a custom client (e.g. ElasticsearchClient)
     * Removed `GetService` from `NetworkContext` users can use `GetServiceContext` to get relevant service's information
     * Removed `AvailabilityChecker` class in the returned values of `AddService` and `AddServiceToPartition`; users should either call the service directly to check availability or use the `NetworkContext.WaitForAvailability` method
     * Removed `GetServiceCreatingFunc` from `ContainerCreationConfig`type
     * Removed `serviceCreatingFunc` field and `GetServiceCreatingFunc` from ContainerCreationConfig type
     * Replaced `Service` interface with `ServiceContext` type in the returned values of `AddService` and `AddServiceToPartition`
+
+# 1.26.4
+### Changes
+* Depend on Kurtosis Client v0.2.3
+* Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
+* Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
+
+### Features
+* Add a `BulkCommandExecutionTest` as part of the Kurtosis-internal testsuite for demonstrating and testing bulk command execution
 
 # 1.26.3
 ### Changes
