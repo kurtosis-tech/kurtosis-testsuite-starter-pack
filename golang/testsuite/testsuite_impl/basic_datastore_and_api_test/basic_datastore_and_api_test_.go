@@ -43,14 +43,12 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
-	uncastedDatastoreSvc, datastoreSvcHostPortBindings, _, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	// Go doesn't have generics so we need to do this cast
-	datastoreSvc := uncastedDatastoreSvc.(*datastore.DatastoreService)
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreSvc.GetServiceContext().GetIPAddress(), datastoreSvc.GetPort())
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -59,15 +57,13 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreSvc)
-	uncastedApiService, apiSvcHostPortBindings, _, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
+	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreClient)
+	apiServiceContext, apiSvcHostPortBindings, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	// Go doesn't have generics so we need to do this cast
-	apiSrvc := uncastedApiService.(*api.ApiService)
-	apiClient := api_service_client.NewAPIClient(apiSrvc.GetServiceContext().GetIPAddress(), apiSrvc.GetPort())
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), api.Port)
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -83,13 +79,12 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
 
-	uncastedApiService, err := castedNetwork.GetService(apiServiceId)
+	serviceContext, err := castedNetwork.GetServiceContext(apiServiceId)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred getting the API service")
+		return stacktrace.Propagate(err, "An error occurred getting the API service context")
 	}
-	apiService := uncastedApiService.(*api.ApiService)
 
-	apiClient := api_service_client.NewAPIClient(apiService.GetServiceContext().GetIPAddress(), apiService.GetPort())
+	apiClient := api_service_client.NewAPIClient(serviceContext.GetIPAddress(), api.Port)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
 	if _, err = apiClient.GetPerson(testPersonId); err == nil {

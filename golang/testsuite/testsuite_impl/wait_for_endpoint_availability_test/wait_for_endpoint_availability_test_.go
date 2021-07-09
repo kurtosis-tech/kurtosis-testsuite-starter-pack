@@ -46,12 +46,12 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 	castedNetworkContext := network.(*networks.NetworkContext)
 
 	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	_, _, _, err := castedNetworkContext.AddService(datastoreServiceId, datastoreConfigFactory)
+	_, _,  err := castedNetworkContext.AddService(datastoreServiceId, datastoreConfigFactory)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	port := uint32(datastoreConfigFactory.GetPort())
+	port := uint32(datastore.Port)
 
 	if err := castedNetworkContext.WaitForEndpointAvailability(datastoreServiceId, port, healthCheckUrlSlug, waitInitialDelaySeconds, waitForStartupMaxPolls, waitForStartupTimeBetweenPolls, healthyValue); err != nil {
 		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")
