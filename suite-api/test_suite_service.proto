@@ -12,6 +12,10 @@ service TestSuiteService {
 
   rpc GetTestSuiteMetadata(google.protobuf.Empty) returns (TestSuiteMetadata) {};
 
+  // Will be called by Kurtosis itself, telling the testsuite container to copy static files contained in the testsuite 
+  //  to the suite execution volume so that API containers can use them when starting services
+  rpc CopyStaticFilesToExecutionVolume(CopyStaticFilesToExecutionVolumeArgs) returns (google.protobuf.Empty) {};
+
   rpc SetupTest(SetupTestArgs) returns (google.protobuf.Empty) {};
 
   // We don't need args dictating what test to run because SetupTest already indicates it (and it wouldn't make
@@ -28,7 +32,9 @@ message TestSuiteMetadata {
 
   uint32 network_width_bits = 2;
 
-  // TODO Declare used file artifact URLs here (at the suite level)
+  // "Set" of user-defined ID's identifying the static files that the testsuite container has which can be
+  //  used when starting services
+  map<string, bool> static_files = 3;
 }
 
 message TestMetadata {
@@ -42,9 +48,19 @@ message TestMetadata {
   uint32 test_run_timeout_in_seconds = 4;
 }
 
+// ====================================================================================================
+//                                   Copy Static Files To Execution Volume
+// ====================================================================================================
+message CopyStaticFilesToExecutionVolumeArgs {
+  // Map of user_defined_id -> filepath_relative_to_suite_ex_vol, where user_defined_id corresponds to the
+  //  IDs defined in the test suite metadata and the filepath_relative_to_suite_ex_vol is the relative filepath
+  //  where the testsuite should copy its contained static files. The files at that relative filepath will exist,
+  //  and be empty.
+  map<string, string> static_file_dest_relative_filepaths = 1;
+}
 
 // ====================================================================================================
-//                                       SetupTest
+//                                              SetupTest
 // ====================================================================================================
 message SetupTestArgs {
   string test_name = 1;

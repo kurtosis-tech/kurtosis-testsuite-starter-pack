@@ -1,6 +1,22 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Upgraded to Kurtosis Client v0.4.0
+* Moved code defining the Docker API from Kurt Core into this repo
+
+### Features
+* Added the ability to start services with static files packaged inside the testsuite container:
+    * The `TestSuite.getStaticFiles` method will declare the static files that the testsuite makes available
+    * `ContainerCreationConfigBuilder.withStaticFiles` allows loading static files into a service's filesystem at creation time
+    * `ServiceContext.loadStaticFiles` allows loading static files into a service's filesystem at runtime
+
+### Breaking Changes
+* Upgraded to Kurtosis Core 1.16 (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/)), which provides the `LoadStaticFiles` endpoint
+* Added a `GetStaticFiles` function to the `TestSuite` interface, which should return a mapping of user-defined static file ID -> filepath on the testsuite container where that static file lives
+* Upgraded to Kurtosis Client v0.4.0, which has the following breaking changes:
+    * `ContainerConfigFactory.getRunConfig` now takes an extra map argument, `staticFileFilepaths`, whose keys correspond to the static file IDs defined in `ContainerCreationConfigBuilder.withStaticFiles` and whose values are the filepaths _on the service container_ where those static files can be found
+        * If your service needs static files, you can use this map to set your container's ENTRYPOINT, CMD, and environment variable parameters appropriately
 
 # 1.27.0
 ### Changes

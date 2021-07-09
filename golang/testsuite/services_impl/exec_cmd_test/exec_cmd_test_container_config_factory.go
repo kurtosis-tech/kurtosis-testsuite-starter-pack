@@ -22,7 +22,7 @@ func (e ExecCmdTestContainerConfigFactory) GetCreationConfig(containerIpAddr str
 	return result, nil
 }
 
-func (e ExecCmdTestContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
+func (e ExecCmdTestContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 	// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
 	// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
 	// args), but this provides a nice little regression test of the ENTRYPOINT overriding
