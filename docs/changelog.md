@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.28.0
 ### Changes
 * Upgraded to Kurtosis Client v0.4.0
 * Moved code defining the Docker API from Kurt Core into this repo
