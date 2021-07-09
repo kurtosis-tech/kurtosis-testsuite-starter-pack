@@ -29,6 +29,10 @@ WORKDIR /run
 # Copy the code into the container
 COPY --from=builder /build/testsuite.bin .
 
+# Copy local static files inside the testsuite image
+# NOTE: The testsuite will need to register these static files in the GetStaticFiles method
+COPY testsuite/files /static-files
+
 # TODO Switch to exec command form, wrapping arguments with double-quote
 CMD ./testsuite.bin \
     --custom-params-json="${CUSTOM_PARAMS_JSON}" \

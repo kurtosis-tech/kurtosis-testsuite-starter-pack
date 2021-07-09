@@ -22,6 +22,9 @@ type TestSuiteServiceClient interface {
 	// Endpoint to verify the gRPC server is actually up before making any real calls
 	IsAvailable(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetTestSuiteMetadata(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*TestSuiteMetadata, error)
+	// Will be called by Kurtosis itself, telling the testsuite container to copy static files contained in the testsuite
+	//  to the suite execution volume so that API containers can use them when starting services
+	CopyStaticFilesToExecutionVolume(ctx context.Context, in *CopyStaticFilesToExecutionVolumeArgs, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	SetupTest(ctx context.Context, in *SetupTestArgs, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// We don't need args dictating what test to run because SetupTest already indicates it (and it wouldn't make
 	//  sense to setup one test and run another)
@@ -54,6 +57,15 @@ func (c *testSuiteServiceClient) GetTestSuiteMetadata(ctx context.Context, in *e
 	return out, nil
 }
 
+func (c *testSuiteServiceClient) CopyStaticFilesToExecutionVolume(ctx context.Context, in *CopyStaticFilesToExecutionVolumeArgs, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/test_suite_api.TestSuiteService/CopyStaticFilesToExecutionVolume", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *testSuiteServiceClient) SetupTest(ctx context.Context, in *SetupTestArgs, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/test_suite_api.TestSuiteService/SetupTest", in, out, opts...)
@@ -79,6 +91,9 @@ type TestSuiteServiceServer interface {
 	// Endpoint to verify the gRPC server is actually up before making any real calls
 	IsAvailable(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	GetTestSuiteMetadata(context.Context, *emptypb.Empty) (*TestSuiteMetadata, error)
+	// Will be called by Kurtosis itself, telling the testsuite container to copy static files contained in the testsuite
+	//  to the suite execution volume so that API containers can use them when starting services
+	CopyStaticFilesToExecutionVolume(context.Context, *CopyStaticFilesToExecutionVolumeArgs) (*emptypb.Empty, error)
 	SetupTest(context.Context, *SetupTestArgs) (*emptypb.Empty, error)
 	// We don't need args dictating what test to run because SetupTest already indicates it (and it wouldn't make
 	//  sense to setup one test and run another)
@@ -95,6 +110,9 @@ func (UnimplementedTestSuiteServiceServer) IsAvailable(context.Context, *emptypb
 }
 func (UnimplementedTestSuiteServiceServer) GetTestSuiteMetadata(context.Context, *emptypb.Empty) (*TestSuiteMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTestSuiteMetadata not implemented")
+}
+func (UnimplementedTestSuiteServiceServer) CopyStaticFilesToExecutionVolume(context.Context, *CopyStaticFilesToExecutionVolumeArgs) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CopyStaticFilesToExecutionVolume not implemented")
 }
 func (UnimplementedTestSuiteServiceServer) SetupTest(context.Context, *SetupTestArgs) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetupTest not implemented")
@@ -151,6 +169,24 @@ func _TestSuiteService_GetTestSuiteMetadata_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TestSuiteService_CopyStaticFilesToExecutionVolume_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CopyStaticFilesToExecutionVolumeArgs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestSuiteServiceServer).CopyStaticFilesToExecutionVolume(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/test_suite_api.TestSuiteService/CopyStaticFilesToExecutionVolume",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestSuiteServiceServer).CopyStaticFilesToExecutionVolume(ctx, req.(*CopyStaticFilesToExecutionVolumeArgs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TestSuiteService_SetupTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetupTestArgs)
 	if err := dec(in); err != nil {
@@ -201,6 +237,10 @@ var TestSuiteService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTestSuiteMetadata",
 			Handler:    _TestSuiteService_GetTestSuiteMetadata_Handler,
+		},
+		{
+			MethodName: "CopyStaticFilesToExecutionVolume",
+			Handler:    _TestSuiteService_CopyStaticFilesToExecutionVolume_Handler,
 		},
 		{
 			MethodName: "SetupTest",

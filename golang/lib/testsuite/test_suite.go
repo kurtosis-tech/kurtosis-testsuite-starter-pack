@@ -5,6 +5,8 @@
 
 package testsuite
 
+import "github.com/kurtosis-tech/kurtosis-client/golang/services"
+
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type TestSuite interface {
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
@@ -12,4 +14,7 @@ type TestSuite interface {
 
 	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 	GetNetworkWidthBits() uint32
+
+	// Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
+	GetStaticFiles() map[services.StaticFileID]string
 }
