@@ -8,7 +8,7 @@ import (
 const (
 	dockerImage = "flashspys/nginx-static"
 
-	listenPort = 80
+	ListenPort = 80
 
 	testVolumeMountpoint = "/test-volume"
 
@@ -31,9 +31,8 @@ func (factory NginxStaticContainerConfigFactory) GetCreationConfig(containerIpAd
 	result := services.NewContainerCreationConfigBuilder(
 		dockerImage,
 		testVolumeMountpoint,
-		func(serviceCtx *services.ServiceContext) services.Service { return NewNginxStaticService(serviceCtx) },
 	).WithUsedPorts(map[string]bool{
-		strconv.Itoa(listenPort): true,
+		strconv.Itoa(ListenPort): true,
 	}).WithFilesArtifacts(map[services.FilesArtifactID]string{
 		factory.filesArtifactId: nginxStaticFilesDirpath,
 	}).Build()
@@ -42,8 +41,4 @@ func (factory NginxStaticContainerConfigFactory) GetCreationConfig(containerIpAd
 
 func (factory NginxStaticContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string) (*services.ContainerRunConfig, error) {
 	return services.NewContainerRunConfigBuilder().Build(), nil
-}
-
-func (factory NginxStaticContainerConfigFactory) GetPort() int {
-	return listenPort
 }
