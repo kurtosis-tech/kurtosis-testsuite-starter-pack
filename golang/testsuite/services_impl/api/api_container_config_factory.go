@@ -14,8 +14,6 @@ const (
 	port = 2434
 
 	configFileKey = "config-file"
-
-	testVolumeMountpoint = "/test-volume"
 )
 
 // Fields are public so we can marshal them as JSON
@@ -57,7 +55,6 @@ func (factory ApiContainerConfigFactory) GetCreationConfig(containerIpAddr strin
 
 	result := services.NewContainerCreationConfigBuilder(
 		factory.image,
-		testVolumeMountpoint,
 		func(serviceCtx *services.ServiceContext) services.Service { return NewApiService(serviceCtx, port) },
 	).WithUsedPorts(map[string]bool{
 		fmt.Sprintf("%v/tcp", port): true,
