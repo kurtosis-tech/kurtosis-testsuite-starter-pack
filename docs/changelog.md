@@ -1,11 +1,20 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Upgraded to Kurtosis Client v0.4.0
+
 ### Features
 * Added the ability to start services with static files packaged inside the testsuite container:
-    * The `ContainerCreationConfig` with the new `TestSuite.getStaticFiles()` function
-    * This function should return a mapping between user_defined_static_file_id -> filepath_on_testsuite_container
-    * Services can then be started with the new 
+    * The `TestSuite.getStaticFiles` method will declare the static files that the testsuite makes available
+    * `ContainerCreationConfigBuilder.withStaticFiles` allows loading static files into a service's filesystem at creation time
+    * `ServiceContext.loadStaticFiles` allows loading static files into a service's filesystem at runtime
+
+### Breaking Changes
+* The `TestSuite` interface now has a `GetStaticFiles()` function, which should return all the static files that the testsuite makes available for services
+* Upgraded to Kurtosis Client v0.4.0, which has the following breaking changes:
+    * `ContainerConfigFactory.getRunConfig` now takes an extra map argument, `staticFileFilepaths`, whose keys correspond to the static file IDs defined in `ContainerCreationConfigBuilder.withStaticFiles` and whose values are the filepaths _on the service container_ where those static files can be found
+        * If your service needs static files, you can use this map to set your container's ENTRYPOINT, CMD, and environment variable parameters appropriately
 
 # 1.27.0
 ### Changes
