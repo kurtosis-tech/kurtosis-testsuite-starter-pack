@@ -26,7 +26,7 @@ func (l LocalStaticFileTest) Configure(builder *testsuite.TestConfigurationBuild
 
 func (l LocalStaticFileTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(dockerImage)
-	_, _, _, err := networkCtx.AddService(testService, configFactory)
+	_, _, err := networkCtx.AddService(testService, configFactory)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
@@ -39,16 +39,11 @@ func (l LocalStaticFileTest) Run(network networks.Network) error {
 		return stacktrace.NewError("An error occurred casting the uncasted network to a NetworkContext")
 	}
 
-	uncastedService, err := castedNetwork.GetService(testService)
+	serviceCtx, err := castedNetwork.GetServiceContext(testService)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting service '%v'", testService)
 	}
-	castedService, ok := uncastedService.(*exec_cmd_test.ExecCmdTestService)
-	if !ok {
-		return stacktrace.NewError("An error occurred downcasting the uncasted service")
-	}
 
-	serviceCtx := castedService.GetServiceContext()
 	staticFileAbsFilepaths, err := serviceCtx.LoadStaticFiles(map[services.StaticFileID]bool{static_file_consts.TestStaticFileID: true})
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred loading the static file corresponding to key '%v'", static_file_consts.TestStaticFileID)

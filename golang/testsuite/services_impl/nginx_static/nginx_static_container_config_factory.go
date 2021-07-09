@@ -8,7 +8,7 @@ import (
 const (
 	dockerImage = "flashspys/nginx-static"
 
-	listenPort = 80
+	ListenPort = 80
 
 	testVolumeMountpoint = "/test-volume"
 
@@ -20,36 +20,26 @@ A config factory implementation to launch an NginxStaticService pre-initialized 
 	the given files artifact
 */
 type NginxStaticContainerConfigFactory struct {
-	filesArtifactIdOpt services.FilesArtifactID
+	filesArtifactId services.FilesArtifactID
 }
 
 // NOTE: The files artifact ID is optional; if it's emptystring then no files artifact will be extracted
-func NewNginxStaticContainerConfigFactory(filesArtifactIdOpt services.FilesArtifactID) *NginxStaticContainerConfigFactory {
-	return &NginxStaticContainerConfigFactory{filesArtifactIdOpt: filesArtifactIdOpt}
+func NewNginxStaticContainerConfigFactory(filesArtifactId services.FilesArtifactID) *NginxStaticContainerConfigFactory {
+	return &NginxStaticContainerConfigFactory{filesArtifactId: filesArtifactId}
 }
 
 func (factory NginxStaticContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
-	builder := services.NewContainerCreationConfigBuilder(
+	result := services.NewContainerCreationConfigBuilder(
 		dockerImage,
 		testVolumeMountpoint,
-		func(serviceCtx *services.ServiceContext) services.Service { return NewNginxStaticService(serviceCtx) },
 	).WithUsedPorts(map[string]bool{
-		strconv.Itoa(listenPort): true,
-	})
-
-	if factory.filesArtifactIdOpt != "" {
-		builder.WithFilesArtifacts(map[services.FilesArtifactID]string{
-			factory.filesArtifactIdOpt: nginxStaticFilesDirpath,
-		})
-	}
-
-	return builder.Build(), nil
+		strconv.Itoa(ListenPort): true,
+	}).WithFilesArtifacts(map[services.FilesArtifactID]string{
+		factory.filesArtifactId: nginxStaticFilesDirpath,
+	}).Build()
+	return result, nil
 }
 
 func (factory NginxStaticContainerConfigFactory) GetRunConfig(containerIpAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 	return services.NewContainerRunConfigBuilder().Build(), nil
-}
-
-func (factory NginxStaticContainerConfigFactory) GetPort() int {
-	return listenPort
 }

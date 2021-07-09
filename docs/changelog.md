@@ -7,7 +7,23 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
     * This function should return a mapping between user_defined_static_file_id -> filepath_on_testsuite_container
     * Services can then be started with the new 
 
+# 1.27.0
 ### Changes
+* Removes all `Service` implementations in the example testsuites
+* Switch to using `example-microservice` clients in example tests (rather than `Service` implementations)
+
+### Breaking Changes
+* Upgraded to Kurtosis Client v0.3.0, which:
+    * Removed `Service` interface; users should communicate with the service directly or use a custom client (e.g. ElasticsearchClient)
+    * Removed `GetService` from `NetworkContext` users can use `GetServiceContext` to get relevant service's information
+    * Removed `AvailabilityChecker` class in the returned values of `AddService` and `AddServiceToPartition`; users should either call the service directly to check availability or use the `NetworkContext.WaitForAvailability` method
+    * Removed `GetServiceCreatingFunc` from `ContainerCreationConfig`type
+    * Removed `serviceCreatingFunc` field and `GetServiceCreatingFunc` from ContainerCreationConfig type
+    * Replaced `Service` interface with `ServiceContext` type in the returned values of `AddService` and `AddServiceToPartition`
+
+# 1.26.4
+### Changes
+* Depend on Kurtosis Client v0.2.3
 * Added warning to `NetworkContext.repartitionNetwork` indicating that partitioning must be turned on in the test configuration
 * Added extra information to PartitionConnectionInfo docs explaining that the gRPC-internal fields can be ignored
 * Moved code defining the Docker API from Kurt Core into this repo
@@ -17,6 +33,9 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 * Added a `GetStaticFiles` function to the `TestSuite` interface, which should return a mapping of user-defined static file ID -> filepath on the testsuite container where that static file lives
 * `ContainerConfigFactory.getRunConfig` now takes an extra map argument, `staticFileFilepaths`, whose keys correspond to the static file IDs defined in `ContainerCreationConfigBuilder.withStaticFiles` and whose values are the filepaths _on the service container_ where those static files can be found
     * If your service needs static files, you can use this map to set your container's ENTRYPOINT, CMD, and environment variable parameters appropriately
+
+### Features
+* Add a `BulkCommandExecutionTest` as part of the Kurtosis-internal testsuite for demonstrating and testing bulk command execution
 
 # 1.26.3
 ### Changes
