@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.27.0
 ### Changes
 * Removes all `Service` implementations in the example testsuites
 * Switch to using `example-microservice` clients in example tests (rather than `Service` implementations)
