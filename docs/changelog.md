@@ -11,6 +11,7 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
     * `ServiceContext.loadStaticFiles` allows loading static files into a service's filesystem at runtime
 
 ### Breaking Changes
+* Upgraded to Kurtosis Core 1.16 (requires downloading correct scripts from the [dists page](https://kurtosis-public-access.s3.us-east-1.amazonaws.com/index.html?prefix=dist/)), which provides the `LoadStaticFiles` endpoint
 * The `TestSuite` interface now has a `GetStaticFiles()` function, which should return all the static files that the testsuite makes available for services
 * Upgraded to Kurtosis Client v0.4.0, which has the following breaking changes:
     * `ContainerConfigFactory.getRunConfig` now takes an extra map argument, `staticFileFilepaths`, whose keys correspond to the static file IDs defined in `ContainerCreationConfigBuilder.withStaticFiles` and whose values are the filepaths _on the service container_ where those static files can be found
