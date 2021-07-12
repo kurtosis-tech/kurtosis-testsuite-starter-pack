@@ -76,7 +76,8 @@ func (suite ExampleTestsuite) GetNetworkWidthBits() uint32 {
 
 func (suite ExampleTestsuite) GetStaticFiles() map[services.StaticFileID]string {
 	return map[services.StaticFileID]string{
-		static_file_consts.TestStaticFileID: path.Join(staticFilesDirpath, static_file_consts.TestStaticFileFilename),
+		static_file_consts.TestStaticFile1ID: path.Join(staticFilesDirpath, static_file_consts.TestStaticFile1Filename),
+		static_file_consts.TestStaticFile2ID: path.Join(staticFilesDirpath, static_file_consts.TestStaticFile2Filename),
 	}
 }
 
