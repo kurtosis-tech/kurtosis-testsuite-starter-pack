@@ -38,8 +38,19 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 }
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	serviceContext, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"kurtosistech/example-microservices_datastore",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"1323/tcp": true},
+	).Build()
+
+	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+
+	serviceContext, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}

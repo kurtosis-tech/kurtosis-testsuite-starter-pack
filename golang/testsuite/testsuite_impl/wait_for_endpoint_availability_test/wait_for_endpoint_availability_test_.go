@@ -45,8 +45,18 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 	// Necessary because Go doesn't have generics
 	castedNetworkContext := network.(*networks.NetworkContext)
 
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	_, _,  err := castedNetworkContext.AddService(datastoreServiceId, datastoreConfigFactory)
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"kurtosistech/example-microservices_datastore",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"1323/tcp": true},
+	).Build()
+
+	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+
+	_, _,  err := castedNetworkContext.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}

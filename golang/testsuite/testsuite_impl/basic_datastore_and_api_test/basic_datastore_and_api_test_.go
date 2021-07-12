@@ -6,31 +6,32 @@
 package basic_datastore_and_api_test
 
 import (
+	"encoding/json"
 	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/api"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
+	"os"
 )
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
-	apiServiceId services.ServiceID = "api"
+	apiServiceId       services.ServiceID = "api"
 
 	waitForStartupDelayMilliseconds = 1000
-	waitForStartupMaxPolls = 15
+	waitForStartupMaxPolls          = 15
 
-	testPersonId = 23
+	testPersonId     = 23
 	testNumBooksRead = 3
 )
 
 type BasicDatastoreAndApiTest struct {
 	datstoreImage string
-	apiImage string
+	apiImage      string
 }
 
 func NewBasicDatastoreAndApiTest(datstoreImage string, apiImage string) *BasicDatastoreAndApiTest {
@@ -42,8 +43,19 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 }
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(b.datstoreImage)
-	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"kurtosistech/example-microservices_datastore",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"1323/tcp": true},
+	).Build()
+
+	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+
+	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -57,13 +69,62 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	apiConfigFactory := api.NewApiContainerConfigFactory(b.apiImage, datastoreClient)
-	apiServiceContext, apiSvcHostPortBindings, err := networkCtx.AddService(apiServiceId, apiConfigFactory)
+	configFileKey := "config-file"
+
+	type config struct {
+		DatastoreIp   string `json:"datastoreIp"`
+		DatastorePort int    `json:"datastorePort"`
+	}
+
+	configInitializingFunc := func(fp *os.File) error {
+		logrus.Debugf("Datastore IP: %v , port: %v", datastoreClient.IpAddr(), datastoreClient.Port())
+		configObj := config{
+			DatastoreIp:   datastoreClient.IpAddr(),
+			DatastorePort: datastoreClient.Port(),
+		}
+		configBytes, err := json.Marshal(configObj)
+		if err != nil {
+			return stacktrace.Propagate(err, "An error occurred serializing the config to JSON")
+		}
+
+		logrus.Debugf("API config JSON: %v", string(configBytes))
+
+		if _, err := fp.Write(configBytes); err != nil {
+			return stacktrace.Propagate(err, "An error occurred writing the serialized config JSON to file")
+		}
+
+		return nil
+	}
+
+	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"kurtosistech/example-microservices_api",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"2434/tcp": true},
+	).WithGeneratedFiles(map[string]func(*os.File) error{
+		configFileKey: configInitializingFunc,
+	}).Build()
+
+	apiServiceGenerateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		configFilepath, found := generatedFileFilepaths[configFileKey]
+		if !found {
+			return nil, stacktrace.NewError("No filepath found for config file key '%v'", configFileKey)
+		}
+		startCmd := []string{
+			"./api.bin",
+			"--config",
+			configFilepath,
+		}
+		result := services.NewContainerRunConfigBuilder().WithCmdOverride(startCmd).Build()
+		return result, nil
+	}
+
+	apiServiceContext, apiSvcHostPortBindings, err := networkCtx.AddService(apiServiceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), api.Port)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), 2434)
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -74,7 +135,6 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	return networkCtx, nil
 }
 
-
 func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 	// Go doesn't have generics so we have to do this cast first
 	castedNetwork := network.(*networks.NetworkContext)
@@ -84,7 +144,7 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the API service context")
 	}
 
-	apiClient := api_service_client.NewAPIClient(serviceContext.GetIPAddress(), api.Port)
+	apiClient := api_service_client.NewAPIClient(serviceContext.GetIPAddress(), 2434)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
 	if _, err = apiClient.GetPerson(testPersonId); err == nil {

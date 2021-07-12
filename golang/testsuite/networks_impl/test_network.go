@@ -6,14 +6,15 @@
 package networks_impl
 
 import (
+	"encoding/json"
 	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/api"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
+	"os"
 	"strconv"
 )
 
@@ -61,8 +62,18 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 		return stacktrace.NewError("Cannot add API services to network; one or more API services already exists")
 	}
 
-	configFactory := datastore.NewDatastoreContainerConfigFactory(network.datastoreServiceImage)
-	datastoreServiceContext, hostPortBindings, err := network.networkCtx.AddService(datastoreServiceId, configFactory)
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"kurtosistech/example-microservices_datastore",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"1323/tcp": true},
+	).Build()
+
+	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+
+	datastoreServiceContext, hostPortBindings, err := network.networkCtx.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -121,13 +132,62 @@ func (network *TestNetwork) addApiService() (*api_service_client.APIClient, erro
 	network.nextApiServiceId = network.nextApiServiceId + 1
 	serviceId := services.ServiceID(serviceIdStr)
 
-	configFactory := api.NewApiContainerConfigFactory(network.apiServiceImage, network.datastoreClient)
-	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, configFactory)
+	configFileKey := "config-file"
+
+	type config struct {
+		DatastoreIp   string `json:"datastoreIp"`
+		DatastorePort int    `json:"datastorePort"`
+	}
+
+	configInitializingFunc := func(fp *os.File) error {
+		logrus.Debugf("Datastore IP: %v , port: %v", network.datastoreClient.IpAddr(), network.datastoreClient.Port())
+		configObj := config{
+			DatastoreIp:   network.datastoreClient.IpAddr(),
+			DatastorePort: network.datastoreClient.Port(),
+		}
+		configBytes, err := json.Marshal(configObj)
+		if err != nil {
+			return stacktrace.Propagate(err, "An error occurred serializing the config to JSON")
+		}
+
+		logrus.Debugf("API config JSON: %v", string(configBytes))
+
+		if _, err := fp.Write(configBytes); err != nil {
+			return stacktrace.Propagate(err, "An error occurred writing the serialized config JSON to file")
+		}
+
+		return nil
+	}
+
+	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"kurtosistech/example-microservices_api",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"2434/tcp": true},
+	).WithGeneratedFiles(map[string]func(*os.File) error{
+		configFileKey: configInitializingFunc,
+	}).Build()
+
+	apiServiceGenerateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		configFilepath, found := generatedFileFilepaths[configFileKey]
+		if !found {
+			return nil, stacktrace.NewError("No filepath found for config file key '%v'", configFileKey)
+		}
+		startCmd := []string{
+			"./api.bin",
+			"--config",
+			configFilepath,
+		}
+		result := services.NewContainerRunConfigBuilder().WithCmdOverride(startCmd).Build()
+		return result, nil
+	}
+
+	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), api.Port)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), 2434)
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {

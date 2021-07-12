@@ -40,11 +40,17 @@ github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kurtosis-tech/example-microservice v0.0.0-20210630122852-803468141c0e/go.mod h1:KiXXUled3vCITYLTigmhDiXz0V9CFthPlv9C2B1ZfI8=
 github.com/kurtosis-tech/example-microservice v0.0.0-20210708190343-51d08a1c685b/go.mod h1:KiXXUled3vCITYLTigmhDiXz0V9CFthPlv9C2B1ZfI8=
+github.com/kurtosis-tech/example-microservice v0.0.0-20210708190344-942aa7289105 h1:zoGtUPS8lp2L2Dd+ocPOaNr2yK0WAfHL6S5mAaZqhzU=
+github.com/kurtosis-tech/example-microservice v0.0.0-20210708190344-942aa7289105/go.mod h1:KiXXUled3vCITYLTigmhDiXz0V9CFthPlv9C2B1ZfI8=
 github.com/kurtosis-tech/kurtosis-client v0.0.0-20210709213855-4df83454d041 h1:nVs3cM4FfYUXaSAi2i+zR9NU2zyJYSpiCla9JpHqOsY=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210709213855-4df83454d041 h1:QoEwpe8Ijg4ykbAS6qhQQuIXsxKIlV7BdiJSCN4sFxA=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210709213855-4df83454d041/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210709221857-9070e5102e66 h1:urGPJlEOinM8wNFE/M/+HVPblghoaEKcswdn4fABHx8=
 github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210709221857-9070e5102e66/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210712190126-6b03289cd8c2 h1:IkyI3kw3LBtPVkg9vUB6D6KzAPqWnqAnVPJtpic3RE4=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210712190126-6b03289cd8c2/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210712191213-01f5ecdd9bcc h1:1dtvXgELPjR6RumepFq2hvF2uYqiEImPTsWnIpnQZHI=
+github.com/kurtosis-tech/kurtosis-client/golang v0.0.0-20210712191213-01f5ecdd9bcc/go.mod h1:UQD+w+gp8PItWKvIKJGO2PExpmO6p0XhWfBOtGPzBLM=
 github.com/kurtosis-tech/minimal-grpc-server v0.0.0-20210504182615-82226e94877b/go.mod h1:/XcImLhsJTy+xD9xN9t6eV8ASM9s/OU5g/KqBb8DCEg=
 github.com/labstack/echo v3.3.10+incompatible/go.mod h1:0INS7j/VjnFxD4E2wkz67b8cVwCLbBmJyDaka6Cmk1s=
 github.com/labstack/gommon v0.3.0/go.mod h1:MULnywXg0yavhxWKc+lOruYdAhDwPK9wf0OL7NoOu+k=

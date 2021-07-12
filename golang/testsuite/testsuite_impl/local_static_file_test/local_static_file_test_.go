@@ -4,7 +4,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/exec_cmd_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/static_file_consts"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -25,8 +24,27 @@ func (l LocalStaticFileTest) Configure(builder *testsuite.TestConfigurationBuild
 }
 
 func (l LocalStaticFileTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(dockerImage)
-	_, _, err := networkCtx.AddService(testService, configFactory)
+
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"alpine:3.12.4",
+		"/test-volume",
+	).Build()
+
+	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
+		// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
+		// args), but this provides a nice little regression test of the ENTRYPOINT overriding
+		entrypointArgs := []string{"sleep"}
+		cmdArgs := []string{"30"}
+		result := services.NewContainerRunConfigBuilder().WithEntrypointOverride(
+			entrypointArgs,
+		).WithCmdOverride(
+			cmdArgs,
+		).Build()
+		return result, nil
+	}
+
+	_, _, err := networkCtx.AddService(testService, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}

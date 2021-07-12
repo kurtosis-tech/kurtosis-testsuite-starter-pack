@@ -50,8 +50,21 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 }
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
-	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, configFactory)
+
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		"flashspys/nginx-static",
+		"/test-volume",
+	).WithUsedPorts(
+		map[string]bool{"80": true},
+	).WithFilesArtifacts(map[services.FilesArtifactID]string{
+		"test-files-artifact": "/static",
+	}).Build()
+
+	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+
+	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
