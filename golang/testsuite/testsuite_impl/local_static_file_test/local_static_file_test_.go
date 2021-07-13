@@ -58,7 +58,7 @@ func (l LocalStaticFileTest) Run(network networks.Network) error {
 	}
 	testFile2AbsFilepath, found := staticFileAbsFilepaths[static_file_consts.TestStaticFile2ID]
 	if !found {
-		return stacktrace.Propagate(err, "No filepath found for test file 2 key '%v'; this is a bug in Kurtosis!", static_file_consts.TestStaticFile1ID)
+		return stacktrace.Propagate(err, "No filepath found for test file 2 key '%v'; this is a bug in Kurtosis!", static_file_consts.TestStaticFile2ID)
 	}
 
 	// Test file 1
