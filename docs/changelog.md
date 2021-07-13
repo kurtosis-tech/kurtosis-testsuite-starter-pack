@@ -1,8 +1,11 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.28.1
 ### Changes
 * Switched `release.sh` script to use the devtools version
+* Removed the Kurtosis Client docs from the documentation here, as they've been moved to the Kurtosis Client repo
 * Upgrade to Kurt Client 0.5.0
 
 ### Features
