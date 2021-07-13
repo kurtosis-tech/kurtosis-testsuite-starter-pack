@@ -1,6 +1,6 @@
-Lib Documentation
-=================
-Kurtosis libs exist in multiple languages and maintaining in-code comments for each of these is prohibitively expensive. This page exists to provide the canonical reference for Kurtosis lib classes and methods. Note that any comments specific to a language implementation will be found in the library code comments.
+Test SDK Documentation
+======================
+The Kurtosis testing SDK exists in multiple languages and maintaining in-code comments for each of these is prohibitively expensive. This page provides the canonical reference for testing SDK classes and methods. For documentation on the client (which is used to manipulate the testnet), see [the Kurtosis Client documentation](../kurtosis-client/lib-documentation).
 
 _Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-libs/issues)!_
 
