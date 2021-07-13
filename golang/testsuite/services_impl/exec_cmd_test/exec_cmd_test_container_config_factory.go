@@ -17,7 +17,6 @@ func NewExecCmdTestContainerConfigFactory(image string) *ExecCmdTestContainerCon
 func (e ExecCmdTestContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	result := services.NewContainerCreationConfigBuilder(
 		e.image,
-		testVolumeMountpoint,
 	).Build()
 	return result, nil
 }

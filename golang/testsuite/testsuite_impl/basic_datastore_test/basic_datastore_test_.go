@@ -41,7 +41,6 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"1323/tcp": true},
 	).Build()

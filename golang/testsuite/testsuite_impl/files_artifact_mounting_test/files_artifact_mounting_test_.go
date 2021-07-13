@@ -53,7 +53,6 @@ func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (n
 
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"flashspys/nginx-static",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"80": true},
 	).WithFilesArtifacts(map[services.FilesArtifactID]string{

@@ -27,7 +27,6 @@ func (l LocalStaticFileTest) Setup(networkCtx *networks.NetworkContext) (network
 
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"alpine:3.12.4",
-		"/test-volume",
 	).Build()
 
 	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {

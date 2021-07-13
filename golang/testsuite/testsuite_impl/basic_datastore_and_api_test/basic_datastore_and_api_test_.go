@@ -46,7 +46,6 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"1323/tcp": true},
 	).Build()
@@ -98,7 +97,6 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_api",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"2434/tcp": true},
 	).WithGeneratedFiles(map[string]func(*os.File) error{

@@ -44,7 +44,6 @@ func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"alpine:3.12.4",
-		"/test-volume",
 	).Build()
 
 	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {

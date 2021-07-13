@@ -47,7 +47,6 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"1323/tcp": true},
 	).Build()

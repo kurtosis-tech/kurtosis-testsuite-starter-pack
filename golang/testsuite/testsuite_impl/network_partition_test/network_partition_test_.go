@@ -55,7 +55,6 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"1323/tcp": true},
 	).Build()
@@ -214,7 +213,6 @@ func (test NetworkPartitionTest) addApiService(
 
 	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_api",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"2434/tcp": true},
 	).WithGeneratedFiles(map[string]func(*os.File) error{

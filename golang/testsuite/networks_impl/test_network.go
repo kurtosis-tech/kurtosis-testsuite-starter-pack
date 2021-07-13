@@ -64,7 +64,6 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"1323/tcp": true},
 	).Build()
@@ -161,7 +160,6 @@ func (network *TestNetwork) addApiService() (*api_service_client.APIClient, erro
 
 	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_api",
-		"/test-volume",
 	).WithUsedPorts(
 		map[string]bool{"2434/tcp": true},
 	).WithGeneratedFiles(map[string]func(*os.File) error{
