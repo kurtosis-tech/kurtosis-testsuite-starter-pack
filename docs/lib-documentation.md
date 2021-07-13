@@ -369,39 +369,33 @@ _Found a bug? File it on [the repo](https://github.com/kurtosis-tech/kurtosis-li
 <!-- TODO Make the function definition not include args or return values, so we don't get these huge ugly links that break if we change the function signature -->
 <!-- TODO make the reference names a) be properly-cased (e.g. "Service.isAvailable" rather than "service_isavailable") and b) have an underscore in front of them, so they're easy to find-replace without accidentally over-replacing -->
 
-[availabilitychecker]: #availabilitychecker
-[availabilitychecker_waitforstartup]: #waitforstartupduration-timebetweenpolls-int-maxnumretries
+[containerconfigfactory]: ../kurtosis-client/lib-documentation##containerconfigfactorys-extends-service
+[containerconfigfactory_getrunconfig]: ../kurtosis-client/lib-documentation##getrunconfigstring-containeripaddr-mapstring-string-generatedfilefilepaths---containerrunconfig
 
-[containerconfigfactory]: #containerconfigfactorys-extends-service
-[containerconfigfactory_getrunconfig]: #getrunconfigstring-containeripaddr-mapstring-string-generatedfilefilepaths---containerrunconfig
+[containercreationconfig]: ../kurtosis-client/lib-documentation#containercreationconfig
+[containercreationconfig_usedports]: ../kurtosis-client/lib-documentation#setstring-usedports
+[containercreationconfig_filegeneratingfuncs]: ../kurtosis-client/lib-documentation#mapstring-funcfile-filegeneratingfuncs
+[containercreationconfig_filesartifactmountpoints]: ../kurtosis-client/lib-documentation#mapstring-string-filesartifactmountpoints
+[containercreationconfig_servicecreatingfunc]: ../kurtosis-client/lib-documentation#funcservicecontext---s-servicecreatingfunc
 
-[containercreationconfig]: #containercreationconfig
-[containercreationconfig_usedports]: #setstring-usedports
-[containercreationconfig_filegeneratingfuncs]: #mapstring-funcfile-filegeneratingfuncs
-[containercreationconfig_filesartifactmountpoints]: #mapstring-string-filesartifactmountpoints
-[containercreationconfig_servicecreatingfunc]: #funcservicecontext---s-servicecreatingfunc
+[containercreationconfigbuilder]: ../kurtosis-client/lib-documentation#containercreationconfigbuilder
 
-[containercreationconfigbuilder]: #containercreationconfigbuilder
+[containerrunconfig]: ../kurtosis-client/lib-documentation#containerrunconfig
 
-[containerrunconfig]: #containerrunconfig
+[containerrunconfigbuilder]: ../kurtosis-client/lib-documentation#containerrunconfigbuilder
 
-[containerrunconfigbuilder]: #containerrunconfigbuilder
+[network]: ../kurtosis-client/lib-documentation#network
 
-[network]: #network
+[networkcontext]: ../kurtosis-client/lib-documentation#networkcontext
+[networkcontext_addservice]: ../kurtosis-client/lib-documentation#addserviceserviceid-serviceid-containerconfigfactorys-configfactory---s-service-mapstring-portbinding-hostportbindings-availabilitychecker-checker
+[networkcontext_addservicetopartition]: ../kurtosis-client/lib-documentation#addservicetopartitionserviceid-serviceid-partitionid-partitionid-containerconfigfactorys-configfactory---s-service-mapstring-portbinding-hostportbindings-availabilitychecker-checker
+[networkcontext_repartitionnetwork]: ../kurtosis-client/lib-documentation#repartitionnetworkmappartitionid-setserviceid-partitionservices-mappartitionid-mappartitionid-partitionconnectioninfo-partitionconnections-partitionconnectioninfo-defaultconnection
 
-[networkcontext]: #networkcontext
-[networkcontext_addservice]: #addserviceserviceid-serviceid-containerconfigfactorys-configfactory---s-service-mapstring-portbinding-hostportbindings-availabilitychecker-checker
-[networkcontext_addservicetopartition]: #addservicetopartitionserviceid-serviceid-partitionid-partitionid-containerconfigfactorys-configfactory---s-service-mapstring-portbinding-hostportbindings-availabilitychecker-checker
-[networkcontext_repartitionnetwork]: #repartitionnetworkmappartitionid-setserviceid-partitionservices-mappartitionid-mappartitionid-partitionconnectioninfo-partitionconnections-partitionconnectioninfo-defaultconnection
+[partitionconnectioninfo]: ../kurtosis-client/lib-documentation#partitionconnectioninfo
 
-[partitionconnectioninfo]: #partitionconnectioninfo
+[servicecontext]: ../kurtosis-client/lib-documentation##servicecontext
 
-[service]: #service
-[service_isavailable]: #isavailable---bool
-
-[servicecontext]: #servicecontext
-
-[generatedfilefilepaths]: #generatedfilefilepaths
+[generatedfilefilepaths]: ../kurtosis-client/lib-documentation##generatedfilefilepaths
 
 [test]: #testn-extends-network
 [test_configure]: #configuretestconfigurationbuilder-builder
