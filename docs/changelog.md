@@ -1,8 +1,11 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Switched `release.sh` script to use the devtools version
+
 ### Features
-* The static file test now test with two files, rather than one, to guard against a regression found in `ServiceDirectory` where the first file would be fine but the second file would break
+* The `localStaticFileTest` now tests with two files, rather than one, to guard against a regression found in `ServiceDirectory` where the first file would be fine but the second file would break
 
 # 1.28.0
 ### Changes
