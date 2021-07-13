@@ -3,9 +3,16 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 # TBD
 ### Changes
 * Switched `release.sh` script to use the devtools version
+* Upgrade to Kurt Client 0.5.0
 
 ### Features
 * The `localStaticFileTest` now tests with two files, rather than one, to guard against a regression found in `ServiceDirectory` where the first file would be fine but the second file would break
+
+### Breaking Changes
+* Upgraded to Kurtosis Client 0.5.0, which contains the following breaking changes:
+    * The `ContainerCreationConfigBuilder` constructor no longer takes in a test volume mountpoint
+    * Added a `ContainerCreationConfigBuilder.WithTestVolumeMountpoint` for specifying the test volume mountpoint, which should be used instead if the default test volume mountpoint of `/kurtosis-test-volume` isn't acceptable
+
 
 # 1.28.0
 ### Changes
