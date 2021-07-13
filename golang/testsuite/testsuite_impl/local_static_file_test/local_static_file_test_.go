@@ -25,9 +25,7 @@ func (l LocalStaticFileTest) Configure(builder *testsuite.TestConfigurationBuild
 
 func (l LocalStaticFileTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 
-	containerCreationConfig := services.NewContainerCreationConfigBuilder(
-		"alpine:3.12.4",
-	).Build()
+	containerCreationConfig := services.NewContainerCreationConfigBuilder("alpine:3.12.4").Build()
 
 	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 		// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
