@@ -25,6 +25,7 @@ const (
 	apiServicePort                                     = 2434
 	waitForStartupDelayMilliseconds                    = 1000
 	waitForStartupMaxNumPolls                          = 15
+	configFileKey                                      = "config-file"
 )
 
 //  A custom Network implementation is intended to make test-writing easier by wrapping low-level
@@ -131,8 +132,6 @@ func (network *TestNetwork) addApiService() (*api_service_client.APIClient, erro
 	serviceIdStr := apiServiceIdPrefix + strconv.Itoa(network.nextApiServiceId)
 	network.nextApiServiceId = network.nextApiServiceId + 1
 	serviceId := services.ServiceID(serviceIdStr)
-
-	configFileKey := "config-file"
 
 	type config struct {
 		DatastoreIp   string `json:"datastoreIp"`

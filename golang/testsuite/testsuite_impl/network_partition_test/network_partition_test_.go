@@ -32,7 +32,8 @@ const (
 	waitForStartupDelayMilliseconds = 1000
 	waitForStartupMaxNumPolls       = 15
 
-	testPersonId = 46
+	testPersonId  = 46
+	configFileKey = "config-file"
 )
 
 type NetworkPartitionTest struct {
@@ -184,8 +185,6 @@ func (test NetworkPartitionTest) addApiService(
 	serviceId services.ServiceID,
 	partitionId networks.PartitionID,
 	datastoreServiceClient *datastore_service_client.DatastoreClient) (*api_service_client.APIClient, error) {
-
-	configFileKey := "config-file"
 
 	type config struct {
 		DatastoreIp   string `json:"datastoreIp"`

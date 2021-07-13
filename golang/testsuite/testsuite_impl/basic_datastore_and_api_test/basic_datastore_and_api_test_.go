@@ -28,6 +28,8 @@ const (
 
 	testPersonId     = 23
 	testNumBooksRead = 3
+
+	configFileKey = "config-file"
 )
 
 type BasicDatastoreAndApiTest struct {
@@ -68,8 +70,6 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	}
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
-
-	configFileKey := "config-file"
 
 	type config struct {
 		DatastoreIp   string `json:"datastoreIp"`
