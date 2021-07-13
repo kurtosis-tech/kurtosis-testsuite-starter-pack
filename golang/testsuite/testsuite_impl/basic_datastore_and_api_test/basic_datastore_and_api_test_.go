@@ -7,6 +7,7 @@ package basic_datastore_and_api_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
@@ -21,6 +22,7 @@ const (
 	datastoreServiceId              services.ServiceID = "datastore"
 	apiServiceId                    services.ServiceID = "api"
 	datastorePort                                      = 1323
+	apiServicePort                                     = 2434
 	waitForStartupDelayMilliseconds                    = 1000
 	waitForStartupMaxPolls                             = 15
 
@@ -29,12 +31,12 @@ const (
 )
 
 type BasicDatastoreAndApiTest struct {
-	datstoreImage string
-	apiImage      string
+	datastoreImage string
+	apiImage       string
 }
 
 func NewBasicDatastoreAndApiTest(datstoreImage string, apiImage string) *BasicDatastoreAndApiTest {
-	return &BasicDatastoreAndApiTest{datstoreImage: datstoreImage, apiImage: apiImage}
+	return &BasicDatastoreAndApiTest{datastoreImage: datstoreImage, apiImage: apiImage}
 }
 
 func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfigurationBuilder) {
@@ -46,7 +48,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
 	).WithUsedPorts(
-		map[string]bool{"1323/tcp": true},
+		map[string]bool{fmt.Sprintf("%v/tcp", datastorePort): true},
 	).Build()
 
 	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
@@ -97,7 +99,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_api",
 	).WithUsedPorts(
-		map[string]bool{"2434/tcp": true},
+		map[string]bool{fmt.Sprintf("%v/tcp", apiServicePort): true},
 	).WithGeneratedFiles(map[string]func(*os.File) error{
 		configFileKey: configInitializingFunc,
 	}).Build()
@@ -121,7 +123,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), 2434)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), apiServicePort)
 
 	err = apiClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -141,7 +143,7 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the API service context")
 	}
 
-	apiClient := api_service_client.NewAPIClient(serviceContext.GetIPAddress(), 2434)
+	apiClient := api_service_client.NewAPIClient(serviceContext.GetIPAddress(), apiServicePort)
 
 	logrus.Infof("Verifying that person with test ID '%v' doesn't already exist...", testPersonId)
 	if _, err = apiClient.GetPerson(testPersonId); err == nil {

@@ -6,6 +6,7 @@
 package basic_datastore_test
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
@@ -41,7 +42,7 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
 	).WithUsedPorts(
-		map[string]bool{"1323/tcp": true},
+		map[string]bool{fmt.Sprintf("%v/tcp", port): true},
 	).Build()
 
 	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {

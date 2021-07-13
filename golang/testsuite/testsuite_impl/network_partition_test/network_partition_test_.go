@@ -7,6 +7,7 @@ package network_partition_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
@@ -23,6 +24,7 @@ const (
 	apiPartitionId       networks.PartitionID = "api"
 	datastorePartitionId networks.PartitionID = "datastore"
 	datastorePort                             = 1323
+	apiServicePort                            = 2434
 	datastoreServiceId   services.ServiceID   = "datastore"
 	api1ServiceId        services.ServiceID   = "api1"
 	api2ServiceId        services.ServiceID   = "api2"
@@ -55,7 +57,7 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_datastore",
 	).WithUsedPorts(
-		map[string]bool{"1323/tcp": true},
+		map[string]bool{fmt.Sprintf("%v/tcp", datastorePort): true},
 	).Build()
 
 	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
@@ -113,7 +115,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the API 1 service context")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), 2434)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), apiServicePort)
 	if err := apiClient.IncrementBooksRead(testPersonId); err == nil {
 		return stacktrace.NewError("Expected the book increment call via API 1 to fail due to the network " +
 			"partition between API and datastore services, but no error was thrown")
@@ -213,7 +215,7 @@ func (test NetworkPartitionTest) addApiService(
 	apiServiceContainerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"kurtosistech/example-microservices_api",
 	).WithUsedPorts(
-		map[string]bool{"2434/tcp": true},
+		map[string]bool{fmt.Sprintf("%v/tcp", apiServicePort): true},
 	).WithGeneratedFiles(map[string]func(*os.File) error{
 		configFileKey: configInitializingFunc,
 	}).Build()
@@ -237,7 +239,7 @@ func (test NetworkPartitionTest) addApiService(
 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), 2434)
+	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), apiServicePort)
 	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")
