@@ -13,7 +13,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -23,10 +22,10 @@ const (
 	defaultPartitionId   networks.PartitionID = ""
 	apiPartitionId       networks.PartitionID = "api"
 	datastorePartitionId networks.PartitionID = "datastore"
-
-	datastoreServiceId services.ServiceID = "datastore"
-	api1ServiceId      services.ServiceID = "api1"
-	api2ServiceId      services.ServiceID = "api2"
+	datastorePort                             = 1323
+	datastoreServiceId   services.ServiceID   = "datastore"
+	api1ServiceId        services.ServiceID   = "api1"
+	api2ServiceId        services.ServiceID   = "api2"
 
 	waitForStartupDelayMilliseconds = 1000
 	waitForStartupMaxNumPolls       = 15
@@ -70,7 +69,7 @@ func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (net
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastorePort)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -106,7 +105,7 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service context")
 	}
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastorePort)
 
 	logrus.Info("Incrementing books read via API 1 while partition is in place, to verify no comms are possible...")
 	apiServiceContext, err := castedNetwork.GetServiceContext(api1ServiceId)
@@ -179,10 +178,10 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 //                                     Private helper functions
 // ========================================================================================================
 func (test NetworkPartitionTest) addApiService(
-		networkCtx *networks.NetworkContext,
-		serviceId services.ServiceID,
-		partitionId networks.PartitionID,
-		datastoreServiceClient *datastore_service_client.DatastoreClient) (*api_service_client.APIClient, error) {
+	networkCtx *networks.NetworkContext,
+	serviceId services.ServiceID,
+	partitionId networks.PartitionID,
+	datastoreServiceClient *datastore_service_client.DatastoreClient) (*api_service_client.APIClient, error) {
 
 	configFileKey := "config-file"
 

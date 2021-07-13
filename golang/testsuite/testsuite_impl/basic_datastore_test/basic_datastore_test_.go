@@ -10,14 +10,13 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 )
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
-
+	port = 1323
 	testKey = "test-key"
 	testValue = "test-value"
 
@@ -54,7 +53,7 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), port)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -74,7 +73,7 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), port)
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := datastoreClient.Exists(testKey)

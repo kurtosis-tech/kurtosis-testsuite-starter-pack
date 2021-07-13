@@ -9,21 +9,20 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 )
+
 const (
 	datastoreServiceId services.ServiceID = "datastore"
-
-	healthCheckUrlSlug = "health"
-	healthyValue       = "healthy"
+	datastorePort                         = 1323
+	healthCheckUrlSlug                    = "health"
+	healthyValue                          = "healthy"
 
 	waitForStartupTimeBetweenPolls = 1
-	waitForStartupMaxPolls = 15
-	waitInitialDelaySeconds = 1
+	waitForStartupMaxPolls         = 15
+	waitInitialDelaySeconds        = 1
 )
-
 
 type WaitForEndpointAvailabilityTest struct {
 	datastoreImage string
@@ -55,12 +54,12 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 		return services.NewContainerRunConfigBuilder().Build(), nil
 	}
 
-	_, _,  err := castedNetworkContext.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
+	_, _, err := castedNetworkContext.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	port := uint32(datastore.Port)
+	port := uint32(datastorePort)
 
 	if err := castedNetworkContext.WaitForEndpointAvailability(datastoreServiceId, port, healthCheckUrlSlug, waitInitialDelaySeconds, waitForStartupMaxPolls, waitForStartupTimeBetweenPolls, healthyValue); err != nil {
 		return stacktrace.Propagate(err, "An error occurred waiting for the datastore service to become available")

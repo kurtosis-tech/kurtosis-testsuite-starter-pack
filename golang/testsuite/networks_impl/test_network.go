@@ -11,7 +11,6 @@ import (
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -19,11 +18,11 @@ import (
 )
 
 const (
-	datastoreServiceId services.ServiceID = "datastore"
-	apiServiceIdPrefix                    = "api-"
-
-	waitForStartupDelayMilliseconds = 1000
-	waitForStartupMaxNumPolls       = 15
+	datastoreServiceId              services.ServiceID = "datastore"
+	apiServiceIdPrefix                                 = "api-"
+	datastorePort                                      = 1323
+	waitForStartupDelayMilliseconds                    = 1000
+	waitForStartupMaxNumPolls                          = 15
 )
 
 //  A custom Network implementation is intended to make test-writing easier by wrapping low-level
@@ -77,7 +76,7 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastorePort)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {

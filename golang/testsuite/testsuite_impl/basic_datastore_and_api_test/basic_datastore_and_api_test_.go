@@ -12,18 +12,17 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"os"
 )
 
 const (
-	datastoreServiceId services.ServiceID = "datastore"
-	apiServiceId       services.ServiceID = "api"
-
-	waitForStartupDelayMilliseconds = 1000
-	waitForStartupMaxPolls          = 15
+	datastoreServiceId              services.ServiceID = "datastore"
+	apiServiceId                    services.ServiceID = "api"
+	datastorePort                                      = 1323
+	waitForStartupDelayMilliseconds                    = 1000
+	waitForStartupMaxPolls                             = 15
 
 	testPersonId     = 23
 	testNumBooksRead = 3
@@ -59,7 +58,7 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(datastoreServiceContext.GetIPAddress(), datastorePort)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
