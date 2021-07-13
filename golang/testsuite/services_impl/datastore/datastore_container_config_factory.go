@@ -7,8 +7,6 @@ import (
 
 const (
 	Port = 1323
-
-	testVolumeMountpoint = "/test-volume"
 )
 
 type DatastoreContainerConfigFactory struct {
@@ -22,7 +20,6 @@ func NewDatastoreContainerConfigFactory(dockerImage string) *DatastoreContainerC
 func (factory DatastoreContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	result := services.NewContainerCreationConfigBuilder(
 		factory.dockerImage,
-		testVolumeMountpoint,
 	).WithUsedPorts(
 		map[string]bool{
 			fmt.Sprintf("%v/tcp", Port): true,

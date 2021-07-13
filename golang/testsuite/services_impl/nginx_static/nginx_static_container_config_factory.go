@@ -10,8 +10,6 @@ const (
 
 	ListenPort = 80
 
-	testVolumeMountpoint = "/test-volume"
-
 	nginxStaticFilesDirpath = "/static"
 )
 
@@ -30,7 +28,6 @@ func NewNginxStaticContainerConfigFactory(filesArtifactId services.FilesArtifact
 func (factory NginxStaticContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
 	result := services.NewContainerCreationConfigBuilder(
 		dockerImage,
-		testVolumeMountpoint,
 	).WithUsedPorts(map[string]bool{
 		strconv.Itoa(ListenPort): true,
 	}).WithFilesArtifacts(map[services.FilesArtifactID]string{

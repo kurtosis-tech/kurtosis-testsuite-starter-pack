@@ -2,10 +2,6 @@ package exec_cmd_test
 
 import "github.com/kurtosis-tech/kurtosis-client/golang/services"
 
-const (
-	testVolumeMountpoint = "/test-volume"
-)
-
 type ExecCmdTestContainerConfigFactory struct {
 	image string
 }
@@ -15,10 +11,7 @@ func NewExecCmdTestContainerConfigFactory(image string) *ExecCmdTestContainerCon
 }
 
 func (e ExecCmdTestContainerConfigFactory) GetCreationConfig(containerIpAddr string) (*services.ContainerCreationConfig, error) {
-	result := services.NewContainerCreationConfigBuilder(
-		e.image,
-		testVolumeMountpoint,
-	).Build()
+	result := services.NewContainerCreationConfigBuilder(e.image).Build()
 	return result, nil
 }
 
