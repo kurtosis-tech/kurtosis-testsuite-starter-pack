@@ -14,7 +14,8 @@ const (
 	testService services.ServiceID = "test-service"
 
 	execCommandSuccessExitCode = 0
-	expectedTestFileContents = "This is a test static file"
+	expectedTestFile1Contents  = "This is a test static file"
+	expectedTestFile2Contents = "This is another test static file"
 )
 
 type LocalStaticFileTest struct {}
@@ -59,31 +60,57 @@ func (l LocalStaticFileTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting service '%v'", testService)
 	}
 
-	staticFileAbsFilepaths, err := serviceCtx.LoadStaticFiles(map[services.StaticFileID]bool{static_file_consts.TestStaticFileID: true})
+	staticFileAbsFilepaths, err := serviceCtx.LoadStaticFiles(map[services.StaticFileID]bool{
+		static_file_consts.TestStaticFile1ID: true,
+		static_file_consts.TestStaticFile2ID: true,
+	})
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred loading the static file corresponding to key '%v'", static_file_consts.TestStaticFileID)
+		return stacktrace.Propagate(err, "An error occurred loading the static file corresponding to key '%v'", static_file_consts.TestStaticFile1ID)
 	}
-	testFileAbsFilepath, found := staticFileAbsFilepaths[static_file_consts.TestStaticFileID]
+	testFile1AbsFilepath, found := staticFileAbsFilepaths[static_file_consts.TestStaticFile1ID]
 	if !found {
-		return stacktrace.Propagate(err, "No filepath found for test file key '%v'; this is a bug in Kurtosis!", static_file_consts.TestStaticFileID)
+		return stacktrace.Propagate(err, "No filepath found for test file 1 key '%v'; this is a bug in Kurtosis!", static_file_consts.TestStaticFile1ID)
+	}
+	testFile2AbsFilepath, found := staticFileAbsFilepaths[static_file_consts.TestStaticFile2ID]
+	if !found {
+		return stacktrace.Propagate(err, "No filepath found for test file 2 key '%v'; this is a bug in Kurtosis!", static_file_consts.TestStaticFile2ID)
 	}
 
-	catStaticFileCmd := []string{
+	// Test file 1
+	catStaticFile1Cmd := []string{
 		"cat",
-		testFileAbsFilepath,
+		testFile1AbsFilepath,
 	}
-	exitCode, outputBytes, err := serviceCtx.ExecCommand(catStaticFileCmd)
+	exitCode1, outputBytes1, err := serviceCtx.ExecCommand(catStaticFile1Cmd)
 	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred executing command '%+v' to cat the static test file contents", catStaticFileCmd)
+		return stacktrace.Propagate(err, "An error occurred executing command '%+v' to cat the static test file 1 contents", catStaticFile1Cmd)
 	}
-	if exitCode != execCommandSuccessExitCode {
-		return stacktrace.NewError("Command '%+v' to cat the static test file exited with non-successful exit code '%v'", catStaticFileCmd, exitCode)
+	if exitCode1 != execCommandSuccessExitCode {
+		return stacktrace.NewError("Command '%+v' to cat the static test file 1 exited with non-successful exit code '%v'", catStaticFile1Cmd, exitCode1)
 	}
-	fileContents := string(*outputBytes)
+	file1Contents := string(*outputBytes1)
+	if file1Contents != expectedTestFile1Contents {
+		return stacktrace.NewError("Static file contents '%v' don't match expected test file 1 contents '%v'", file1Contents, expectedTestFile1Contents)
+	}
+	logrus.Infof("Static file 1 contents were '%v' as expected", expectedTestFile1Contents)
 
-	if fileContents != expectedTestFileContents {
-		return stacktrace.NewError("Static file contents '%v' don't match expected test file contents '%v'", fileContents, expectedTestFileContents)
+	// Test file 2
+	catStaticFile2Cmd := []string{
+		"cat",
+		testFile2AbsFilepath,
 	}
-	logrus.Infof("Static file contents were '%v' as expected", expectedTestFileContents)
+	exitCode2, outputBytes2, err := serviceCtx.ExecCommand(catStaticFile2Cmd)
+	if err != nil {
+		return stacktrace.Propagate(err, "An error occurred executing command '%+v' to cat the static test file 2 contents", catStaticFile2Cmd)
+	}
+	if exitCode2 != execCommandSuccessExitCode {
+		return stacktrace.NewError("Command '%+v' to cat the static test file 2 exited with non-successful exit code '%v'", catStaticFile2Cmd, exitCode2)
+	}
+	file2Contents := string(*outputBytes2)
+	if file2Contents != expectedTestFile2Contents {
+		return stacktrace.NewError("Static file contents '%v' don't match expected test file 2 contents '%v'", file2Contents, expectedTestFile2Contents)
+	}
+	logrus.Infof("Static file 2 contents were '%v' as expected", expectedTestFile2Contents)
+
 	return nil
 }

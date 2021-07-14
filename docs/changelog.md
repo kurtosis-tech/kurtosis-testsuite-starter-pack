@@ -1,8 +1,6 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
-### Changes
-* Switched `release.sh` script to use the devtools version
 * Upgraded to Kurtosis Client v0.6.0, which:
     * Replaced the argument `ContainerConfigFactory` in `AddService`and `AddServiceToPartition`with two arguments `ContainerCreationConfig`and an anonymous function which should returns `ContainerRunConfig`type
         * Users should use the `ContainerCreationConfig` struct, and the function that was defined in `GetRunConfig` in the `ContainerConfigFactory` implementations as the new arguments
@@ -11,6 +9,14 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
         * The `ContainerCreationConfigBuilder` constructor no longer takes in a test volume mountpoint
         * Added a `ContainerCreationConfigBuilder.WithTestVolumeMountpoint` for specifying the test volume mountpoint, which should be used instead if the default test volume mountpoint of `/kurtosis-test-volume` isn't acceptable
 * Removed implementations of `ContainerConfigFactory` this configuration has being moved to the `Setup` method inside each test using the method `NewContainerCreationConfigBuilder`and an anonymous function which contains the logic that was defined in `GetRunConfig`
+
+# 1.28.1
+### Changes
+* Switched `release.sh` script to use the devtools version
+* Removed the Kurtosis Client docs from the documentation here, as they've been moved to the Kurtosis Client repo
+
+### Features
+* The `localStaticFileTest` now tests with two files, rather than one, to guard against a regression found in `ServiceDirectory` where the first file would be fine but the second file would break
 
 # 1.28.0
 ### Changes
