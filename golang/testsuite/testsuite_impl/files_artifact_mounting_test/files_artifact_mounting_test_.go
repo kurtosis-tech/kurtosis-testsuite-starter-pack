@@ -53,7 +53,7 @@ func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (n
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		"flashspys/nginx-static",
 	).WithUsedPorts(
-		map[string]bool{"80": true},
+		map[string]bool{fmt.Sprint(listenPort): true},
 	).WithFilesArtifacts(map[services.FilesArtifactID]string{
 		"test-files-artifact": "/static",
 	}).Build()

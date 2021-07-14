@@ -37,8 +37,8 @@ type BasicDatastoreAndApiTest struct {
 	apiImage       string
 }
 
-func NewBasicDatastoreAndApiTest(datstoreImage string, apiImage string) *BasicDatastoreAndApiTest {
-	return &BasicDatastoreAndApiTest{datastoreImage: datstoreImage, apiImage: apiImage}
+func NewBasicDatastoreAndApiTest(datastoreImage string, apiImage string) *BasicDatastoreAndApiTest {
+	return &BasicDatastoreAndApiTest{datastoreImage: datastoreImage, apiImage: apiImage}
 }
 
 func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfigurationBuilder) {
