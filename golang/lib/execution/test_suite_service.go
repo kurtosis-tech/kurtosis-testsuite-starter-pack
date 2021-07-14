@@ -82,6 +82,8 @@ func (service TestSuiteService) GetTestSuiteMetadata(ctx context.Context, empty 
 		StaticFiles: staticFilesStrKeys,
 	}
 
+	logrus.Debugf("Returning test suite metadata: %+v")
+
 	return testSuiteMetadata, nil
 }
 
