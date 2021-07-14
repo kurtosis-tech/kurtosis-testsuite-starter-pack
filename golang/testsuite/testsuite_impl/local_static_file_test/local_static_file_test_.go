@@ -15,10 +15,10 @@ const (
 
 	execCommandSuccessExitCode = 0
 	expectedTestFile1Contents  = "This is a test static file"
-	expectedTestFile2Contents = "This is another test static file"
+	expectedTestFile2Contents  = "This is another test static file"
 )
 
-type LocalStaticFileTest struct {}
+type LocalStaticFileTest struct{}
 
 func (l LocalStaticFileTest) Configure(builder *testsuite.TestConfigurationBuilder) {
 	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
@@ -26,23 +26,11 @@ func (l LocalStaticFileTest) Configure(builder *testsuite.TestConfigurationBuild
 
 func (l LocalStaticFileTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 
-	containerCreationConfig := services.NewContainerCreationConfigBuilder("alpine:3.12.4").Build()
+	containerCreationConfig := getContainerCreationConfig()
 
-	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
-		// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
-		// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
-		// args), but this provides a nice little regression test of the ENTRYPOINT overriding
-		entrypointArgs := []string{"sleep"}
-		cmdArgs := []string{"30"}
-		result := services.NewContainerRunConfigBuilder().WithEntrypointOverride(
-			entrypointArgs,
-		).WithCmdOverride(
-			cmdArgs,
-		).Build()
-		return result, nil
-	}
+	runConfigFunc := getRunConfigFunc()
 
-	_, _, err := networkCtx.AddService(testService, containerCreationConfig, generateRunConfigFunc)
+	_, _, err := networkCtx.AddService(testService, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
@@ -113,4 +101,29 @@ func (l LocalStaticFileTest) Run(network networks.Network) error {
 	logrus.Infof("Static file 2 contents were '%v' as expected", expectedTestFile2Contents)
 
 	return nil
+}
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	return services.NewContainerCreationConfigBuilder(dockerImage).Build()
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
+		// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
+		// args), but this provides a nice little regression test of the ENTRYPOINT overriding
+		entrypointArgs := []string{"sleep"}
+		cmdArgs := []string{"30"}
+		result := services.NewContainerRunConfigBuilder().WithEntrypointOverride(
+			entrypointArgs,
+		).WithCmdOverride(
+			cmdArgs,
+		).Build()
+		return result, nil
+	}
+	return runConfigFunc
 }

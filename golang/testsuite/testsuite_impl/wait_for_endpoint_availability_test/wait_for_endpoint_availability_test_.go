@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	datastoreImage                        = "kurtosistech/example-microservices_datastore"
 	datastoreServiceId services.ServiceID = "datastore"
 	datastorePort                         = 1323
 	healthCheckUrlSlug                    = "health"
@@ -45,17 +46,11 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 	// Necessary because Go doesn't have generics
 	castedNetworkContext := network.(*networks.NetworkContext)
 
-	containerCreationConfig := services.NewContainerCreationConfigBuilder(
-		"kurtosistech/example-microservices_datastore",
-	).WithUsedPorts(
-		map[string]bool{fmt.Sprintf("%v/tcp", datastorePort): true},
-	).Build()
+	containerCreationConfig := getContainerCreationConfig()
 
-	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
-		return services.NewContainerRunConfigBuilder().Build(), nil
-	}
+	runConfigFunc := getRunConfigFunc()
 
-	_, _, err := castedNetworkContext.AddService(datastoreServiceId, containerCreationConfig, generateRunConfigFunc)
+	_, _, err := castedNetworkContext.AddService(datastoreServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
@@ -68,4 +63,24 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 	logrus.Infof("Service: %v is available", datastoreServiceId)
 
 	return nil
+}
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		datastoreImage,
+	).WithUsedPorts(
+		map[string]bool{fmt.Sprintf("%v/tcp", datastorePort): true},
+	).Build()
+	return containerCreationConfig
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+	return runConfigFunc
 }

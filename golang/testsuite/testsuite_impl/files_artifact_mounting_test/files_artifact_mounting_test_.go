@@ -17,11 +17,13 @@ import (
 )
 
 const (
-	fileServerServiceId            services.ServiceID = "file-server"
-	listenPort                                        = 80
-	waitForStartupTimeBetweenPolls                    = 1000
-	waitForStartupMaxRetries                          = 15
-	waitInitialDelaySeconds                           = 0
+	fileServerServiceImage                    = "flashspys/nginx-static"
+	fileServerServiceId    services.ServiceID = "file-server"
+	listenPort                                = 80
+
+	waitForStartupTimeBetweenPolls = 1000
+	waitForStartupMaxRetries       = 15
+	waitInitialDelaySeconds        = 0
 
 	testFilesArtifactId  services.FilesArtifactID = "test-files-artifact"
 	testFilesArtifactUrl                          = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"
@@ -32,6 +34,7 @@ const (
 
 	expectedFile1Contents = "file1\n"
 	expectedFile2Contents = "file2\n"
+
 )
 
 type FilesArtifactMountingTest struct{}
@@ -50,19 +53,11 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 
-	containerCreationConfig := services.NewContainerCreationConfigBuilder(
-		"flashspys/nginx-static",
-	).WithUsedPorts(
-		map[string]bool{fmt.Sprint(listenPort): true},
-	).WithFilesArtifacts(map[services.FilesArtifactID]string{
-		"test-files-artifact": "/static",
-	}).Build()
+	containerCreationConfig := getContainerCreationConfig()
 
-	generateRunConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
-		return services.NewContainerRunConfigBuilder().Build(), nil
-	}
+	runConfigFunc := getRunConfigFunc()
 
-	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, containerCreationConfig, generateRunConfigFunc)
+	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
@@ -106,6 +101,28 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 		)
 	}
 	return nil
+}
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		fileServerServiceImage,
+	).WithUsedPorts(
+		map[string]bool{fmt.Sprint(listenPort): true},
+	).WithFilesArtifacts(map[services.FilesArtifactID]string{
+		testFilesArtifactId: "/static",
+	}).Build()
+	return containerCreationConfig
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+	return runConfigFunc
 }
 
 func getFileContents(ipAddress string, port uint32, filename string) (string, error) {
