@@ -73,9 +73,7 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() error {
 		return stacktrace.NewError("Cannot add API services to network; one or more API services already exists")
 	}
 
-	datastoreContainerCreationConfig := getDataStoreContainerCreationConfig()
-
-	datastoreRunConfigFunc := getDataStoreRunConfigFunc()
+	datastoreContainerCreationConfig, datastoreRunConfigFunc := getDatastoreServiceConfigurations()
 
 	datastoreServiceContext, hostPortBindings, err := network.networkCtx.AddService(datastoreServiceId, datastoreContainerCreationConfig, datastoreRunConfigFunc)
 	if err != nil {
@@ -136,11 +134,7 @@ func (network *TestNetwork) addApiService() (*api_service_client.APIClient, erro
 	network.nextApiServiceId = network.nextApiServiceId + 1
 	serviceId := services.ServiceID(serviceIdStr)
 
-	configInitializingFunc := getConfigInitializingFunc(network.datastoreClient)
-
-	apiServiceContainerCreationConfig := getApiServiceContainerCreationConfig(configInitializingFunc)
-
-	apiServiceGenerateRunConfigFunc := getApiServiceRunConfigFunc()
+	apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc := getApiServiceConfigurations(network)
 
 	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc)
 	if err != nil {
@@ -158,9 +152,12 @@ func (network *TestNetwork) addApiService() (*api_service_client.APIClient, erro
 	return apiClient, nil
 }
 
-// ====================================================================================================
-//                                       Private helper functions
-// ====================================================================================================
+func getDatastoreServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	datastoreContainerCreationConfig := getDataStoreContainerCreationConfig()
+
+	datastoreRunConfigFunc := getDataStoreRunConfigFunc()
+	return datastoreContainerCreationConfig, datastoreRunConfigFunc
+}
 
 func getDataStoreContainerCreationConfig() *services.ContainerCreationConfig {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
@@ -178,7 +175,16 @@ func getDataStoreRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[
 	return runConfigFunc
 }
 
-func getConfigInitializingFunc(datastoreClient *datastore_service_client.DatastoreClient) func(fp *os.File) error {
+func getApiServiceConfigurations(network *TestNetwork) (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	configInitializingFunc := getApiServiceConfigInitializingFunc(network.datastoreClient)
+
+	apiServiceContainerCreationConfig := getApiServiceContainerCreationConfig(configInitializingFunc)
+
+	apiServiceGenerateRunConfigFunc := getApiServiceRunConfigFunc()
+	return apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc
+}
+
+func getApiServiceConfigInitializingFunc(datastoreClient *datastore_service_client.DatastoreClient) func(fp *os.File) error {
 	configInitializingFunc := func(fp *os.File) error {
 		logrus.Debugf("Datastore IP: %v , port: %v", datastoreClient.IpAddr(), datastoreClient.Port())
 		configObj := datastoreConfig{

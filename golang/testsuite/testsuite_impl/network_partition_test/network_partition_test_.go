@@ -62,9 +62,7 @@ func (test NetworkPartitionTest) Configure(builder *testsuite.TestConfigurationB
 
 // Instantiates the network with no partition and one person in the datatstore
 func (test NetworkPartitionTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreContainerCreationConfig := getDataStoreContainerCreationConfig()
-
-	datastoreRunConfigFunc := getDataStoreRunConfigFunc()
+	datastoreContainerCreationConfig, datastoreRunConfigFunc := getDatastoreServiceConfigurations()
 
 	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreContainerCreationConfig, datastoreRunConfigFunc)
 	if err != nil {
@@ -182,6 +180,13 @@ func (test NetworkPartitionTest) Run(network networks.Network) error {
 //                                     Private helper functions
 // ========================================================================================================
 
+func getDatastoreServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	datastoreContainerCreationConfig := getDataStoreContainerCreationConfig()
+
+	datastoreRunConfigFunc := getDataStoreRunConfigFunc()
+	return datastoreContainerCreationConfig, datastoreRunConfigFunc
+}
+
 func getDataStoreContainerCreationConfig() *services.ContainerCreationConfig {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		datastoreImage,
@@ -204,11 +209,7 @@ func (test NetworkPartitionTest) addApiService(
 	partitionId networks.PartitionID,
 	datastoreServiceClient *datastore_service_client.DatastoreClient) (*api_service_client.APIClient, error) {
 
-	configInitializingFunc := getConfigInitializingFunc(datastoreServiceClient)
-
-	apiServiceContainerCreationConfig := getApiServiceContainerCreationConfig(configInitializingFunc)
-
-	apiServiceGenerateRunConfigFunc := getApiServiceRunConfigFunc()
+	apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc := getApiServiceConfigurations(datastoreServiceClient)
 
 	apiServiceContext, hostPortBindings, err := networkCtx.AddServiceToPartition(serviceId, partitionId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc)
 	if err != nil {
@@ -225,7 +226,16 @@ func (test NetworkPartitionTest) addApiService(
 	return apiClient, nil
 }
 
-func getConfigInitializingFunc(datastoreClient *datastore_service_client.DatastoreClient) func(fp *os.File) error {
+func getApiServiceConfigurations(datastoreServiceClient *datastore_service_client.DatastoreClient) (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	configInitializingFunc := getApiServiceConfigInitializingFunc(datastoreServiceClient)
+
+	apiServiceContainerCreationConfig := getApiServiceContainerCreationConfig(configInitializingFunc)
+
+	apiServiceGenerateRunConfigFunc := getApiServiceRunConfigFunc()
+	return apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc
+}
+
+func getApiServiceConfigInitializingFunc(datastoreClient *datastore_service_client.DatastoreClient) func(fp *os.File) error {
 	configInitializingFunc := func(fp *os.File) error {
 		logrus.Debugf("Datastore IP: %v , port: %v", datastoreClient.IpAddr(), datastoreClient.Port())
 		configObj := datastoreConfig{

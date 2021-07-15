@@ -42,9 +42,7 @@ func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) 
 }
 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	containerCreationConfig := getContainerCreationConfig()
-
-	runConfigFunc := getRunConfigFunc()
+	containerCreationConfig, runConfigFunc := getServiceConfigurations()
 
 	_, _, err := networkCtx.AddService(testServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
@@ -104,6 +102,13 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 // ====================================================================================================
 //                                       Private helper functions
 // ====================================================================================================
+
+func getServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getContainerCreationConfig()
+
+	runConfigFunc := getRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
 
 func getContainerCreationConfig() *services.ContainerCreationConfig {
 	return services.NewContainerCreationConfigBuilder(execCmdTestImage).Build()

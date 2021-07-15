@@ -53,9 +53,7 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 
-	containerCreationConfig := getContainerCreationConfig()
-
-	runConfigFunc := getRunConfigFunc()
+	containerCreationConfig, runConfigFunc := getFileServerServiceConfigurations()
 
 	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
@@ -106,6 +104,13 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 // ====================================================================================================
 //                                       Private helper functions
 // ====================================================================================================
+
+func getFileServerServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getContainerCreationConfig()
+
+	runConfigFunc := getRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
 
 func getContainerCreationConfig() *services.ContainerCreationConfig {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(

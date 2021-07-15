@@ -46,9 +46,7 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 	// Necessary because Go doesn't have generics
 	castedNetworkContext := network.(*networks.NetworkContext)
 
-	containerCreationConfig := getContainerCreationConfig()
-
-	runConfigFunc := getRunConfigFunc()
+	containerCreationConfig, runConfigFunc := getDatastoreServiceConfigurations()
 
 	_, _, err := castedNetworkContext.AddService(datastoreServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
@@ -69,7 +67,14 @@ func (test WaitForEndpointAvailabilityTest) Run(network networks.Network) error 
 //                                       Private helper functions
 // ====================================================================================================
 
-func getContainerCreationConfig() *services.ContainerCreationConfig {
+func getDatastoreServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getDatastoreServiceContainerCreationConfig()
+
+	runConfigFunc := getDatastoreServiceRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
+
+func getDatastoreServiceContainerCreationConfig() *services.ContainerCreationConfig {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		datastoreImage,
 	).WithUsedPorts(
@@ -78,7 +83,7 @@ func getContainerCreationConfig() *services.ContainerCreationConfig {
 	return containerCreationConfig
 }
 
-func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+func getDatastoreServiceRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
 		return services.NewContainerRunConfigBuilder().Build(), nil
 	}
