@@ -6,23 +6,24 @@
 package basic_datastore_test
 
 import (
+	"fmt"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/datastore"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 )
 
 const (
+	datastoreImage                        = "kurtosistech/example-microservices_datastore"
 	datastoreServiceId services.ServiceID = "datastore"
-
-	testKey = "test-key"
-	testValue = "test-value"
+	datastorePort                         = 1323
+	testKey                               = "test-key"
+	testValue                             = "test-value"
 
 	waitForStartupDelayMilliseconds = 1000
-	waitForStartupMaxPolls = 15
+	waitForStartupMaxPolls          = 15
 )
 
 type BasicDatastoreTest struct {
@@ -38,13 +39,15 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 }
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	datastoreConfigFactory := datastore.NewDatastoreContainerConfigFactory(test.datastoreImage)
-	serviceContext, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreConfigFactory)
+
+	containerCreationConfig, runConfigFunc := getDatastoreServiceConfigurations()
+
+	serviceContext, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the datastore service")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastorePort)
 
 	err = datastoreClient.WaitForHealthy(waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
@@ -64,7 +67,7 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting the datastore service info")
 	}
 
-	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastore.Port)
+	datastoreClient := datastore_service_client.NewDatastoreClient(serviceContext.GetIPAddress(), datastorePort)
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
 	exists, err := datastoreClient.Exists(testKey)
@@ -92,4 +95,31 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Value verified")
 	return nil
+}
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getDatastoreServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getContainerCreationConfig()
+
+	runConfigFunc := getRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		datastoreImage,
+	).WithUsedPorts(
+		map[string]bool{fmt.Sprintf("%v/tcp", datastorePort): true},
+	).Build()
+	return containerCreationConfig
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+	return runConfigFunc
 }

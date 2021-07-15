@@ -5,7 +5,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/exec_cmd_test"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -43,8 +42,9 @@ func (e ExecCommandTest) Configure(builder *testsuite.TestConfigurationBuilder) 
 }
 
 func (e ExecCommandTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(execCmdTestImage)
-	_, _, err := networkCtx.AddService(testServiceId, configFactory)
+	containerCreationConfig, runConfigFunc := getServiceConfigurations()
+
+	_, _, err := networkCtx.AddService(testServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(
 			err,
@@ -99,6 +99,37 @@ func (e ExecCommandTest) Run(uncastedNetwork networks.Network) error {
 	return nil
 }
 
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getContainerCreationConfig()
+
+	runConfigFunc := getRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	return services.NewContainerCreationConfigBuilder(execCmdTestImage).Build()
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	return func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
+		// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
+		// args), but this provides a nice little regression test of the ENTRYPOINT overriding
+		entrypointArgs := []string{"sleep"}
+		cmdArgs := []string{"30"}
+		result := services.NewContainerRunConfigBuilder().WithEntrypointOverride(
+			entrypointArgs,
+		).WithCmdOverride(
+			cmdArgs,
+		).Build()
+		return result, nil
+	}
+}
+
 func runExecCmd(serviceContext *services.ServiceContext, command []string) (int32, *[]byte, error) {
 	exitCode, logOutput, err := serviceContext.ExecCommand(command)
 	if err != nil {
@@ -108,3 +139,4 @@ func runExecCmd(serviceContext *services.ServiceContext, command []string) (int3
 	}
 	return exitCode, logOutput, nil
 }
+
