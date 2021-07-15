@@ -1,6 +1,14 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+* Upgraded to Kurtosis Client v0.6.0, which:
+    * Replaced the argument `ContainerConfigFactory` in `AddService`and `AddServiceToPartition`with two arguments `ContainerCreationConfig`and an anonymous function which should returns `ContainerRunConfig`type
+        * Users should use the `ContainerCreationConfig` struct, and the function that was defined in `GetRunConfig` in the `ContainerConfigFactory` implementations as the new arguments
+    * Removed `ContainerConfigFactory` interface; users should instead feed the `ContainerCreationConfig` and `ContainerRunConfig` values directly to `NetworkContext.AddService` or `NetworkContext.AddServiceToPartition`
+    * Include changes of Kurtosis Client v0.5.0, which:
+        * The `ContainerCreationConfigBuilder` constructor no longer takes in a test volume mountpoint
+        * Added a `ContainerCreationConfigBuilder.WithTestVolumeMountpoint` for specifying the test volume mountpoint, which should be used instead if the default test volume mountpoint of `/kurtosis-test-volume` isn't acceptable
+* Removed implementations of `ContainerConfigFactory` this configuration has being moved to the `Setup` method inside each test using the method `NewContainerCreationConfigBuilder`and an anonymous function which contains the logic that was defined in `GetRunConfig`
 
 # 1.28.1
 ### Changes

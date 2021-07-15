@@ -4,7 +4,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/exec_cmd_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/static_file_consts"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -16,18 +15,20 @@ const (
 
 	execCommandSuccessExitCode = 0
 	expectedTestFile1Contents  = "This is a test static file"
-	expectedTestFile2Contents = "This is another test static file"
+	expectedTestFile2Contents  = "This is another test static file"
 )
 
-type LocalStaticFileTest struct {}
+type LocalStaticFileTest struct{}
 
 func (l LocalStaticFileTest) Configure(builder *testsuite.TestConfigurationBuilder) {
 	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
 }
 
 func (l LocalStaticFileTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := exec_cmd_test.NewExecCmdTestContainerConfigFactory(dockerImage)
-	_, _, err := networkCtx.AddService(testService, configFactory)
+
+	containerCreationConfig, runConfigFunc := getServiceConfigurations()
+
+	_, _, err := networkCtx.AddService(testService, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
@@ -98,4 +99,36 @@ func (l LocalStaticFileTest) Run(network networks.Network) error {
 	logrus.Infof("Static file 2 contents were '%v' as expected", expectedTestFile2Contents)
 
 	return nil
+}
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getContainerCreationConfig()
+
+	runConfigFunc := getRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	return services.NewContainerCreationConfigBuilder(dockerImage).Build()
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		// We sleep because the only function of this container is to test Docker exec'ing a command while it's running
+		// NOTE: We could just as easily combine this into a single array (rather than splitting between ENTRYPOINT and CMD
+		// args), but this provides a nice little regression test of the ENTRYPOINT overriding
+		entrypointArgs := []string{"sleep"}
+		cmdArgs := []string{"30"}
+		result := services.NewContainerRunConfigBuilder().WithEntrypointOverride(
+			entrypointArgs,
+		).WithCmdOverride(
+			cmdArgs,
+		).Build()
+		return result, nil
+	}
+	return runConfigFunc
 }
