@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+
+# 1.30.0
 ### Fixes
 * Corrected `test_suite_env_vars.CustomParamsJson` missing the `EnvVar` suffix
 
