@@ -10,7 +10,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/services_impl/nginx_static"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -18,11 +17,13 @@ import (
 )
 
 const (
-	fileServerServiceId services.ServiceID = "file-server"
+	fileServerServiceImage                    = "flashspys/nginx-static"
+	fileServerServiceId    services.ServiceID = "file-server"
+	listenPort                                = 80
 
 	waitForStartupTimeBetweenPolls = 1000
-	waitForStartupMaxRetries = 15
-	waitInitialDelaySeconds = 0
+	waitForStartupMaxRetries       = 15
+	waitInitialDelaySeconds        = 0
 
 	testFilesArtifactId  services.FilesArtifactID = "test-files-artifact"
 	testFilesArtifactUrl                          = "https://kurtosis-public-access.s3.us-east-1.amazonaws.com/test-artifacts/static-fileserver-files.tgz"
@@ -33,9 +34,10 @@ const (
 
 	expectedFile1Contents = "file1\n"
 	expectedFile2Contents = "file2\n"
+
 )
 
-type FilesArtifactMountingTest struct {}
+type FilesArtifactMountingTest struct{}
 
 func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfigurationBuilder) {
 	builder.WithSetupTimeoutSeconds(
@@ -50,13 +52,15 @@ func (f FilesArtifactMountingTest) Configure(builder *testsuite.TestConfiguratio
 }
 
 func (f FilesArtifactMountingTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
-	configFactory := nginx_static.NewNginxStaticContainerConfigFactory(testFilesArtifactId)
-	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, configFactory)
+
+	containerCreationConfig, runConfigFunc := getFileServerServiceConfigurations()
+
+	_, hostPortBindings, err := networkCtx.AddService(fileServerServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred adding the file server service")
 	}
 
-	if err := networkCtx.WaitForEndpointAvailability(fileServerServiceId, nginx_static.ListenPort, file1Filename, waitInitialDelaySeconds, waitForStartupMaxRetries, waitForStartupTimeBetweenPolls, ""); err != nil {
+	if err := networkCtx.WaitForEndpointAvailability(fileServerServiceId, listenPort, file1Filename, waitInitialDelaySeconds, waitForStartupMaxRetries, waitForStartupTimeBetweenPolls, ""); err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the file server service to become available")
 	}
 
@@ -73,7 +77,7 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 		return stacktrace.Propagate(err, "An error occurred getting service context with ID '%v'", fileServerServiceId)
 	}
 
-	file1Contents, err := getFileContents(fileServerServiceContext.GetIPAddress(), nginx_static.ListenPort, file1Filename)
+	file1Contents, err := getFileContents(fileServerServiceContext.GetIPAddress(), listenPort, file1Filename)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting file 1's contents")
 	}
@@ -84,7 +88,7 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 		)
 	}
 
-	file2Contents, err := getFileContents(fileServerServiceContext.GetIPAddress(), nginx_static.ListenPort, file2Filename)
+	file2Contents, err := getFileContents(fileServerServiceContext.GetIPAddress(), listenPort, file2Filename)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting file 2's contents")
 	}
@@ -95,6 +99,35 @@ func (f FilesArtifactMountingTest) Run(uncastedNetwork networks.Network) error {
 		)
 	}
 	return nil
+}
+
+// ====================================================================================================
+//                                       Private helper functions
+// ====================================================================================================
+
+func getFileServerServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
+	containerCreationConfig := getContainerCreationConfig()
+
+	runConfigFunc := getRunConfigFunc()
+	return containerCreationConfig, runConfigFunc
+}
+
+func getContainerCreationConfig() *services.ContainerCreationConfig {
+	containerCreationConfig := services.NewContainerCreationConfigBuilder(
+		fileServerServiceImage,
+	).WithUsedPorts(
+		map[string]bool{fmt.Sprint(listenPort): true},
+	).WithFilesArtifacts(map[services.FilesArtifactID]string{
+		testFilesArtifactId: "/static",
+	}).Build()
+	return containerCreationConfig
+}
+
+func getRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+	runConfigFunc := func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error) {
+		return services.NewContainerRunConfigBuilder().Build(), nil
+	}
+	return runConfigFunc
 }
 
 func getFileContents(ipAddress string, port uint32, filename string) (string, error) {
