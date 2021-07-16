@@ -1,7 +1,7 @@
 package execution
 
 import (
-	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
+	"github.com/kurtosis-tech/kurtosis-client/golang/kurtosis_core_rpc_api_bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/rpc_api_consts"
 	"github.com/kurtosis-tech/minimal-grpc-server/server"
@@ -35,7 +35,7 @@ func (executor TestSuiteExecutor) Run() error {
 		return stacktrace.Propagate(err, "An error occurred parsing the suite params JSON and creating the testsuite")
 	}
 
-	var apiContainerService core_api_bindings.ApiContainerServiceClient = nil
+	var apiContainerService kurtosis_core_rpc_api_bindings.ApiContainerServiceClient = nil
 	if executor.kurtosisApiSocket != "" {
 		// TODO SECURITY: Use HTTPS to ensure we're connecting to the real Kurtosis API servers
 		conn, err := grpc.Dial(executor.kurtosisApiSocket, grpc.WithInsecure())
@@ -48,7 +48,7 @@ func (executor TestSuiteExecutor) Run() error {
 		}
 		defer conn.Close()
 
-		apiContainerService = core_api_bindings.NewApiContainerServiceClient(conn)
+		apiContainerService = kurtosis_core_rpc_api_bindings.NewApiContainerServiceClient(conn)
 	}
 
 	testsuiteService := NewTestSuiteService(suite, apiContainerService)

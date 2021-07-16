@@ -2,9 +2,9 @@ package execution
 
 import (
 	"context"
-	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
-	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
-	"github.com/kurtosis-tech/kurtosis-client/golang/services"
+	"github.com/kurtosis-tech/kurtosis-client/golang/kurtosis_core_rpc_api_bindings"
+	"github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/docker_api/test_suite_container_mountpoints"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/rpc_api/bindings"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
@@ -35,10 +35,10 @@ type TestSuiteService struct {
 	testSetupInfoMutex *sync.Mutex
 
 	// Will only be non-nil if an IP:port to a Kurtosis API container was provided
-	kurtosisApiClient core_api_bindings.ApiContainerServiceClient
+	kurtosisApiClient kurtosis_core_rpc_api_bindings.ApiContainerServiceClient
 }
 
-func NewTestSuiteService(suite testsuite.TestSuite, kurtosisApiClient core_api_bindings.ApiContainerServiceClient) *TestSuiteService {
+func NewTestSuiteService(suite testsuite.TestSuite, kurtosisApiClient kurtosis_core_rpc_api_bindings.ApiContainerServiceClient) *TestSuiteService {
 	return &TestSuiteService{
 		suite:              suite,
 		testSetupInfo:      nil,

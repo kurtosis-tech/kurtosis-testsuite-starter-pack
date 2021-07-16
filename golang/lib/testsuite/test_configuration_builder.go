@@ -1,6 +1,6 @@
 package testsuite
 
-import "github.com/kurtosis-tech/kurtosis-client/golang/services"
+import "github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
 
 const (
 	// vvvvvvvvv Update the docs if you change these vvvvvvvvvvv

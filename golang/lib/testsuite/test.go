@@ -5,7 +5,7 @@
 
 package testsuite
 
-import "github.com/kurtosis-tech/kurtosis-client/golang/networks"
+import "github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
 
 // Docs available at https://docs.kurtosistech.com/kurtosis-libs/lib-documentation
 type Test interface {
