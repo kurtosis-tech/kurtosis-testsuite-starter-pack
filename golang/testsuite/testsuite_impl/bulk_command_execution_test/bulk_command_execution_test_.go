@@ -2,7 +2,7 @@ package bulk_command_execution_test
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"

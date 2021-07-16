@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"github.com/kurtosis-tech/example-microservice/api/api_service_client"
 	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
-	"github.com/kurtosis-tech/kurtosis-client/golang/core_api_bindings"
-	"github.com/kurtosis-tech/kurtosis-client/golang/networks"
-	"github.com/kurtosis-tech/kurtosis-client/golang/services"
+	"github.com/kurtosis-tech/kurtosis-client/golang/kurtosis_core_rpc_api_bindings"
+	"github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
+	"github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
@@ -306,14 +306,14 @@ func repartitionNetwork(
 			datastoreServiceId: true,
 		},
 	}
-	partitionConnections := map[networks.PartitionID]map[networks.PartitionID]*core_api_bindings.PartitionConnectionInfo{
+	partitionConnections := map[networks.PartitionID]map[networks.PartitionID]*kurtosis_core_rpc_api_bindings.PartitionConnectionInfo{
 		apiPartitionId: {
-			datastorePartitionId: &core_api_bindings.PartitionConnectionInfo{
+			datastorePartitionId: &kurtosis_core_rpc_api_bindings.PartitionConnectionInfo{
 				IsBlocked: isConnectionBlocked,
 			},
 		},
 	}
-	defaultPartitionConnection := &core_api_bindings.PartitionConnectionInfo{
+	defaultPartitionConnection := &kurtosis_core_rpc_api_bindings.PartitionConnectionInfo{
 		IsBlocked: false,
 	}
 	if err := networkCtx.RepartitionNetwork(partitionServices, partitionConnections, defaultPartitionConnection); err != nil {

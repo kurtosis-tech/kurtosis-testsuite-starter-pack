@@ -2,6 +2,10 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.29.1
+### Changes
+* Upgraded to Kurtosis Client 0.7.0
+
 # 1.29.0
 ### Breaking Changes
 * Upgraded to Kurtosis Client v0.6.0, which:
