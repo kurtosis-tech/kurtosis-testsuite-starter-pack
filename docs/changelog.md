@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added an extra explanatory error message guardrail if a user's `Test.setup` method accidentally returns a nil `Network` object
 
 # 1.30.0
 ### Fixes
