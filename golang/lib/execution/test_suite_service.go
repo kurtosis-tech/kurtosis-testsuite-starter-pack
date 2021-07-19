@@ -180,6 +180,9 @@ func (service *TestSuiteService) SetupTest(ctx context.Context, args *bindings.S
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "An error occurred during test setup")
 	}
+	if userNetwork == nil {
+		return nil, stacktrace.NewError("The test setup method returned successfully, but yielded a nil network object - this is a bug with the test's setup method accidentally returning a nil network object")
+	}
 	service.testSetupInfo = &testSetupInfo{
 		network:  userNetwork,
 		testName: testName,
