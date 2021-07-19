@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	testLambdaImage = "mieubrisse/datastore-army-lambda"
+	testLambdaImage = "kurtosistech/datastore-army-lambda"
 
 	datastoreArmyLambdaId modules.LambdaID = "datastore-army"
 
