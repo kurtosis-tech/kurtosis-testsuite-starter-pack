@@ -12,6 +12,11 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
     * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/rpc_api_consts` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_consts`
     * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs` with `github.com/kurtosis-tech/kurtosis-testsuite-api-lib`
 
+# 1.30.2
+### Features
+* Added `lambdaTest` for testing Kurtosis Lambdas
+* In `lambdaTest`, get the datastore service ports from the Lambda
+
 # 1.30.1
 ### Features
 * Added an extra explanatory error message guardrail if a user's `Test.setup` method accidentally returns a nil `Network` object
