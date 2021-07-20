@@ -28,7 +28,7 @@ const (
 type LambdaTest struct {}
 
 type DatastoreArmyLambdaResult struct {
-	CreatedServiceIdsSet map[string]bool 	`json:"createdServiceIdsSet"`
+	CreatedServiceIdPorts map[string]uint32 `json:"createdServiceIdPorts"`
 }
 
 func (l LambdaTest) Configure(builder *testsuite.TestConfigurationBuilder) {
@@ -115,7 +115,7 @@ func addTwoDatastoreServices(lambdaCtx *modules.LambdaContext) (map[services.Ser
 	}
 
 	result := map[services.ServiceID]bool{}
-	for createdServiceIdStr := range parsedResult.CreatedServiceIdsSet {
+	for createdServiceIdStr := range parsedResult.CreatedServiceIdPorts {
 		result[services.ServiceID(createdServiceIdStr)] = true
 	}
 	return result, nil
