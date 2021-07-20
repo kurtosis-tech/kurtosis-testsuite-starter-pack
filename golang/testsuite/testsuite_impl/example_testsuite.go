@@ -14,6 +14,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/bulk_command_execution_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/exec_command_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/files_artifact_mounting_test"
+	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/lambda_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/local_static_file_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/network_partition_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/static_file_consts"
@@ -66,6 +67,7 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 		)
 		tests["localStaticFileTest"] = local_static_file_test.LocalStaticFileTest{}
 		tests["bulkCommandExecutionTest"] = bulk_command_execution_test.NewBulkCommandExecutionTest(suite.datastoreServiceImage)
+		tests["lambdaTest"] = lambda_test.LambdaTest{}
 	}
 	return tests
 }

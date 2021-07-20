@@ -2,6 +2,11 @@ _See [here](./versioning-and-upgrading.md) for information about versioning and 
 
 # TBD
 
+# 1.30.2
+### Features
+* Added `lambdaTest` for testing Kurtosis Lambdas
+* In `lambdaTest`, get the datastore service ports from the Lambda
+
 # 1.30.1
 ### Features
 * Added an extra explanatory error message guardrail if a user's `Test.setup` method accidentally returns a nil `Network` object
