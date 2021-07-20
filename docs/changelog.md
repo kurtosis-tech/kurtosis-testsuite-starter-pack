@@ -1,14 +1,18 @@
 # TBD
 ### Changes
-* Moved all the testing machinery [the Kurtosis Testsuite API library](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib)
+* Moved all the testing framework to [the Kurtosis Testsuite API library](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib), to the purpose that:
+    * It will change less often than this repo (less upgrading needed)
+    * Changes will result in meaningful improvements for the user (unlike this repo where example testsuite changes would result in new versions that had no effect on consumers of the testing framework library)
 
 ### Breaking Changes
 * All testing packages have been moved to `kurtosis-testsuite-api-lib`, which means users will need to:
-    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/docker_api/test_suite_container_mountpoints` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_docker_api`
-    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/docker_api/test_suite_env_vars` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_docker_api`
-    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/bindings` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_bindings`
-    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/rpc_api_consts` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_consts`
-    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs` with `github.com/kurtosis-tech/kurtosis-testsuite-api-lib`
+    1. Depend on the new lib via `go get github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang` to add it to the `go.mod` file
+    1. Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/docker_api/test_suite_container_mountpoints` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_docker_api`
+    1. Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/docker_api/test_suite_env_vars` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_docker_api`
+    1. Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/bindings` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_bindings`
+    1. Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/rpc_api_consts` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_consts`
+    1. Replace all import references to `github.com/kurtosis-tech/kurtosis-libs` with `github.com/kurtosis-tech/kurtosis-testsuite-api-lib`
+    1. Remove the dependency on this repo, `github.com/kurtosis-tech/kurtosis-libs/golang`, in the `go.mod` file
 
 # 1.30.2
 ### Features
