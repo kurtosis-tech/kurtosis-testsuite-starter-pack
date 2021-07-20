@@ -1,6 +1,9 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added `lambdaTest` for testing Kurtosis Lambdas
+* In `lambdaTest`, get the datastore service ports from the Lambda
 
 # 1.30.1
 ### Features
