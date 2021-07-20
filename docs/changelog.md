@@ -1,4 +1,6 @@
 # TBD
+
+# 1.31.0
 ### Changes
 * Moved all the testing framework to [the Kurtosis Testsuite API library](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib), to the purpose that:
     * It will change less often than this repo (less upgrading needed)
