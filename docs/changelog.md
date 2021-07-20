@@ -1,6 +1,8 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Features
+* Added `lambdaTest` for testing Kurtosis Lambdas
 
 # 1.30.0
 ### Fixes

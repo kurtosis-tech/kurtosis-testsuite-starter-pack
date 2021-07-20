@@ -20,8 +20,7 @@ set -euo pipefail
 # Can make this configurable if needed
 KURTOSIS_DIRPATH="${HOME}/.kurtosis"
 
-KURTOSIS_CORE_TAG="mieubrisse_modules" # TODO DEBUGGING
-# KURTOSIS_CORE_TAG="1.16"
+KURTOSIS_CORE_TAG="1.16"
 KURTOSIS_DOCKERHUB_ORG="kurtosistech"
 INITIALIZER_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_initializer:${KURTOSIS_CORE_TAG}"
 API_IMAGE="${KURTOSIS_DOCKERHUB_ORG}/kurtosis-core_api:${KURTOSIS_CORE_TAG}"
