@@ -1,4 +1,6 @@
 # TBD
+### Removed
+* Removed alllllll the Kurtosis-internal tests, leaving only the basic datastore test, datastore & API test, and advanced network test
 
 # 1.31.0
 ### Changes
