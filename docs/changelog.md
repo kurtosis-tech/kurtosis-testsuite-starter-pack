@@ -1,6 +1,15 @@
 _See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
 
 # TBD
+### Changes
+* Moved all the testing machinery [the Kurtosis Testsuite API library](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib)
+
+### Breaking Changes
+* All testing packages have been moved to `kurtosis-testsuite-api-lib`, which means users will need to:
+    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/docker_api` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_docker_api`
+    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/bindings` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_bindings`
+    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs/lib/rpc_api/rpc_api_consts` -> `github.com/kurtosis-tech/kurtosis-testsuite-api-lib/kurtosis_testsuite_rpc_api_consts`
+    * Replace all import references to `github.com/kurtosis-tech/kurtosis-libs` with `github.com/kurtosis-tech/kurtosis-testsuite-api-lib`
 
 # 1.30.1
 ### Features
