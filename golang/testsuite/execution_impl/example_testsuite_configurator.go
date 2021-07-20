@@ -7,7 +7,7 @@ package execution_impl
 
 import (
 	"encoding/json"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"

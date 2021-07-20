@@ -9,14 +9,9 @@ TESTSUITE_IMPL_DIRNAME="testsuite"
 GO_MOD_FILENAME="go.mod"
 GO_MOD_MODULE_KEYWORD="module "  # The key we'll look for when replacing the module name in go.mod
 
-KURTOSIS_LIB_MODULE="github.com/kurtosis-tech/kurtosis-libs/golang"
-
 # Frustratingly, there's no way to say "do in-place replacement" in sed that's compatible on both Mac and Linux
 # Instead, we add this suffix and delete the backup files after
 SED_INPLACE_FILE_SUFFIX=".sedreplace"
-
-# If we don't specify this, sometimes 'go get' inexplicably gets old versions
-KURTOSIS_LIBS_MODULE_BRANCH="master"
 
 # =============================================================================
 #                             Arg-Parsing & Validation
@@ -81,13 +76,6 @@ fi
 # We search for old_module_name/testsuite because we don't want the old_module_name/lib entries to get renamed
 if ! sed -i"${SED_INPLACE_FILE_SUFFIX}" "s,${existing_module_name}/${TESTSUITE_IMPL_DIRNAME},${new_module_name}/${TESTSUITE_IMPL_DIRNAME},g" $(find "${output_dirpath}" -type f); then
     echo "Error: Could not replace Go module name in code files" >&2
-    exit 1
-fi
-
-# TODO Just modify the go.mod file, so that we don't need 'go' installed on the machine
-# Lastly, depend on the actual Kurtosis library
-if ! ( cd "${output_dirpath}" && go get "${KURTOSIS_LIB_MODULE}@master" ); then
-    echo "Error: Failed to pull Kurtosis Go lib dependency '${KURTOSIS_LIB_MODULE}'" >&2
     exit 1
 fi
 

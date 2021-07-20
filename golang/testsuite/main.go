@@ -8,8 +8,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/execution"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/execution_impl"
+	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/execution"
 	"github.com/sirupsen/logrus"
 	"os"
 )
