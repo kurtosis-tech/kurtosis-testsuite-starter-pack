@@ -7,7 +7,6 @@ package testsuite_impl
 
 import (
 	"github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/lib/testsuite"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/advanced_network_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
@@ -18,6 +17,7 @@ import (
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/network_partition_test"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/static_file_consts"
 	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/wait_for_endpoint_availability_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/testsuite"
 	"path"
 )
 
