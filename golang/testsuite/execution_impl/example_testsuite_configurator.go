@@ -44,7 +44,7 @@ func (t ExampleTestsuiteConfigurator) ParseParamsAndCreateSuite(paramsJsonStr st
 		return nil, stacktrace.Propagate(err, "An error occurred validating the deserialized testsuite params")
 	}
 
-	suite := testsuite_impl.NewExampleTestsuite(args.ApiServiceImage, args.DatastoreServiceImage, args.IsKurtosisCoreDevMode)
+	suite := testsuite_impl.NewExampleTestsuite(args.ApiServiceImage, args.DatastoreServiceImage)
 	return suite, nil
 }
 
