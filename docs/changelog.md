@@ -1,5 +1,3 @@
-_See [here](./versioning-and-upgrading.md) for information about versioning and upgrading_
-
 # TBD
 ### Changes
 * Moved all the testing machinery [the Kurtosis Testsuite API library](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib)
