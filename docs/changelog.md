@@ -1,4 +1,6 @@
 # TBD
+
+# 1.32.1
 ### Changes
 * Upgrade to testsuite lib 0.2.0, which reads its inputs directly from the environment (rather than needing the user to pass them through the Dockerfile)
 * Renamed the `files` directory to `static_files`
