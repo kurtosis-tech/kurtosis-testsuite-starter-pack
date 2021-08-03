@@ -85,15 +85,16 @@ if [ -z "${output_dirpath}" ]; then
 fi
 if [ -d "${output_dirpath}" ] && [ "$(ls -A "${output_dirpath}")" ]; then
     echo "Error: Output directory '${output_dirpath}' exists, but is not empty"
-    exit 1
+    show_help_and_exit
 fi
 if [ -z "${testsuite_image}" ]; then
     echo "Error: Testsuite image cannot be empty" >&2
-    exit 1
+    show_help_and_exit
 fi
 sanitized_image="$(echo "${testsuite_image}" | sed "s|[^${ALLOWED_IMAGE_NAME_CHARS}]||g")"
 if [ "${sanitized_image}" != "${testsuite_image}" ]; then
     echo "Error: Testsuite image name '${testsuite_image}' doesn't match regex [${ALLOWED_IMAGE_NAME_CHARS}]+" >&2
+    show_help_and_exit
 fi
 
 # =============================================================================

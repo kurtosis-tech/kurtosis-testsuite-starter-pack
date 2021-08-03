@@ -1,5 +1,13 @@
 # TBD
 
+# 1.32.1
+### Changes
+* Upgrade to testsuite lib 0.2.0, which reads its inputs directly from the environment (rather than needing the user to pass them through the Dockerfile)
+* Renamed the `files` directory to `static_files`
+
+### Fixes
+* Fixed a couple bugs in `bootstrap.sh`
+
 # 1.32.0
 ### Removed
 * Removed alllllll the Kurtosis-internal tests, leaving only the basic datastore test, datastore & API test, and advanced network test
