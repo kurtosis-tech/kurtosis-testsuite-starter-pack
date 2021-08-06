@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2020 - present Kurtosis Technologies LLC.
- * All Rights Reserved.
- */
-
 package basic_datastore_and_api_test
 
 import (

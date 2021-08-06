@@ -3,6 +3,9 @@
 * Upgraded to Kurtosis 1.17, which allows for multiple instances of Kurtosis to be run at the same time
 * Upgraded testsuite API lib 0.2.0 -> 0.4.0
 
+### Removed
+* Removed Apache-2 license, dedicating everything inside this example to the public domain
+
 # 1.32.1
 ### Changes
 * Upgrade to testsuite lib 0.2.0, which reads its inputs directly from the environment (rather than needing the user to pass them through the Dockerfile)

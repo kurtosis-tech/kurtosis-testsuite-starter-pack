@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2020 - present Kurtosis Technologies LLC.
- * All Rights Reserved.
- */
-
 package advanced_network_test
 
 import (
