@@ -1,4 +1,7 @@
 # TBD
+### Features
+* Upgraded to Kurtosis 1.17, which allows for multiple instances of Kurtosis to be run at the same time
+* Upgraded testsuite API lib 0.2.0 -> 0.4.0
 
 # 1.32.1
 ### Changes
