@@ -46,7 +46,7 @@ workflows:
       - check_code:
           context:
             - docker-user
-            - kurtosis-user
+            - simulated-trial-user
           filters:
             branches:
               ignore:
