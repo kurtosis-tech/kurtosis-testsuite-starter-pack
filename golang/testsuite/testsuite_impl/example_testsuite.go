@@ -1,9 +1,9 @@
 package testsuite_impl
 
 import (
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/advanced_network_test"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/testsuite_impl/advanced_network_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/testsuite_impl/basic_datastore_test"
 	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/testsuite"
 )
 
