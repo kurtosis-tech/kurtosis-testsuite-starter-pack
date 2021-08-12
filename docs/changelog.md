@@ -2,6 +2,7 @@
 ### Features
 * Upgraded to Kurtosis 1.18, which allows for multiple instances of Kurtosis to be run at the same time
 * Upgraded testsuite API lib 0.2.0 -> 0.4.0
+* Made bootstrap validation happen upon every PR, rather than upon merge-to-master
 
 ### Fixes
 * Correct all old references to `kurtosis-libs` -> `kurtosis-testsuite-starter-pack`
@@ -9,6 +10,7 @@
 ### Removals
 * Removed Apache-2 license, dedicating everything inside this example to the public domain
 * Now-unused testsuite API `.proto` file
+* Removed now-unnecessary building and pushing of Docker images
 
 # 1.32.1
 ### Changes
