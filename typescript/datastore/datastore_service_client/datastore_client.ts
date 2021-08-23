@@ -1,3 +1,5 @@
+//TODO - extract this to example-microservices repo
+
 import { Result, err, ok } from "neverthrow";
 //"io/ioutil"
 import * as axios from "axios";
@@ -14,7 +16,7 @@ const TIMEOUT_SECONDS: number = 2; //TODO (Ali)
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
-class DatastoreClient {
+export class DatastoreClient {
 	//private readonly httpClient: HttpClient; //TODO (Ali) - might not need since we have axios ;)
 	private readonly ipAddr: string;
 	private readonly port: number;

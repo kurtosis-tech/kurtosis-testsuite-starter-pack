@@ -1,3 +1,5 @@
+//TODO - extract this to example-microservices repo
+
 //"io/ioutil"
 import { Result, ok, err } from "neverthrow";
 import * as httpStatusCode from "http-status-codes"
@@ -18,7 +20,7 @@ class Person {
 	constructor() {}
 }
 
-class APIClient {
+export class APIClient {
 	//httpClient http.Client
 	private readonly ipAddr: string;
 	private readonly port: number;
