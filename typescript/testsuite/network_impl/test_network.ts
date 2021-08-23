@@ -1,6 +1,6 @@
 import { APIClient } from "../../api/api_service_client/api_client";
 import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client"; //TODO - extract to microservice-examples
-import { ServiceID, NetworkContext, ContainerCreationConfig, StaticFileID, ContainerRunConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib"; //TODO (Ali)
+import { ServiceID, NetworkContext, ContainerCreationConfig, StaticFileID, ContainerRunConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib"; //TODO (Ali) - need to export ContainerCreationConfig and ContainerRunConfig
 import { Result, ok, err, ResultAsync, okAsync, errAsync } from "neverthrow";
 import * as log from "loglevel";
 import * as fs from 'fs';
@@ -52,11 +52,11 @@ class TestNetwork {
 	//   in the Test.Setup function of each test
 	public async setupDatastoreAndTwoApis(): Promise<Result<null, Error>> {
 
-		if (this.datastoreClient != null) {
+		if (this.datastoreClient !== null) {
 			return err(new Error("Cannot add datastore client to network; datastore client already exists!"));
 		}
 
-		if (this.personModifyingApiClient != null || this.personRetrievingApiClient != null) {
+		if (this.personModifyingApiClient !== null || this.personRetrievingApiClient !== null) {
 			return err(new Error("Cannot add API services to network; one or more API services already exists"));
 		}
 
@@ -99,21 +99,21 @@ class TestNetwork {
 	//  Custom network implementations will also usually have getters, to retrieve information about the
 	//   services created during setup
 	public getPersonModifyingApiClient(): Result<APIClient, Error> {
-		if (this.personModifyingApiClient == null) {
+		if (this.personModifyingApiClient === null) {
 			return err(new Error("No person-modifying API client exists"));
 		}
 		return ok(this.personModifyingApiClient);
 	}
 
 	public getPersonRetrievingApiClient(): Result<APIClient, Error> {
-		if (this.personRetrievingApiClient == null) {
+		if (this.personRetrievingApiClient === null) {
 			return err(new Error("No person-retrieving API client exists"));
 		}
 		return ok(this.personRetrievingApiClient)
 	}
 
 	public getDatastoreClient(): Result<DatastoreClient, Error>{ //TODO (Ali) (comment) - added this getter
-		if (this.datastoreClient == null) {
+		if (this.datastoreClient === null) {
 			return err(new Error("No datastore client exists"));
 		}
 		return ok(this.datastoreClient);
@@ -122,7 +122,7 @@ class TestNetwork {
 	//Private helper function
 	public async addApiService(): Promise<Result<APIClient, Error>> { //TODO (Ali) - All methods inside would need to be turned into promises here
 
-		if (this.datastoreClient == null) {
+		if (this.datastoreClient === null) {
 			return err(new Error("Cannot add API service to network; no datastore client exists"));
 		}
 	
@@ -155,34 +155,6 @@ class TestNetwork {
 // ====================================================================================================
 //                                       Private helper functions
 // ====================================================================================================
-// func (network *TestNetwork)  addApiService() (*api_service_client.APIClient, error) {
-
-// 	if network.datastoreClient == nil {
-// 		return nil, stacktrace.NewError("Cannot add API service to network; no datastore client exists")
-// 	}
-
-// 	serviceIdStr := apiServiceIdPrefix + strconv.Itoa(network.nextApiServiceId)
-// 	network.nextApiServiceId = network.nextApiServiceId + 1
-// 	serviceId := services.ServiceID(serviceIdStr)
-
-// 	apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc := getApiServiceConfigurations(network)
-
-// 	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc)
-// 	if err != nil {
-// 		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
-// 	}
-
-// 	apiClient := api_service_client.NewAPIClient(apiServiceContext.GetIPAddress(), apiServicePort)
-
-// 	err = apiClient.WaitForHealthy(waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
-// 	if err != nil {
-// 		return nil, stacktrace.Propagate(err, "An error occurred waiting for the api service to become available")
-// 	}
-
-// 	log.info("Added API service with host port bindings:" + hostPortBindings)
-// 	return apiClient, nil
-// }
-
 async function getDatastoreServiceConfigurations(): Promise<[ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>]> {
 	const datastoreContainerCreationConfig: ContainerCreationConfig = await getDataStoreContainerCreationConfig();
 
@@ -228,8 +200,7 @@ async function getApiServiceConfigInitializingFunc(datastoreClientResult: Result
 		let configBytes: string;
 		try { 
 			configBytes = JSON.stringify(configObj);
-		}
-		catch(jsonErr) {
+		} catch(jsonErr) {
 			return err(jsonErr);
 		}
 
