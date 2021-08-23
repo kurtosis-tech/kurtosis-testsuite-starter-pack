@@ -1,0 +1,31 @@
+{
+  "name": "kurtosis-testsuite-starter-pack",
+  "version": "1.0.0",
+  "description": "This repo contains: example testsuites in each language that Kurtosis supports & a bootstrap.sh script for creating your own testsuite in your language of choice",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/kurtosis-tech/kurtosis-testsuite-starter-pack.git"
+  },
+  "keywords": [
+    "kurtosis",
+    "testsuite",
+    "starter",
+    "pack"
+  ],
+  "author": "Kurtosis <accounts@kurtosistech.com> (https://www.kurtosistech.com/)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/issues"
+  },
+  "homepage": "https://github.com/kurtosis-tech/kurtosis-testsuite-starter-pack#readme",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "http-status-codes": "^2.1.4",
+    "neverthrow": "^4.2.2"
+  },
+  "devDependencies": {}
+}
