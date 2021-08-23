@@ -1,6 +1,6 @@
 //"io/ioutil"
 import { Result, ok, err } from "neverthrow";
-import * as httpStatusCode from "http-status-codes"
+import * as httpStatusCode from "http-status-codes";
 import * as axios from "axios";
 
 const PERSON_ENDPOINT: string = "person";
@@ -9,7 +9,7 @@ const TEXT_CONTEXT_TYPE: string = "text/plain"; //TODO (Ali)
 const TIMEOUT_SECONDS: number = 2; //TODO (Ali)
 const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 
-const HEALTHCHECK_URL_SLUG = "health";
+const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
 class Person {
@@ -19,21 +19,21 @@ class Person {
 }
 
 class APIClient {
-	//httpClient http.Client
+	//httpClient http.Client //TODO (Ali) - might not need since we have axios ;)
 	private readonly ipAddr: string;
 	private readonly port: number;
-
-    constructor (ipAddr: string, port: number) {
+	
+	constructor (ipAddr: string, port: number) {
 		this.ipAddr = ipAddr;
 		this.port = port;
-    }
+	}
 
 	public async addPerson(id: number): Promise<Result<null, Error>> {
 		const url: string = this.getPersonUrlForId(id);
 		const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - might need to catch error to make up for line below ; content type missing in POST request
 		
 		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err != nil {
+		// if err !== nil {
 		// 	return stacktrace.Propagate(err, "An error occurred making the request to add person with ID '%v'", id)
 		// }
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
@@ -47,7 +47,7 @@ class APIClient {
 		const resp: axios.AxiosResponse<any> = await axios.default.get(url); //TODO (Ali) - might need to catch error to make up for line below
 		
 		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err != nil {
+		// if err !== nil {
 		// 	return Person{}, stacktrace.Propagate(err, "An error occurred making the request to get person with ID '%v'", id)
 		// }
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
@@ -58,7 +58,7 @@ class APIClient {
 		//TODO (Ali) - how do I deal with a response type of <any>, I can't guarantee on it
 		// defer body.Close()
 		// bodyBytes, err := ioutil.ReadAll(body)
-		// if err != nil {
+		// if err !== nil {
 		// 	return Person{}, stacktrace.Propagate(err, "An error occurred reading the response body")
 		// }
 
@@ -77,7 +77,7 @@ class APIClient {
 		const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - might need to catch error to make up for line below ; content type missing in POST request
 		
 		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err != nil {
+		// if err !== nil {
 		// 	return stacktrace.Propagate(err, "An error occurred making the request to increment the books read of person with ID '%v'", id)
 		// }
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
@@ -124,7 +124,7 @@ class APIClient {
 		return ok(null);
 	}
 
-	public getPersonUrlForId(id: number): string {
+	public getPersonUrlForId(id: number): string { //TODO (Ali) - since async functions use it, I might need to make this async
 		return "http://" + this.ipAddr + ":" + this.port + "/" + PERSON_ENDPOINT + "/" + id + "";
 	}
 

@@ -1,7 +1,7 @@
 import { Result, err, ok } from "neverthrow";
 //"io/ioutil"
 import * as axios from "axios";
-import * as httpStatusCode from "http-status-codes"
+import * as httpStatusCode from "http-status-codes";
 //"strings"
 
 const TEXT_CONTENT_TYPE: string = "text/plain"; //TODO (Ali)
@@ -51,7 +51,7 @@ class DatastoreClient {
 		// }
 		
 		if (resp.status === httpStatusCode.StatusCodes.OK) {
-			return ok(true)
+			return ok(true);
 		} else if (resp.status === httpStatusCode.StatusCodes.NOT_FOUND) {
 			return ok(false);
 		} else {
@@ -73,7 +73,7 @@ class DatastoreClient {
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
 			return err(new Error("A non-" + resp.status + " status code was returned"));
 		}
-		const body: any = resp.data
+		const body: any = resp.data;
 
 		//TODO (Ali) - how do I deal with a response type of <any>, I can't guarantee on it
 		// defer body.Close()
@@ -102,7 +102,7 @@ class DatastoreClient {
 		return ok(null);
 	}
 
-	public getUrlForKey(key: string): string {
+	public getUrlForKey(key: string): string { //TODO (Ali) - since async functions use it, I might need to make this async
 		return "http://"+this.ipAddr+":"+this.port+"/"+KEY_ENDPOINT+"/"+key+"";
 	}
 
