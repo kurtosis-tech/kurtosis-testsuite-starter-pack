@@ -4,7 +4,7 @@ import { BasicDatastoreTest } from "./basic_datastore_test/basic_datastore_test_
 import { Test } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
 
 
-class ExampleTestsuite {
+export class ExampleTestsuite {
 	private readonly apiServiceImage: string;
 	private readonly datastoreServiceImage: string;
 
