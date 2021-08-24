@@ -25,8 +25,8 @@ const CONFIG_FILE_KEY: string  = "config-file";
 
 
 class DatastoreConfig {
-    private readonly datastoreIp: string;
-    private readonly datastorePort: number;
+	private readonly datastoreIp: string;
+	private readonly datastorePort: number;
 	
 	constructor(datastoreIp: string, datastorePort: number) {
 		this.datastoreIp = datastoreIp;
