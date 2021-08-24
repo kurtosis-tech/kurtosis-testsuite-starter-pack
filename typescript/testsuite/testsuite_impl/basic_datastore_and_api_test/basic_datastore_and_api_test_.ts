@@ -27,7 +27,7 @@ const CONFIG_FILE_KEY: string  = "config-file";
 class DatastoreConfig {
     private readonly datastoreIp: string;
     private readonly datastorePort: number;
-
+	
 	constructor(datastoreIp: string, datastorePort: number) {
 		this.datastoreIp = datastoreIp;
 		this.datastorePort = datastorePort;
@@ -128,8 +128,8 @@ export class BasicDatastoreAndApiTest {
 		const person: Person = getPersonResult.value;
 		log.info("Retrieved test person");
 
-		if (person.getBookRead() != TEST_NUM_BOOKS_READ) {
-			return err(new Error("Expected number of book read '"+TEST_NUM_BOOKS_READ+"' != actual number of books read '"+person.getBookRead()+"'"));
+		if (person.getBookRead() !== TEST_NUM_BOOKS_READ) {
+			return err(new Error("Expected number of book read '"+TEST_NUM_BOOKS_READ+"' !== actual number of books read '"+person.getBookRead()+"'"));
 		}
 
 		return ok(null);

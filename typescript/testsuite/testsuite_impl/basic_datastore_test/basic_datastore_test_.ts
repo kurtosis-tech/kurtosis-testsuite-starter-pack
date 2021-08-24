@@ -83,8 +83,8 @@ export class BasicDatastoreTest {
 			return err(getResult.error);
 		}
 		const value: string = getResult.value;
-		if (value != TEST_VALUE) {
-			return err(new Error("Returned value '" + value + "' != test value '" + TEST_VALUE + "'"));
+		if (value !== TEST_VALUE) {
+			return err(new Error("Returned value '" + value + "' !== test value '" + TEST_VALUE + "'"));
 		}
 		log.info("Value verified");
 		return ok(null);

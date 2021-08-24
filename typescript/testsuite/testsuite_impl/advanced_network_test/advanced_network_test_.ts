@@ -5,7 +5,7 @@ import * as log from "loglevel";
 import { ok, err, Result } from "neverthrow";
 import { APIClient, Person } from "../../../api/api_service_client/api_client";
 
-const TEST_PERSON_ID = 46;
+const TEST_PERSON_ID: number = 46;
 
 export class AdvancedNetworkTest {
 	private readonly datastoreServiceImage: string;
@@ -67,7 +67,7 @@ export class AdvancedNetworkTest {
 		const person: Person = getPersonResult.value;
 		log.info("Retrieved test person");
 
-		if (person.getBookRead() != 1) {
+		if (person.getBookRead() !== 1) {
 			return err(new Error("Expected number of books read to be incremented, but was '"+ person.getBookRead() +"'"));
 		}
 		return ok(null);
