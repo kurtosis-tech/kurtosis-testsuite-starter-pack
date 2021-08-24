@@ -29,8 +29,8 @@ class ExampleTestsuiteConfigurator {
 		
 		const validateArgsResult: Result<null, Error> = validateArgs(args);
 		if (!validateArgsResult.isOk()) {
-            return err(validateArgsResult.error);
-        }
+			return err(validateArgsResult.error);
+		}
 		
 		const suite: ExampleTestsuite = new ExampleTestsuite(args.getApiServiceImage(), args.getDatastoreServiceImage());
 		return ok(suite);
