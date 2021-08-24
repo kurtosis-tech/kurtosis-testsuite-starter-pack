@@ -10,6 +10,7 @@
 * Added build script for typescript files
 * Added network_impl typescript files 
 * Added testsuite_impl typescript files
+* Added execution_impl typescript files
 
 ### Fixes
 * Correct all old references to `kurtosis-libs` -> `kurtosis-testsuite-starter-pack`
