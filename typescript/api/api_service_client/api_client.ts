@@ -14,10 +14,14 @@ const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
-class Person {
+export class Person {
 	private readonly booksRead: number;
 
 	constructor() {}
+
+	public getBookRead(): number {
+		return this.booksRead;
+	}
 }
 
 export class APIClient {

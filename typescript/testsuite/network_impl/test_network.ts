@@ -29,7 +29,7 @@ class DatastoreConfig {
 
 //  A custom Network implementation is intended to make test-writing easier by wrapping low-level
 //    NetworkContext calls with custom higher-level business logic
-class TestNetwork {
+export class TestNetwork {
 	private readonly networkCtx: NetworkContext;
 	private readonly datastoreServiceImage: string;
 	private readonly apiServiceImage: string;
