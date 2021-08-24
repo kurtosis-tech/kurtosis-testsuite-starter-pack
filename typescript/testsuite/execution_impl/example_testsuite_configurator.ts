@@ -6,8 +6,8 @@ import { ExampleTestsuiteArgs } from "./example_testsuite_args";
 
 
 class ExampleTestsuiteConfigurator {
-    
-    construcor () {}
+	
+	construcor () {}
 	
 	public setLogLevel(logLevelStr: string): Result<null, Error> {
 		const newLog: log.Logger = log.getLogger(logLevelStr);
@@ -20,7 +20,7 @@ class ExampleTestsuiteConfigurator {
     }
 
     public parseParamsAndCreateSuite(paramsJsonStr: string): Result<TestSuite, Error> {
-        let args: ExampleTestsuiteArgs;
+		let args: ExampleTestsuiteArgs;
 		try {
 			args = JSON.parse(paramsJsonStr); //TODO (Ali) - golang used bytes in their unMarshal
 		} catch (jsonErr) {

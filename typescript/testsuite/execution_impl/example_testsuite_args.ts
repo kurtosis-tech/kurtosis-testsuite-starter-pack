@@ -9,9 +9,9 @@ export class ExampleTestsuiteArgs {
 	
 	public getApiServiceImage(): string {
         return this.apiServiceImage;
-    }
+	}
 	
 	public getDatastoreServiceImage(): string {
         return this.datastoreServiceImage;
-    }
+	}
 }
