@@ -7,7 +7,7 @@ import { APIClient, Person } from "../../../api/api_service_client/api_client";
 
 const TEST_PERSON_ID = 46;
 
-class AdvancedNetworkTest {
+export class AdvancedNetworkTest {
 	private readonly datastoreServiceImage: string;
 	private readonly apiServiceImage: string;
 	
