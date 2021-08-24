@@ -39,16 +39,16 @@ export class BasicDatastoreAndApiTest {
     private readonly apiImage: string;
     
     constructor(datastoreImage: string, apiImage: string) {
-        this.datastoreImage = datastoreImage;
-        this.apiImage = apiImage;
+		this.datastoreImage = datastoreImage;
+		this.apiImage = apiImage;
     }
 	
 	public configure(builder: TestConfigurationBuilder): void {
-        builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60); //TODO (Ali) - allowed since typescript gives direct reference
+		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60); //TODO (Ali) - allowed since typescript gives direct reference
     }
 
 	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> { //TODO (Ali) - async?
-
+		
 		const [datastoreContainerCreationConfig, datastoreRunConfigFunc]: [ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>] = await getDatastoreServiceConfigurations(); //TODO (Ali) - maybe Result here
 
 		const addDatastoreServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
