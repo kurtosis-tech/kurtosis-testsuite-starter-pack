@@ -30,12 +30,13 @@ class APIClient {
 
 	public async addPerson(id: number): Promise<Result<null, Error>> {
 		const url: string = this.getPersonUrlForId(id);
-		const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - might need to catch error to make up for line below ; content type missing in POST request
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return stacktrace.Propagate(err, "An error occurred making the request to add person with ID '%v'", id)
-		// }
+		let resp: axios.AxiosResponse<any>;
+		try {
+			resp = await axios.default.post(url, null); //TODO (Ali) - content type missing in POST request
+		} catch(exception) {
+			return err(exception);
+		}
+
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
 			return err(new Error("Adding person with ID '" + id +  "' returned non-OK status code " + resp.status + ""));
 		}
@@ -44,12 +45,13 @@ class APIClient {
 
 	public async getPerson(id: number): Promise<Result<Person, Error>> {
 		const url: string = this.getPersonUrlForId(id);
-		const resp: axios.AxiosResponse<any> = await axios.default.get(url); //TODO (Ali) - might need to catch error to make up for line below
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return Person{}, stacktrace.Propagate(err, "An error occurred making the request to get person with ID '%v'", id)
-		// }
+		let resp: axios.AxiosResponse<any>;
+		try {
+			resp = await axios.default.get(url);
+		} catch(exception) {
+			return err(exception);
+		}
+
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
 			return err(new Error("Getting person with ID '" + id + "' returned non-OK status code " + resp.status + ""));
 		}
@@ -74,12 +76,13 @@ class APIClient {
 
 	public async incrementBooksRead(id: number): Promise<Result<null, Error>> {
 		const url: string = "http://" + this.ipAddr + ":" + this.port + "/"+ INCREMENT_BOOKS_READ_ENDPOINT +"/" + id + ""; //TODO (Ali) - shouldn't we be calling getPersonUrlForId
-		const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - might need to catch error to make up for line below ; content type missing in POST request
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return stacktrace.Propagate(err, "An error occurred making the request to increment the books read of person with ID '%v'", id)
-		// }
+		let resp: axios.AxiosResponse<any>;
+		try {
+			const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - content type missing in POST request
+		} catch(exception) {
+			return err(exception);
+		}
+
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
 			return err(new Error("Incrementing the books read of person with ID '" + id + "' returned non-OK status code " + resp.status + ""));
 		}
@@ -99,7 +102,7 @@ class APIClient {
 			if (respResult.isOk()) {
 				break;
 			}
-			await new Promise(f => setTimeout(f, retriesDelayMilliseconds));
+			await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
 		}
 
 		if (!respResult.isOk()){
@@ -129,12 +132,13 @@ class APIClient {
 	}
 
 	public async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
-		const resp: axios.AxiosResponse<any> = await axios.default.get(url); //TODO (Ali) - might need to do catch error to make up for line below
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return nil, stacktrace.Propagate(err, "An HTTP error occurred when sending GET request to endpoint '%v'", url)
-		// }
+		let resp: axios.AxiosResponse<any>;
+		try {
+			resp = await axios.default.get(url);
+		} catch(exception) {
+			return err(exception);
+		}
+
 		if (resp.status !== httpStatusCode.StatusCodes.OK) {
 			return err(new Error("Received non-OK status code: '" + resp.status + "'"));
 		}
