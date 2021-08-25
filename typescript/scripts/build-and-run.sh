@@ -19,7 +19,7 @@ custom_params_json='{
 
 bash "${repo_root_dirpath}/.kurtosis/build-and-run-core.sh" \
     "${action}" \
-    "${KURTOSIS_DOCKERHUB_ORG}/kurtosis-golang-example" \
+    "${KURTOSIS_DOCKERHUB_ORG}/kurtosis-typescript-example" \
     "${lang_root_dirpath}" \
     "${lang_root_dirpath}/src/testsuite/Dockerfile" \
     "${repo_root_dirpath}/.kurtosis/kurtosis.sh" \
