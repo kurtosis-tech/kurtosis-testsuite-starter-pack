@@ -1,143 +1,153 @@
-//"io/ioutil"
 import { Result, ok, err } from "neverthrow";
 import * as httpStatusCode from "http-status-codes";
 import * as axios from "axios";
 
 const PERSON_ENDPOINT: string = "person";
-const TEXT_CONTEXT_TYPE: string = "text/plain"; //TODO (Ali)
+const TEXT_CONTEXT_TYPE: string = "text/plain"; //TODO (Ali) - not being used
 
-const TIMEOUT_SECONDS: number = 2; //TODO (Ali)
+const TIMEOUT_SECONDS: number = 2; //TODO (Ali) - not being used
 const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
 class Person {
-	private readonly booksRead: number;
+    private readonly booksRead: number;
 
-	constructor() {}
+    constructor(booksRead: number) {
+        this.booksRead = booksRead;
+    }
 }
 
 class APIClient {
-	//httpClient http.Client //TODO (Ali) - might not need since we have axios ;)
-	private readonly ipAddr: string;
-	private readonly port: number;
-	
-	constructor (ipAddr: string, port: number) {
-		this.ipAddr = ipAddr;
-		this.port = port;
-	}
+    private readonly ipAddr: string;
+    private readonly port: number;
+    
+    constructor (ipAddr: string, port: number) {
+        this.ipAddr = ipAddr;
+        this.port = port;
+    }
 
-	public async addPerson(id: number): Promise<Result<null, Error>> {
-		const url: string = this.getPersonUrlForId(id);
-		const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - might need to catch error to make up for line below ; content type missing in POST request
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return stacktrace.Propagate(err, "An error occurred making the request to add person with ID '%v'", id)
-		// }
-		if (resp.status !== httpStatusCode.StatusCodes.OK) {
-			return err(new Error("Adding person with ID '" + id +  "' returned non-OK status code " + resp.status + ""));
-		}
-		return ok(null);
-	}
+    public async addPerson(id: number): Promise<Result<null, Error>> {
+        const url: string = this.getPersonUrlForId(id);
+        let resp: axios.AxiosResponse<any>;
+        try {
+            resp = await axios.default.post(url, null);
+        } catch(exception) {
+            return err(exception);
+        }
 
-	public async getPerson(id: number): Promise<Result<Person, Error>> {
-		const url: string = this.getPersonUrlForId(id);
-		const resp: axios.AxiosResponse<any> = await axios.default.get(url); //TODO (Ali) - might need to catch error to make up for line below
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return Person{}, stacktrace.Propagate(err, "An error occurred making the request to get person with ID '%v'", id)
-		// }
-		if (resp.status !== httpStatusCode.StatusCodes.OK) {
-			return err(new Error("Getting person with ID '" + id + "' returned non-OK status code " + resp.status + ""));
-		}
-		const body: any = resp.data; //TODO (Ali) - building this for JSON.parse
+        if (resp.status !== httpStatusCode.StatusCodes.OK) {
+            return err(new Error("Adding person with ID '" + id +  "' returned non-OK status code " + resp.status));
+        }
+        return ok(null);
+    }
 
-		//TODO (Ali) - how do I deal with a response type of <any>, I can't guarantee on it
-		// defer body.Close()
-		// bodyBytes, err := ioutil.ReadAll(body)
-		// if err !== nil {
-		// 	return Person{}, stacktrace.Propagate(err, "An error occurred reading the response body")
-		// }
+    public async getPerson(id: number): Promise<Result<Person, Error>> {
+        const url: string = this.getPersonUrlForId(id);
+        let resp: axios.AxiosResponse<any>;
+        try {
+            resp = await axios.default.get(url);
+        } catch(exception) {
+            return err(exception);
+        }
 
-		let person: Person;
-		try {
-			person = JSON.parse(body); 
-		} catch(jsonErr) {
-			return err(jsonErr);
-		}
-		
-		return ok(person);
-	}
+        if (resp.status !== httpStatusCode.StatusCodes.OK) {
+            return err(new Error("Getting person with ID '" + id + "' returned non-OK status code " + resp.status));
+        }
+        const body: any = resp.data; //TODO (Ali) - this is a JSON object
+        
+        //TODO (Ali) - What line below are doing:
+        // 1) Taking JSON object and turning it into a string
+        // 2) Then parsing the string into a person object 
+        // It feels like I'm doing and un-doing an action with these two commands though, but I'm certain I need parse
+        // to build the Person object itself from the string
+        let bodyString: string;
+        try {
+            bodyString = JSON.stringify(body);
+        } catch(jsonErr) {
+            return err(jsonErr);
+        }
 
-	public async incrementBooksRead(id: number): Promise<Result<null, Error>> {
-		const url: string = "http://" + this.ipAddr + ":" + this.port + "/"+ INCREMENT_BOOKS_READ_ENDPOINT +"/" + id + ""; //TODO (Ali) - shouldn't we be calling getPersonUrlForId
-		const resp: axios.AxiosResponse<any> = await axios.default.post(url, null); //TODO (Ali) - might need to catch error to make up for line below ; content type missing in POST request
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return stacktrace.Propagate(err, "An error occurred making the request to increment the books read of person with ID '%v'", id)
-		// }
-		if (resp.status !== httpStatusCode.StatusCodes.OK) {
-			return err(new Error("Incrementing the books read of person with ID '" + id + "' returned non-OK status code " + resp.status + ""));
-		}
-		return ok(null);
-	}
+        let person: Person;
+        try {
+            person = JSON.parse(bodyString); 
+        } catch(jsonErr) {
+            return err(jsonErr);
+        }
+        
+        return ok(person);
+    }
 
-	/*
-	Wait for healthy response
-	*/
-	public async waitForHealthy(retries: number, retriesDelayMilliseconds: number): Promise<Result<null, Error>> {
+    public async incrementBooksRead(id: number): Promise<Result<null, Error>> {
+        const url: string = "http://" + this.ipAddr + ":" + this.port + "/"+ INCREMENT_BOOKS_READ_ENDPOINT +"/" + id;
+        let resp: axios.AxiosResponse<any>;
+        try {
+            resp = await axios.default.post(url, null);
+        } catch(exception) {
+            return err(exception);
+        }
 
-		const url: string = "http://"+this.ipAddr+":"+this.port+"/"+HEALTHCHECK_URL_SLUG+"";
-		let respResult: Result<axios.AxiosResponse<any>, Error>;
+        if (resp.status !== httpStatusCode.StatusCodes.OK) {
+            return err(new Error("Incrementing the books read of person with ID '" + id + "' returned non-OK status code " + resp.status + ""));
+        }
+        return ok(null);
+    }
 
-		for (let i = 0 ; i < retries ; i++) {
-			respResult = await this.makeHttpGetRequest(url);
-			if (respResult.isOk()) {
-				break;
-			}
-			await new Promise(f => setTimeout(f, retriesDelayMilliseconds));
-		}
+    /*
+    Wait for healthy response
+    */
+    public async waitForHealthy(retries: number, retriesDelayMilliseconds: number): Promise<Result<null, Error>> {
 
-		if (!respResult.isOk()){
-			return err(respResult.error);
-		}
+        const url: string = "http://"+this.ipAddr+":"+this.port+"/"+HEALTHCHECK_URL_SLUG;
+        let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
-		//TODO (Ali) - how do I deal with a response type of <any>, I can't guarantee on it
-		// body := resp.Body
-		// defer body.Close()
+        for (let i = 0 ; i < retries ; i++) {
+            respResult = await this.makeHttpGetRequest(url);
+            if (respResult.isOk()) {
+                break;
+            }
+            await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
+        }
 
-		// bodyBytes, err := ioutil.ReadAll(body)
-		// if err !== nil {
-		// 	return stacktrace.Propagate(err, "An error occurred reading the response body")
-		// }
-		const resp: axios.AxiosResponse<any> = respResult.value;
-		const bodyStr: string = String(resp.data); //TODO - we might need to keep this as any type, and remove lines below
+        if (respResult === null) {
+            return err(new Error("Expected a response or error wrapped around Result, but got null instead. Ensure that retries is greater than 0."));
+        }
+        if (!respResult.isOk()){
+            return err(respResult.error);
+        }
 
-		if (bodyStr !== HEALTHY_VALUE) {
-			return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + bodyStr +  "' instead"));
-		}
+        const resp: axios.AxiosResponse<any> = respResult.value;
 
-		return ok(null);
-	}
+        let bodyString: string;
+        try {
+            bodyString = JSON.stringify(resp.data);
+        } catch(jsonErr) {
+            return err(jsonErr);
+        }
 
-	public getPersonUrlForId(id: number): string { //TODO (Ali) - since async functions use it, I might need to make this async
-		return "http://" + this.ipAddr + ":" + this.port + "/" + PERSON_ENDPOINT + "/" + id + "";
-	}
+        if (bodyString !== HEALTHY_VALUE) {
+            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + bodyString +  "' instead"));
+        }
 
-	public async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
-		const resp: axios.AxiosResponse<any> = await axios.default.get(url); //TODO (Ali) - might need to do catch error to make up for line below
-		
-		//TOOD (Ali) - since I removed http.Client struct, I might remove the following error check
-		// if err !== nil {
-		// 	return nil, stacktrace.Propagate(err, "An HTTP error occurred when sending GET request to endpoint '%v'", url)
-		// }
-		if (resp.status !== httpStatusCode.StatusCodes.OK) {
-			return err(new Error("Received non-OK status code: '" + resp.status + "'"));
-		}
-		return ok(resp);
-	}
+        return ok(null);
+    }
+
+    public getPersonUrlForId(id: number): string { //TODO (Ali) - since async functions use it, I might need to make this async
+        return "http://" + this.ipAddr + ":" + this.port + "/" + PERSON_ENDPOINT + "/" + id;
+    }
+
+    public async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
+        let resp: axios.AxiosResponse<any>;
+        try {
+            resp = await axios.default.get(url);
+        } catch(exception) {
+            return err(exception);
+        }
+
+        if (resp.status !== httpStatusCode.StatusCodes.OK) {
+            return err(new Error("Received non-OK status code: '" + resp.status + "'"));
+        }
+        return ok(resp);
+    }
 }
