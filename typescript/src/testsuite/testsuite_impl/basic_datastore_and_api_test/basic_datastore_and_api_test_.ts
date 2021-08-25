@@ -4,7 +4,7 @@ import { Result, err, ok, ResultAsync, errAsync, okAsync } from "neverthrow";
 import * as log from "loglevel";
 import { DatastoreClient } from "../../../datastore/datastore_service_client/datastore_client";
 import * as fs from 'fs';
-import { APIClient, Person } from "../../../api/api_service_client/api_client"; //TODO - Extract api client to example-microservices 
+import { APIClient, Person } from "../../../api/api_service_client/api_client";
 
 
 const DATASTORE_IMAGE: string = "kurtosistech/example-microservices_datastore";
@@ -128,8 +128,8 @@ export class BasicDatastoreAndApiTest {
 		const person: Person = getPersonResult.value;
 		log.info("Retrieved test person");
 
-		if (person.getBookRead() !== TEST_NUM_BOOKS_READ) {
-			return err(new Error("Expected number of book read '"+TEST_NUM_BOOKS_READ+"' !== actual number of books read '"+person.getBookRead()+"'"));
+		if (person.getBooksRead() !== TEST_NUM_BOOKS_READ) {
+			return err(new Error("Expected number of book read '"+TEST_NUM_BOOKS_READ+"' !== actual number of books read '"+person.getBooksRead()+"'"));
 		}
 
 		return ok(null);
@@ -189,7 +189,7 @@ async function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreCli
 
 
 		const writeFilePromise: Promise<ResultAsync<null, Error>> = new Promise((resolve, _unusedReject) => {
-			fs.writeFile(fp, configBytes, (error: Error) => {
+			fs.writeFile(fp, configBytes, (error: Error | null) => {
 				if (error === null) {
 					resolve(okAsync(null));
 				} else {
@@ -197,7 +197,7 @@ async function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreCli
 				}
 			})
 		});
-		const writeFileResult: Result<fs.Stats, Error> = await writeFilePromise;
+		const writeFileResult: Result<null, Error> = await writeFilePromise;
 		if (!writeFileResult.isOk()) {
 			return err(writeFileResult.error);
 		}
@@ -224,7 +224,7 @@ async function getApiServiceRunConfigFunc(): Promise<(ipAddr: string, generatedF
 		if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
 			return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
 		}
-		const configFilepath: string = generatedFileFilepaths[CONFIG_FILE_KEY];
+		const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
 		const startCmd: string[] = [
 			"./api.bin",
 			"--config",

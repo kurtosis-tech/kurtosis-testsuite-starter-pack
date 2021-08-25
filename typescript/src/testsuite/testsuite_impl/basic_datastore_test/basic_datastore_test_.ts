@@ -1,4 +1,3 @@
-"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 import { Network, NetworkContext, ServiceID, ContainerCreationConfig, ContainerCreationConfigBuilder, ContainerRunConfig, StaticFileID, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib";
 import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
 import * as log from "loglevel";
