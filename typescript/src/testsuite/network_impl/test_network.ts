@@ -18,137 +18,137 @@ const WAIT_FOR_STARTUP_MAX_NUM_POLLS: number = 15;
 const CONFIG_FILE_KEY: string = "config-file";
 
 class DatastoreConfig {
-	private readonly datastoreIp: string;
-	private readonly datastorePort: number;
+    private readonly datastoreIp: string;
+    private readonly datastorePort: number;
 
-	constructor(datastoreIp: string, datastorePort: number) {
-		this.datastoreIp = datastoreIp;
-		this.datastorePort = datastorePort;
-	}
+    constructor(datastoreIp: string, datastorePort: number) {
+        this.datastoreIp = datastoreIp;
+        this.datastorePort = datastorePort;
+    }
 }
 
 //  A custom Network implementation is intended to make test-writing easier by wrapping low-level
 //    NetworkContext calls with custom higher-level business logic
 class TestNetwork {
-	private readonly networkCtx: NetworkContext;
-	private readonly datastoreServiceImage: string;
-	private readonly apiServiceImage: string;
-	private datastoreClient: DatastoreClient | null;
-	private personModifyingApiClient: APIClient | null;
-	private personRetrievingApiClient: APIClient | null;
-	private nextApiServiceId: number;
+    private readonly networkCtx: NetworkContext;
+    private readonly datastoreServiceImage: string;
+    private readonly apiServiceImage: string;
+    private datastoreClient: DatastoreClient | null;
+    private personModifyingApiClient: APIClient | null;
+    private personRetrievingApiClient: APIClient | null;
+    private nextApiServiceId: number;
 
-	constructor (networkCtx: NetworkContext, datastoreServiceImage: string, apiServiceImage: string) {
-		this.networkCtx = networkCtx;
-		this.datastoreServiceImage = datastoreServiceImage;
-		this.apiServiceImage = apiServiceImage;
-		this.datastoreClient = null;
-		this.personModifyingApiClient = null;
-		this.personRetrievingApiClient = null;
-		this.nextApiServiceId = 0;
-	}
+    constructor (networkCtx: NetworkContext, datastoreServiceImage: string, apiServiceImage: string) {
+        this.networkCtx = networkCtx;
+        this.datastoreServiceImage = datastoreServiceImage;
+        this.apiServiceImage = apiServiceImage;
+        this.datastoreClient = null;
+        this.personModifyingApiClient = null;
+        this.personRetrievingApiClient = null;
+        this.nextApiServiceId = 0;
+    }
 
-	//  Custom network implementations usually have a "setup" method (possibly parameterized) that is used
-	//   in the Test.Setup function of each test
-	public async setupDatastoreAndTwoApis(): Promise<Result<null, Error>> {
+    //  Custom network implementations usually have a "setup" method (possibly parameterized) that is used
+    //   in the Test.Setup function of each test
+    public async setupDatastoreAndTwoApis(): Promise<Result<null, Error>> {
 
-		if (this.datastoreClient !== null) {
-			return err(new Error("Cannot add datastore client to network; datastore client already exists!"));
-		}
+        if (this.datastoreClient !== null) {
+            return err(new Error("Cannot add datastore client to network; datastore client already exists!"));
+        }
 
-		if (this.personModifyingApiClient !== null || this.personRetrievingApiClient !== null) {
-			return err(new Error("Cannot add API services to network; one or more API services already exists"));
-		}
+        if (this.personModifyingApiClient !== null || this.personRetrievingApiClient !== null) {
+            return err(new Error("Cannot add API services to network; one or more API services already exists"));
+        }
 
-		const [datastoreContainerCreationConfig, datastoreRunConfigFunc] = await getDatastoreServiceConfigurations();
+        const [datastoreContainerCreationConfig, datastoreRunConfigFunc] = await getDatastoreServiceConfigurations();
 
-		const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
-		if (!addServiceResult.isOk()) {
-			return err(addServiceResult.error);
-		}
+        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
+        if (!addServiceResult.isOk()) {
+            return err(addServiceResult.error);
+        }
 
-		const datastoreServiceContext: ServiceContext = addServiceResult.value[0];
-		const hostPortBindings: Map<string, PortBinding> = addServiceResult.value[1];
+        const datastoreServiceContext: ServiceContext = addServiceResult.value[0];
+        const hostPortBindings: Map<string, PortBinding> = addServiceResult.value[1];
 
-		const datastoreClient: DatastoreClient = new DatastoreClient(datastoreServiceContext.getIPAddress(), DATASTORE_PORT);
+        const datastoreClient: DatastoreClient = new DatastoreClient(datastoreServiceContext.getIPAddress(), DATASTORE_PORT);
 
-		const dataStoreWaitForHealthyResult: Result<null, Error> = await datastoreClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
-		if (!dataStoreWaitForHealthyResult.isOk()) {
-			return err(dataStoreWaitForHealthyResult.error);
-		}
+        const dataStoreWaitForHealthyResult: Result<null, Error> = await datastoreClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
+        if (!dataStoreWaitForHealthyResult.isOk()) {
+            return err(dataStoreWaitForHealthyResult.error);
+        }
 
-		log.info("Added datastore service with host port bindings: " + hostPortBindings);
+        log.info("Added datastore service with host port bindings: " + hostPortBindings);
 
-		this.datastoreClient = datastoreClient;
+        this.datastoreClient = datastoreClient;
 
-		const personModifyingApiClientResult: Result<APIClient, Error> = await this.addApiService();
-		if (!personModifyingApiClientResult.isOk()) {
-			return err(personModifyingApiClientResult.error);
-		}
-		this.personModifyingApiClient = personModifyingApiClientResult.value;
+        const personModifyingApiClientResult: Result<APIClient, Error> = await this.addApiService();
+        if (!personModifyingApiClientResult.isOk()) {
+            return err(personModifyingApiClientResult.error);
+        }
+        this.personModifyingApiClient = personModifyingApiClientResult.value;
 
-		const personRetrievingApiClientResult: Result<APIClient, Error> = await this.addApiService();
-		if (!personRetrievingApiClientResult.isOk()) {
-			return err(personRetrievingApiClientResult.error);
-		}
-		this.personRetrievingApiClient = personRetrievingApiClientResult.value;
+        const personRetrievingApiClientResult: Result<APIClient, Error> = await this.addApiService();
+        if (!personRetrievingApiClientResult.isOk()) {
+            return err(personRetrievingApiClientResult.error);
+        }
+        this.personRetrievingApiClient = personRetrievingApiClientResult.value;
 
-		return ok(null);
-	}
+        return ok(null);
+    }
 
-	//  Custom network implementations will also usually have getters, to retrieve information about the
-	//   services created during setup
-	public getPersonModifyingApiClient(): Result<APIClient, Error> {
-		if (this.personModifyingApiClient === null) {
-			return err(new Error("No person-modifying API client exists"));
-		}
-		return ok(this.personModifyingApiClient);
-	}
+    //  Custom network implementations will also usually have getters, to retrieve information about the
+    //   services created during setup
+    public getPersonModifyingApiClient(): Result<APIClient, Error> {
+        if (this.personModifyingApiClient === null) {
+            return err(new Error("No person-modifying API client exists"));
+        }
+        return ok(this.personModifyingApiClient);
+    }
 
-	public getPersonRetrievingApiClient(): Result<APIClient, Error> {
-		if (this.personRetrievingApiClient === null) {
-			return err(new Error("No person-retrieving API client exists"));
-		}
-		return ok(this.personRetrievingApiClient)
-	}
+    public getPersonRetrievingApiClient(): Result<APIClient, Error> {
+        if (this.personRetrievingApiClient === null) {
+            return err(new Error("No person-retrieving API client exists"));
+        }
+        return ok(this.personRetrievingApiClient)
+    }
 
-	public getDatastoreClient(): Result<DatastoreClient, Error>{ //TODO (Ali) (comment) - added this getter
-		if (this.datastoreClient === null) {
-			return err(new Error("No datastore client exists"));
-		}
-		return ok(this.datastoreClient);
-	}
+    public getDatastoreClient(): Result<DatastoreClient, Error>{ //TODO (Ali) (comment) - added this getter
+        if (this.datastoreClient === null) {
+            return err(new Error("No datastore client exists"));
+        }
+        return ok(this.datastoreClient);
+    }
 
-	//Private helper function
-	public async addApiService(): Promise<Result<APIClient, Error>> { //TODO (Ali) - All methods inside would need to be turned into promises here
+    //Private helper function
+    public async addApiService(): Promise<Result<APIClient, Error>> { //TODO (Ali) - All methods inside would need to be turned into promises here
 
-		if (this.datastoreClient === null) {
-			return err(new Error("Cannot add API service to network; no datastore client exists"));
-		}
-	
-		const serviceIdStr: string = API_SERVICE_ID_PREFIX + this.nextApiServiceId.toString();
-		this.nextApiServiceId = this.nextApiServiceId + 1;
-		const serviceId: ServiceID = <ServiceID>(serviceIdStr);
-	
-		const [apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc] = await getApiServiceConfigurations(this);
-	
-		const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc);
-		if (!addServiceResult.isOk()) {
-			return err(addServiceResult.error);
-		}
-		const apiServiceContext: ServiceContext = addServiceResult.value[0];
-		const hostPortBindings: Map<string, PortBinding> = addServiceResult.value[1];
-	
-		const apiClient: APIClient = new APIClient(apiServiceContext.getIPAddress(), API_SERVICE_PORT);
-	
-		const apiClientWaitForHealthyResult: Result<null, Error> = await apiClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
-		if (!apiClientWaitForHealthyResult.isOk()) {
-			return err(apiClientWaitForHealthyResult.error);
-		}
-	
-		log.info("Added API service with host port bindings:" + hostPortBindings)
-		return ok(apiClient);
-	}
+        if (this.datastoreClient === null) {
+            return err(new Error("Cannot add API service to network; no datastore client exists"));
+        }
+    
+        const serviceIdStr: string = API_SERVICE_ID_PREFIX + this.nextApiServiceId.toString();
+        this.nextApiServiceId = this.nextApiServiceId + 1;
+        const serviceId: ServiceID = <ServiceID>(serviceIdStr);
+    
+        const [apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc] = await getApiServiceConfigurations(this);
+    
+        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc);
+        if (!addServiceResult.isOk()) {
+            return err(addServiceResult.error);
+        }
+        const apiServiceContext: ServiceContext = addServiceResult.value[0];
+        const hostPortBindings: Map<string, PortBinding> = addServiceResult.value[1];
+    
+        const apiClient: APIClient = new APIClient(apiServiceContext.getIPAddress(), API_SERVICE_PORT);
+    
+        const apiClientWaitForHealthyResult: Result<null, Error> = await apiClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
+        if (!apiClientWaitForHealthyResult.isOk()) {
+            return err(apiClientWaitForHealthyResult.error);
+        }
+    
+        log.info("Added API service with host port bindings:" + hostPortBindings)
+        return ok(apiClient);
+    }
 
 }
 
@@ -156,102 +156,102 @@ class TestNetwork {
 //                                       Private helper functions
 // ====================================================================================================
 async function getDatastoreServiceConfigurations(): Promise<[ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>]> {
-	const datastoreContainerCreationConfig: ContainerCreationConfig = await getDataStoreContainerCreationConfig();
+    const datastoreContainerCreationConfig: ContainerCreationConfig = await getDataStoreContainerCreationConfig();
 
-	const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getDataStoreRunConfigFunc();
-	return [datastoreContainerCreationConfig, datastoreRunConfigFunc];
+    const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getDataStoreRunConfigFunc();
+    return [datastoreContainerCreationConfig, datastoreRunConfigFunc];
 }
 
 async function getDataStoreContainerCreationConfig(): Promise<ContainerCreationConfig> {
-	const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder( //TODO (Ali) - may need to make ContainerCreationConfig async
-		DATASTORE_IMAGE,
-	).withUsedPorts(
-		new Set(""+DATASTORE_PORT+"/tcp"),
-	).build()
-	return containerCreationConfig;
+    const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder( //TODO (Ali) - may need to make ContainerCreationConfig async
+        DATASTORE_IMAGE,
+    ).withUsedPorts(
+        new Set(""+DATASTORE_PORT+"/tcp"),
+    ).build()
+    return containerCreationConfig;
 }
 
 async function getDataStoreRunConfigFunc(): Promise<(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>> {
-	const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-	(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-		return ok(new ContainerRunConfigBuilder().build());
-	}
-	return runConfigFunc;
+    const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
+    (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
+        return ok(new ContainerRunConfigBuilder().build());
+    }
+    return runConfigFunc;
 }
 
 async function getApiServiceConfigurations(network: TestNetwork): Promise<[ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>]> {
-	const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = await getApiServiceConfigInitializingFunc(network.getDatastoreClient());
+    const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = await getApiServiceConfigInitializingFunc(network.getDatastoreClient());
 
-	const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
+    const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
 
-	const apiServiceGenerateRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getApiServiceRunConfigFunc();
-	return [apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc];
+    const apiServiceGenerateRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getApiServiceRunConfigFunc();
+    return [apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc];
 }
 
 async function getApiServiceConfigInitializingFunc(datastoreClientResult: Result<DatastoreClient, Error>): Promise<(fp: number) => Promise<Result<null, Error>>> { //Making simplification that file descriptor is just number
-	const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => { //TOOD (Ali) - might require changes in ConfigRunFactory in kurt-client
-		if (!datastoreClientResult.isOk()) {
-			return err(datastoreClientResult.error);
-		}
-		const datastoreClient: DatastoreClient = datastoreClientResult.value;
+    const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => { //TOOD (Ali) - might require changes in ConfigRunFactory in kurt-client
+        if (!datastoreClientResult.isOk()) {
+            return err(datastoreClientResult.error);
+        }
+        const datastoreClient: DatastoreClient = datastoreClientResult.value;
 
-		log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort+"");
-		const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
-		let configBytes: string;
-		try { 
-			configBytes = JSON.stringify(configObj);
-		} catch(jsonErr) {
-			return err(jsonErr);
-		}
+        log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort+"");
+        const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
+        let configBytes: string;
+        try { 
+            configBytes = JSON.stringify(configObj);
+        } catch(jsonErr) {
+            return err(jsonErr);
+        }
 
-		log.debug("API config JSON: " + String(configBytes));
+        log.debug("API config JSON: " + String(configBytes));
 
 
-		const writeFilePromise: Promise<ResultAsync<null, Error>> = new Promise((resolve, _unusedReject) => {
-			fs.writeFile(fp, configBytes, (error: Error | null) => {
-				if (error === null) {
-					resolve(okAsync(null));
-				} else {
-					resolve(errAsync(error));
-				}
-			})
-		});
-		const writeFileResult: Result<null, Error> = await writeFilePromise;
-		if (!writeFileResult.isOk()) {
-			return err(writeFileResult.error);
-		}
-	
-		return ok(null);
-	}
-	return configInitializingFunc;
+        const writeFilePromise: Promise<ResultAsync<null, Error>> = new Promise((resolve, _unusedReject) => {
+            fs.writeFile(fp, configBytes, (error: Error | null) => {
+                if (error === null) {
+                    resolve(okAsync(null));
+                } else {
+                    resolve(errAsync(error));
+                }
+            })
+        });
+        const writeFileResult: Result<null, Error> = await writeFilePromise;
+        if (!writeFileResult.isOk()) {
+            return err(writeFileResult.error);
+        }
+    
+        return ok(null);
+    }
+    return configInitializingFunc;
 }
 
 async function getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): Promise<ContainerCreationConfig> {
-	const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-		API_SERVICE_IMAGE,
-	).withUsedPorts(
-		new Set(API_SERVICE_PORT+"/tcp")
-	).withGeneratedFiles(new Map().set(
-		CONFIG_FILE_KEY, configInitializingFunc //TODO (Ali) - might need to wrap value in kurt client of this func inside a promise
-	)).build();
-	return apiServiceContainerCreationConfig;
+    const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
+        API_SERVICE_IMAGE,
+    ).withUsedPorts(
+        new Set(API_SERVICE_PORT+"/tcp")
+    ).withGeneratedFiles(new Map().set(
+        CONFIG_FILE_KEY, configInitializingFunc //TODO (Ali) - might need to wrap value in kurt client of this func inside a promise
+    )).build();
+    return apiServiceContainerCreationConfig;
 }
 
 async function getApiServiceRunConfigFunc(): Promise<(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>> {
-	const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-	(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-		if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
-			return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
-		}
-		const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
-		const startCmd: string[] = [
-			"./api.bin",
-			"--config",
-			configFilepath
-		]
+    const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
+    (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
+        if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
+            return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
+        }
+        const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
+        const startCmd: string[] = [
+            "./api.bin",
+            "--config",
+            configFilepath
+        ]
 
-		const result: ContainerCreationConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
-		return result;
-	}
-	return apiServiceRunConfigFunc;
+        const result: ContainerCreationConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
+        return result;
+    }
+    return apiServiceRunConfigFunc;
 }
