@@ -1,6 +1,6 @@
-import { AdvancedNetworkTest } from "./advanced_network_test/advanced_network_test_";
-import { BasicDatastoreAndApiTest } from "./basic_datastore_and_api_test/basic_datastore_and_api_test_";
-import { BasicDatastoreTest } from "./basic_datastore_test/basic_datastore_test_";
+import { AdvancedNetworkTest } from "./advanced_network_test/advanced_network_test";
+import { BasicDatastoreAndApiTest } from "./basic_datastore_and_api_test/basic_datastore_and_api_test";
+import { BasicDatastoreTest } from "./basic_datastore_test/basic_datastore_test";
 import { Test } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
 
 

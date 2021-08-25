@@ -35,7 +35,8 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 
 func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 
-	containerCreationConfig, runConfigFunc := getDatastoreServiceConfigurations()
+	containerCreationConfig := getContainerCreationConfig()
+	runConfigFunc := getRunConfigFunc()
 
 	serviceContext, hostPortBindings, err := networkCtx.AddService(datastoreServiceId, containerCreationConfig, runConfigFunc)
 	if err != nil {
@@ -95,13 +96,6 @@ func (test BasicDatastoreTest) Run(network networks.Network) error {
 // ====================================================================================================
 //                                       Private helper functions
 // ====================================================================================================
-
-func getDatastoreServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
-	containerCreationConfig := getContainerCreationConfig()
-
-	runConfigFunc := getRunConfigFunc()
-	return containerCreationConfig, runConfigFunc
-}
 
 func getContainerCreationConfig() *services.ContainerCreationConfig {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(

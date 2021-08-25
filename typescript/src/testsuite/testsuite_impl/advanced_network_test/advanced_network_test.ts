@@ -17,10 +17,10 @@ export class AdvancedNetworkTest {
 	}
 
 	public configure(builder: TestConfigurationBuilder): void {
-		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60); //TODO (Ali) - allowed since typescript gives direct reference
+		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60);
 	}
 
-	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> { //TODO (Ali) - allowed to be async
+	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
 		const network: TestNetwork = new TestNetwork(networkCtx, this.datastoreServiceImage, this.apiServiceImage);
 		// Note how setup logic has been pushed into a custom Network implementation, to make test-writing easy
 		
@@ -31,7 +31,7 @@ export class AdvancedNetworkTest {
 		return ok(network);
 	}
 
-	public async run(network: Network): Promise<Result<null, Error>> { //TODO (Ali) - allowed to be async
+	public async run(network: Network): Promise<Result<null, Error>> {
 		const castedNetwork: TestNetwork = <TestNetwork>network;
 		const personModifierClientResult: Result<APIClient, Error> = castedNetwork.getPersonModifyingApiClient()
 		if (!personModifierClientResult.isOk()) {
@@ -59,7 +59,7 @@ export class AdvancedNetworkTest {
 		}
 		log.info("Incremented number of books read");
 
-		log.info("Retrieving test person to verify number of books read person-retrieving API client...");
+		log.info("Retrieving test person to verify number of books read by the person-retrieving API client...");
 		const getPersonResult: Result<Person, Error> = await personRetrieverClient.getPerson(TEST_PERSON_ID);
 		if (!getPersonResult.isOk()) {
 			return err(getPersonResult.error);

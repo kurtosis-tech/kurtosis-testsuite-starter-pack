@@ -22,12 +22,13 @@ export class BasicDatastoreTest {
 	}
 
 	public configure(builder: TestConfigurationBuilder) {
-		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60); //TODO (Ali) - allowed since typescript gives direct reference
+		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60);
 	}
 
-	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> { //TODO (Ali) - async
+	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
 
-		const [containerCreationConfig, runConfigFunc]: [ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>] = await getDatastoreServiceConfigurations(); //TODO (Ali) - maybe Result
+        const containerCreationConfig: ContainerCreationConfig = getContainerCreationConfig();
+        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = getRunConfigFunc();
 
 		const addServiceDatastoreResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(DATASTORE_SERVICE_ID, containerCreationConfig, runConfigFunc);
 		if (!addServiceDatastoreResult.isOk()) {
@@ -46,8 +47,8 @@ export class BasicDatastoreTest {
 		return ok(networkCtx);
 	}
 
-	public async run(network: Network): Promise<Result<null, Error>> { //TODO (Ali) - async?
-		// Necessary because Go doesn't have generics
+	public async run(network: Network): Promise<Result<null, Error>> {
+		// TODO Delete when generics are added
 		const castedNetwork: NetworkContext = <NetworkContext>network;
 
 		const serviceContextResult: Result<ServiceContext, Error> = await castedNetwork.getServiceContext(DATASTORE_SERVICE_ID);
@@ -95,23 +96,16 @@ export class BasicDatastoreTest {
 // ====================================================================================================
 
 //TODO TODO TODO (Ali) - review these helper methods after making final changes to network_impl
-async function getDatastoreServiceConfigurations(): Promise<[ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>]> {
-	const containerCreationConfig: ContainerCreationConfig = await getContainerCreationConfig();
-
-	const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getRunConfigFunc();
-	return [containerCreationConfig, runConfigFunc];
-}
-
-async function getContainerCreationConfig(): Promise<ContainerCreationConfig> {
-	const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder( //TODO (Ali) - may need to make ContainerCreationConfig async
+function getContainerCreationConfig(): ContainerCreationConfig {
+	const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
 		DATASTORE_IMAGE,
 	).withUsedPorts(
-		new Set(""+DATASTORE_PORT+"/tcp"),
+		new Set(DATASTORE_PORT+"/tcp"),
 	).build()
 	return containerCreationConfig;
 }
 
-async function getRunConfigFunc(): Promise<(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>> {
+function getRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
 	const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
 	(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
 		return ok(new ContainerRunConfigBuilder().build());

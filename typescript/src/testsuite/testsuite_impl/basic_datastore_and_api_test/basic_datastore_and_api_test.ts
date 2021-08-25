@@ -44,12 +44,13 @@ export class BasicDatastoreAndApiTest {
     }
 	
 	public configure(builder: TestConfigurationBuilder): void {
-		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60); //TODO (Ali) - allowed since typescript gives direct reference
+		builder.withSetupTimeoutSeconds(60).withRunTimeoutSeconds(60);
     }
 
-	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> { //TODO (Ali) - async?
+	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
 		
-		const [datastoreContainerCreationConfig, datastoreRunConfigFunc]: [ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>] = await getDatastoreServiceConfigurations(); //TODO (Ali) - maybe Result here
+        const datastoreContainerCreationConfig: ContainerCreationConfig = await getDataStoreContainerCreationConfig();
+        const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getDataStoreRunConfigFunc();
 
 		const addDatastoreServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
 		if (!addDatastoreServiceResult.isOk()) {
@@ -66,7 +67,9 @@ export class BasicDatastoreAndApiTest {
 
 		log.info("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings);
 
-		const [apiServiceContainerCreationConfig, apiServiceRunConfigFunc]: [ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>] = await getApiServiceConfigurations(datastoreClient) //TODO (Ali) - add maybe Result here
+        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = await getApiServiceConfigInitializingFunc(datastoreClient);
+        const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
+        const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getApiServiceRunConfigFunc();
 
 		const addAPIServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(API_SERVICE_ID, apiServiceContainerCreationConfig, apiServiceRunConfigFunc);
 		if (!addAPIServiceResult.isOk()) {
@@ -85,21 +88,21 @@ export class BasicDatastoreAndApiTest {
 		return ok(networkCtx);
 	}
 
-	public async run(network: Network): Promise<Result<null, Error>> { //TODO(Ali) - async?
-		// Go doesn't have generics so we have to do this cast first
+	public async run(network: Network): Promise<Result<null, Error>> {
+		// TODO when test is generic - right now we have to do this cast first
 		const castedNetwork: NetworkContext = <NetworkContext>network;
 
-		const serviceContextResult: Result<ServiceContext, Error> = await castedNetwork.getServiceContext(API_SERVICE_ID);
-		if (!serviceContextResult.isOk()) {
-			return err(serviceContextResult.error);
+		const getServiceContextResult: Result<ServiceContext, Error> = await castedNetwork.getServiceContext(API_SERVICE_ID);
+		if (!getServiceContextResult.isOk()) {
+			return err(getServiceContextResult.error);
 		}
-		const serviceContext: ServiceContext = serviceContextResult.value;
+		const serviceContext: ServiceContext = getServiceContextResult.value;
 
 		const apiClient: APIClient = new APIClient(serviceContext.getIPAddress(), API_SERVICE_PORT);
 
 		log.info("Verifying that person with test ID '" + TEST_PERSON_ID + "' doesn't already exist...");
 		const getPersonExistsResult: Result<Person, Error> = await apiClient.getPerson(TEST_PERSON_ID);
-		if (!getPersonExistsResult.isOk()) {
+		if (getPersonExistsResult.isOk()) {
 			return err(new Error("Expected an error trying to get a person who doesn't exist yet, but didn't receive one"));
 		}
 		log.info("Verified that test person doesn't already exist");
@@ -141,23 +144,16 @@ export class BasicDatastoreAndApiTest {
 // ====================================================================================================
 
 //TODO TODO TODO (Ali) - review these helper methods after making final changes to network_impl
-async function getDatastoreServiceConfigurations(): Promise<[ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>]> {
-	const datastoreContainerCreationConfig: ContainerCreationConfig = await getDataStoreContainerCreationConfig();
-
-	const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getDataStoreRunConfigFunc();
-	return [datastoreContainerCreationConfig, datastoreRunConfigFunc];
-}
-
-async function getDataStoreContainerCreationConfig(): Promise<ContainerCreationConfig> {
-	const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder( //TODO (Ali) - may need to make ContainerCreationConfig async
+function getDataStoreContainerCreationConfig(): ContainerCreationConfig {
+	const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
 		DATASTORE_IMAGE,
 	).withUsedPorts(
-		new Set(""+DATASTORE_PORT+"/tcp"),
+		new Set(DATASTORE_PORT+"/tcp"),
 	).build()
 	return containerCreationConfig;
 }
 
-async function getDataStoreRunConfigFunc(): Promise<(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>> {
+function getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
 	const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
 	(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
 		return ok(new ContainerRunConfigBuilder().build());
@@ -165,18 +161,9 @@ async function getDataStoreRunConfigFunc(): Promise<(ipAddr: string, generatedFi
 	return runConfigFunc;
 }
 
-async function getApiServiceConfigurations(datastoreClient: DatastoreClient): Promise<[ContainerCreationConfig, (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>]> {
-	const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = await getApiServiceConfigInitializingFunc(datastoreClient);
-
-	const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
-
-	const apiServiceGenerateRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getApiServiceRunConfigFunc();
-	return [apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc];
-}
-
 async function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): Promise<(fp: number) => Promise<Result<null, Error>>> { //Note: Making simplification that file descriptor is just number
-	const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => { //TOOD (Ali) - might require changes in ConfigRunFactory in kurt-client due to async
-		log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort+"");
+	const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
+		log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
 		const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
 		let configBytes: string;
 		try { 
@@ -207,18 +194,18 @@ async function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreCli
 	return configInitializingFunc;
 }
 
-async function getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): Promise<ContainerCreationConfig> {
+function getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
 	const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
 		API_SERVICE_IMAGE,
 	).withUsedPorts(
 		new Set(API_SERVICE_PORT+"/tcp")
 	).withGeneratedFiles(new Map().set(
-		CONFIG_FILE_KEY, configInitializingFunc //TODO (Ali) - might need to wrap value in kurt client of this func inside a promise
+		CONFIG_FILE_KEY, configInitializingFunc
 	)).build();
 	return apiServiceContainerCreationConfig;
 }
 
-async function getApiServiceRunConfigFunc(): Promise<(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>> {
+function getApiServiceRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
 	const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
 	(ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
 		if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
@@ -231,8 +218,8 @@ async function getApiServiceRunConfigFunc(): Promise<(ipAddr: string, generatedF
 			configFilepath
 		]
 
-		const result: ContainerCreationConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
-		return result;
+		const result: ContainerRunConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
+		return ok(result);
 	}
 	return apiServiceRunConfigFunc;
 }
