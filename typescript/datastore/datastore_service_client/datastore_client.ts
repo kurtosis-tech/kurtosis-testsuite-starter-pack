@@ -110,7 +110,7 @@ class DatastoreClient {
 	public async waitForHealthy(retries: number, retriesDelayMilliseconds: number): Promise<Result<null, Error>> {
 
 		const url: string = "http://"+this.ipAddr+":"+this.port+"/"+HEALTHCHECK_URL_SLUG;
-		let respResult: Result<axios.AxiosResponse<any>, Error>;
+		let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
 		for (let i = 0 ; i < retries ; i++) {
 			respResult = await this.makeHttpGetRequest(url);
@@ -120,6 +120,9 @@ class DatastoreClient {
 			await new Promise(f => setTimeout(f, retriesDelayMilliseconds));
 		}
 
+        if (respResult === null) {
+            return err(new Error("Expected a response or error wrapped around Result, but got null instead. Ensure that retries is greater than 0."));
+        }
 		if (!respResult.isOk()){
 			return err(respResult.error);
 		}

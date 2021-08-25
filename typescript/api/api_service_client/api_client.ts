@@ -14,7 +14,9 @@ const HEALTHY_VALUE: string = "healthy";
 class Person {
 	private readonly booksRead: number;
 
-	constructor() {}
+	constructor(booksRead: number) {
+        this.booksRead = booksRead;
+    }
 }
 
 class APIClient {
@@ -81,7 +83,7 @@ class APIClient {
 		const url: string = "http://" + this.ipAddr + ":" + this.port + "/"+ INCREMENT_BOOKS_READ_ENDPOINT +"/" + id;
 		let resp: axios.AxiosResponse<any>;
 		try {
-			const resp: axios.AxiosResponse<any> = await axios.default.post(url, null);
+			resp = await axios.default.post(url, null);
 		} catch(exception) {
 			return err(exception);
 		}
@@ -98,7 +100,7 @@ class APIClient {
 	public async waitForHealthy(retries: number, retriesDelayMilliseconds: number): Promise<Result<null, Error>> {
 
 		const url: string = "http://"+this.ipAddr+":"+this.port+"/"+HEALTHCHECK_URL_SLUG;
-		let respResult: Result<axios.AxiosResponse<any>, Error>;
+		let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
 		for (let i = 0 ; i < retries ; i++) {
 			respResult = await this.makeHttpGetRequest(url);
@@ -108,6 +110,9 @@ class APIClient {
 			await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
 		}
 
+        if (respResult === null) {
+            return err(new Error("Expected a response or error wrapped around Result, but got null instead. Ensure that retries is greater than 0."));
+        }
 		if (!respResult.isOk()){
 			return err(respResult.error);
 		}
