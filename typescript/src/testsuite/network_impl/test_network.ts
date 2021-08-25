@@ -1,5 +1,5 @@
 import { APIClient } from "../../api/api_service_client/api_client";
-import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client"; //TODO - extract to microservice-examples
+import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client";
 import { ServiceID, NetworkContext, ContainerCreationConfig, StaticFileID, ContainerRunConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib"; //TODO (Ali) - need to export ContainerCreationConfig and ContainerRunConfig
 import { Result, ok, err, ResultAsync, okAsync, errAsync } from "neverthrow";
 import * as log from "loglevel";
@@ -33,9 +33,9 @@ class TestNetwork {
 	private readonly networkCtx: NetworkContext;
 	private readonly datastoreServiceImage: string;
 	private readonly apiServiceImage: string;
-	private datastoreClient: DatastoreClient;
-	private personModifyingApiClient: APIClient;
-	private personRetrievingApiClient: APIClient;
+	private datastoreClient: DatastoreClient | null;
+	private personModifyingApiClient: APIClient | null;
+	private personRetrievingApiClient: APIClient | null;
 	private nextApiServiceId: number;
 
 	constructor (networkCtx: NetworkContext, datastoreServiceImage: string, apiServiceImage: string) {
@@ -208,7 +208,7 @@ async function getApiServiceConfigInitializingFunc(datastoreClientResult: Result
 
 
 		const writeFilePromise: Promise<ResultAsync<null, Error>> = new Promise((resolve, _unusedReject) => {
-			fs.writeFile(fp, configBytes, (error: Error) => {
+			fs.writeFile(fp, configBytes, (error: Error | null) => {
 				if (error === null) {
 					resolve(okAsync(null));
 				} else {
@@ -216,7 +216,7 @@ async function getApiServiceConfigInitializingFunc(datastoreClientResult: Result
 				}
 			})
 		});
-		const writeFileResult: Result<fs.Stats, Error> = await writeFilePromise;
+		const writeFileResult: Result<null, Error> = await writeFilePromise;
 		if (!writeFileResult.isOk()) {
 			return err(writeFileResult.error);
 		}
@@ -243,7 +243,7 @@ async function getApiServiceRunConfigFunc(): Promise<(ipAddr: string, generatedF
 		if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
 			return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
 		}
-		const configFilepath: string = generatedFileFilepaths[CONFIG_FILE_KEY];
+		const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
 		const startCmd: string[] = [
 			"./api.bin",
 			"--config",
