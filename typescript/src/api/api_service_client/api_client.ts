@@ -21,8 +21,8 @@ export class Person {
     }
 
     public getBooksRead(): number {
-		return this.booksRead;
-	}
+        return this.booksRead;
+    }
 }
 
 export class APIClient {
