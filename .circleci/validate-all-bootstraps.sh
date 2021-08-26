@@ -116,6 +116,9 @@ for lang in "${lang_dirs_needing_building[@]}"; do
         echo "Error: Custom bootstrap flas must be defined for ${lang} in this script; to indicate there are no custom bootstrap flags, set the value to '${NO_CUSTOM_BOOSTRAP_FLAGS_KEY}'" >&2
         exit 1
     fi
+    if [ "${lang_specific_vars_to_set}" == "${NO_CUSTOM_BOOSTRAP_FLAGS_KEY}" ]; then
+        lang_specific_vars_to_set=""
+    fi
     command="${lang_specific_vars_to_set} ${bootstrap_script_filepath} ${lang} ${output_dirpath} ${testsuite_image}"
     if ! eval "${command}"; then
         echo "Error: Bootstrapping ${lang} testsuite failed" >&2
