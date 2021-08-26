@@ -2,7 +2,7 @@ import { Network, NetworkContext, ServiceID, ContainerCreationConfig, ContainerC
 import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, ok, err } from "neverthrow";
-import { DatastoreClient } from "../../../datastore/datastore_service_client/datastore_client";
+import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client";
 
 const DATASTORE_IMAGE: string = "kurtosistech/example-microservices_datastore";
 const DATASTORE_SERVICE_ID: ServiceID = "datastore";

@@ -1,4 +1,4 @@
-import { ExampleTestsuiteConfigurator } from "./testsuite_impl/execution_impl/example_testsuite_configurator";
+import { ExampleTestsuiteConfigurator } from "./execution_impl/example_testsuite_configurator";
 import { TestSuiteExecutor } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, err, ok } from "neverthrow";

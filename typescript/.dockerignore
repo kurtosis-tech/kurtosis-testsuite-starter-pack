@@ -10,3 +10,5 @@ LICENSE
 
 scripts
 testsuite/Dockerfile
+node_modules
+build

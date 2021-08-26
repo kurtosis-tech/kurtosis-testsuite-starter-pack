@@ -1,4 +1,4 @@
-import { ExampleTestsuite } from "../example_testsuite";
+import { ExampleTestsuite } from "../testsuite_impl/example_testsuite";
 import { TestSuite } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, err, ok } from "neverthrow";

@@ -2,9 +2,9 @@ import { ServiceID, NetworkContext, Network, ServiceContext, PortBinding, Contai
 import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import { Result, err, ok, ResultAsync, errAsync, okAsync } from "neverthrow";
 import * as log from "loglevel";
-import { DatastoreClient } from "../../../datastore/datastore_service_client/datastore_client";
+import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client";
 import * as fs from 'fs';
-import { APIClient, Person } from "../../../api/api_service_client/api_client";
+import { APIClient, Person } from "../../api/api_service_client/api_client";
 
 
 const DATASTORE_IMAGE: string = "kurtosistech/example-microservices_datastore";

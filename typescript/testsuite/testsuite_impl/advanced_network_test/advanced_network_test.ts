@@ -3,7 +3,7 @@ import { TestNetwork } from "../../network_impl/test_network"
 import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { ok, err, Result } from "neverthrow";
-import { APIClient, Person } from "../../../api/api_service_client/api_client";
+import { APIClient, Person } from "../../api/api_service_client/api_client";
 
 const TEST_PERSON_ID: number = 46;
 

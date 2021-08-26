@@ -1,5 +1,5 @@
-import { APIClient } from "../../api/api_service_client/api_client";
-import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client";
+import { APIClient } from "../api/api_service_client/api_client";
+import { DatastoreClient } from "../datastore/datastore_service_client/datastore_client";
 import { ServiceID, NetworkContext, ContainerCreationConfig, StaticFileID, ContainerRunConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib";
 import { Result, ok, err, ResultAsync, okAsync, errAsync } from "neverthrow";
 import * as log from "loglevel";
