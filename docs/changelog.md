@@ -9,6 +9,7 @@
 
 ### Fixes
 * Correct all old references to `kurtosis-libs` -> `kurtosis-testsuite-starter-pack`
+* Add error-checking in `validate-all-bootstraps` in case custom bootstrap flags weren't defined for a language
 
 ### Removals
 * Removed Apache-2 license, dedicating everything inside this example to the public domain
