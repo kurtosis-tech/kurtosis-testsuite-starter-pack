@@ -57,7 +57,7 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Incremented number of books read")
 
-	logrus.Info("Retrieving test person to verify number of books read person-retrieving API client...")
+	logrus.Info("Retrieving test person to verify number of books read by the person-retrieving API client...")
 	person, err := personRetrieverClient.GetPerson(testPersonId)
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the test person")

@@ -1,11 +1,11 @@
-import { ExampleTestsuite } from "../testsuite_impl/example_testsuite";
+import { ExampleTestsuite } from "../example_testsuite";
 import { TestSuite } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
 import * as log from "loglevel";
 import { Result, err, ok } from "neverthrow";
 import { ExampleTestsuiteArgs } from "./example_testsuite_args";
 
 
-class ExampleTestsuiteConfigurator {
+export class ExampleTestsuiteConfigurator {
 	
 	construcor () {}
 	
