@@ -1,6 +1,6 @@
 import { NetworkContext, Network } from "kurtosis-core-api-lib";
 import { TestNetwork } from "../../network_impl/test_network"
-import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
+import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { ok, err, Result } from "neverthrow";
 import { APIClient, Person } from "../../../api/api_service_client/api_client";
@@ -32,6 +32,7 @@ export class AdvancedNetworkTest {
 	}
 
 	public async run(network: Network): Promise<Result<null, Error>> {
+        // TODO remove this when test is generic - right now we have to do this cast first
 		const castedNetwork: TestNetwork = <TestNetwork>network;
 		const personModifierClientResult: Result<APIClient, Error> = castedNetwork.getPersonModifyingApiClient()
 		if (!personModifierClientResult.isOk()) {

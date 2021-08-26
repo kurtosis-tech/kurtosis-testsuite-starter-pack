@@ -1,5 +1,5 @@
 import { Network, NetworkContext, ServiceID, ContainerCreationConfig, ContainerCreationConfigBuilder, ContainerRunConfig, StaticFileID, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib";
-import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
+import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, ok, err } from "neverthrow";
 import { DatastoreClient } from "../../../datastore/datastore_service_client/datastore_client";
@@ -48,7 +48,7 @@ export class BasicDatastoreTest {
 	}
 
 	public async run(network: Network): Promise<Result<null, Error>> {
-		// TODO Delete when generics are added
+		// TODO delete when Test is parameterized with the type of network
 		const castedNetwork: NetworkContext = <NetworkContext>network;
 
 		const serviceContextResult: Result<ServiceContext, Error> = await castedNetwork.getServiceContext(DATASTORE_SERVICE_ID);
@@ -95,7 +95,6 @@ export class BasicDatastoreTest {
 //                                       Private helper functions
 // ====================================================================================================
 
-//TODO TODO TODO (Ali) - review these helper methods after making final changes to network_impl
 function getContainerCreationConfig(): ContainerCreationConfig {
 	const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
 		DATASTORE_IMAGE,

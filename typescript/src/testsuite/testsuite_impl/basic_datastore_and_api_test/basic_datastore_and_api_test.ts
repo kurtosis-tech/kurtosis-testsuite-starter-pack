@@ -1,5 +1,5 @@
 import { ServiceID, NetworkContext, Network, ServiceContext, PortBinding, ContainerRunConfig, StaticFileID, ContainerCreationConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder } from "kurtosis-core-api-lib";
-import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
+import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import { Result, err, ok, ResultAsync, errAsync, okAsync } from "neverthrow";
 import * as log from "loglevel";
 import { DatastoreClient } from "../../../datastore/datastore_service_client/datastore_client";
@@ -49,8 +49,8 @@ export class BasicDatastoreAndApiTest {
 
 	public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
 		
-        const datastoreContainerCreationConfig: ContainerCreationConfig = await getDataStoreContainerCreationConfig();
-        const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getDataStoreRunConfigFunc();
+        const datastoreContainerCreationConfig: ContainerCreationConfig = getDataStoreContainerCreationConfig();
+        const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = getDataStoreRunConfigFunc();
 
 		const addDatastoreServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
 		if (!addDatastoreServiceResult.isOk()) {
@@ -67,7 +67,7 @@ export class BasicDatastoreAndApiTest {
 
 		log.info("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings);
 
-        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = await getApiServiceConfigInitializingFunc(datastoreClient);
+        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = getApiServiceConfigInitializingFunc(datastoreClient);
         const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
         const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getApiServiceRunConfigFunc();
 
@@ -89,7 +89,7 @@ export class BasicDatastoreAndApiTest {
 	}
 
 	public async run(network: Network): Promise<Result<null, Error>> {
-		// TODO when test is generic - right now we have to do this cast first
+		// TODO delete when Test is parameterized with the type of network
 		const castedNetwork: NetworkContext = <NetworkContext>network;
 
 		const getServiceContextResult: Result<ServiceContext, Error> = await castedNetwork.getServiceContext(API_SERVICE_ID);
@@ -161,7 +161,7 @@ function getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: M
 	return runConfigFunc;
 }
 
-async function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): Promise<(fp: number) => Promise<Result<null, Error>>> { //Note: Making simplification that file descriptor is just number
+function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): (fp: number) => Promise<Result<null, Error>> { //Note: Making simplification that file descriptor is just number
 	const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
 		log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
 		const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
