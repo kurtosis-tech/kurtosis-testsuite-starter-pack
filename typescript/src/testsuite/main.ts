@@ -1,4 +1,4 @@
-import { NewExampleTestsuiteConfigurator } from "../execution/example_testsuite_configurator";
+import { ExampleTestsuiteConfigurator } from "./testsuite_impl/execution_impl/example_testsuite_configurator";
 import { TestSuiteExecutor } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, err, ok } from "neverthrow";
@@ -8,7 +8,7 @@ const FAILURE_EXIT_CODE: number = 1;
 
 async function main() {
     // >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
-    const configurator: NewExampleTestsuiteConfigurator = NewExampleTestsuiteConfigurator();
+    const configurator: ExampleTestsuiteConfigurator = new ExampleTestsuiteConfigurator();
     // >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
 
     const suiteExecutor: TestSuiteExecutor = new TestSuiteExecutor(configurator);
