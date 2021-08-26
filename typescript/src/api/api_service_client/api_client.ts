@@ -13,11 +13,15 @@ const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
-class Person {
+export class Person {
     private readonly booksRead: number;
 
     constructor(booksRead: number) {
         this.booksRead = booksRead;
+    }
+
+    public getBooksRead(): number {
+        return this.booksRead;
     }
 }
 
