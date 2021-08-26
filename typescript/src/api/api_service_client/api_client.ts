@@ -1,3 +1,5 @@
+//TODO - extract this to example-microservices repo
+
 import { Result, ok, err } from "neverthrow";
 import * as httpStatusCode from "http-status-codes";
 import * as axios from "axios";
@@ -11,15 +13,19 @@ const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
-class Person {
+export class Person {
     private readonly booksRead: number;
 
     constructor(booksRead: number) {
         this.booksRead = booksRead;
     }
+
+    public getBooksRead(): number {
+        return this.booksRead;
+    }
 }
 
-class APIClient {
+export class APIClient {
     private readonly ipAddr: string;
     private readonly port: number;
     
