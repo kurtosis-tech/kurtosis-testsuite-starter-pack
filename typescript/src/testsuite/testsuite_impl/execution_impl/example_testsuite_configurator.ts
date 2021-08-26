@@ -1,5 +1,5 @@
 import { ExampleTestsuite } from "../example_testsuite";
-import { TestSuite } from "kurtosis-testsuite-api-lib"; //TODO (Ali)
+import { TestSuite } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, err, ok } from "neverthrow";
 import { ExampleTestsuiteArgs } from "./example_testsuite_args";
@@ -11,18 +11,15 @@ export class ExampleTestsuiteConfigurator {
 	
 	public setLogLevel(logLevelStr: string): Result<null, Error> {
 		const newLog: log.Logger = log.getLogger(logLevelStr);
-		newLog.setLevel(newLog.getLevel());
-		// log.SetFormatter(&logrus.TextFormatter{ //TOOD (Ali) - loglevel doesn't support formatting since it would stop stacktrace information
-		//     ForceColors:   true,
-		//     FullTimestamp: true,
-		// })
+		log.setLevel(newLog.getLevel());
+
 		return ok(null);
     }
 
     public parseParamsAndCreateSuite(paramsJsonStr: string): Result<TestSuite, Error> {
 		let args: ExampleTestsuiteArgs;
 		try {
-			args = JSON.parse(paramsJsonStr); //TODO (Ali) - golang used bytes in their unMarshal
+			args = JSON.parse(paramsJsonStr);
 		} catch (jsonErr) {
 			return err(jsonErr);
 		}
