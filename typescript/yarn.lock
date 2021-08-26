@@ -301,7 +301,7 @@ isarray@~1.0.0:
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
   integrity sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=
 
-kurtosis-core-api-lib@^0.13.2, kurtosis-core-api-lib@^0.13.3:
+kurtosis-core-api-lib@^0.13.3:
   version "0.13.3"
   resolved "https://registry.yarnpkg.com/kurtosis-core-api-lib/-/kurtosis-core-api-lib-0.13.3.tgz#28bb53f94b42661a6127b899c44328cb81dac8a0"
   integrity sha512-p605UMVA7i0qY2OZ5aPo8FDYb06DsIEjuI9Qkefg7LXQuppmy38Ayn34MkgH6xhlUySTGD1RST+QGvTvYr6LuA==
@@ -311,18 +311,18 @@ kurtosis-core-api-lib@^0.13.2, kurtosis-core-api-lib@^0.13.3:
     loglevel "^1.7.1"
     neverthrow "^4.2.2"
 
-kurtosis-testsuite-api-lib@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/kurtosis-testsuite-api-lib/-/kurtosis-testsuite-api-lib-0.4.0.tgz#128109ff32384da73975aaa50ab1998fe4e87926"
-  integrity sha512-W2K6TDKgSNI+hQOHGnOSu3HNsUzCaBjLSMI2LX7WeG2ZShI09RmGTkUnh5opH1cE1MNT8euOKAO8+YSPnYj22g==
+kurtosis-testsuite-api-lib@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/kurtosis-testsuite-api-lib/-/kurtosis-testsuite-api-lib-0.4.2.tgz#37db1080a701058c6153ba5935b32932ea4d8fc9"
+  integrity sha512-BIiQUBnSvTX/McCYQhDSmQVIW3MfXhoypqwa+EY2q5E7c76kQstwZgUjO2IG3q20WIQWJlm5FMdP6kKNKa0klw==
   dependencies:
     async-mutex "^0.3.1"
     dotenv "^10.0.0"
     google-protobuf "^3.17.3"
     grpc "^1.24.11"
-    kurtosis-core-api-lib "^0.13.2"
+    kurtosis-core-api-lib "^0.13.3"
     loglevel "^1.7.1"
-    minimal-grpc-server "^0.3.3"
+    minimal-grpc-server "^0.3.6"
     neverthrow "^4.2.2"
 
 lcid@^1.0.0:
@@ -366,10 +366,10 @@ make-dir@^3.1.0:
   dependencies:
     semver "^6.0.0"
 
-minimal-grpc-server@^0.3.3:
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/minimal-grpc-server/-/minimal-grpc-server-0.3.5.tgz#5ef45f993057bdc76d305de9fe74dda01e5dce50"
-  integrity sha512-9gqAtEvWDTrhPY5aWDcg0MqEPYkonB/lzlAF4fbdW5yXXIDW+tVXuXnAKHXr5qXv18/OwbLR64LWG7rv3TNOPQ==
+minimal-grpc-server@^0.3.6:
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/minimal-grpc-server/-/minimal-grpc-server-0.3.6.tgz#dc53678ce256a5a349a9ecc02d394ed1a914c2c2"
+  integrity sha512-2a3PybrGjHIIPVirlBqqKA+k0bxdbHkXzcuuhZNiktD/KXm6cetrHP1f733g3gK5QUEz5qHOYOF2ueL0tbx6Rw==
   dependencies:
     grpc "^1.24.11"
     loglevel "^1.7.1"
