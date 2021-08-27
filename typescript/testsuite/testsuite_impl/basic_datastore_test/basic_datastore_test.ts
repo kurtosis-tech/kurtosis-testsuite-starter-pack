@@ -96,10 +96,11 @@ export class BasicDatastoreTest {
 // ====================================================================================================
 
 function getContainerCreationConfig(): ContainerCreationConfig {
+    const usedPortsSet: Set<string> = new Set();
     const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
         DATASTORE_IMAGE,
     ).withUsedPorts(
-        new Set(DATASTORE_PORT+"/tcp"),
+        usedPortsSet.add(DATASTORE_PORT+"/tcp")
     ).build()
     return containerCreationConfig;
 }

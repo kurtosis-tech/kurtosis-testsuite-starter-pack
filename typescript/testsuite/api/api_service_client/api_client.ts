@@ -13,34 +13,40 @@ const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
 
-export class Person {
-    private readonly booksRead: number;
+export interface Person {
+    readonly booksRead: number;
 
-    constructor(booksRead: number) {
-        this.booksRead = booksRead;
-    }
+    //TODO remove - if everything works
+    // constructor(booksRead: number) {
+    //     this.booksRead = booksRead;
+    // }
 
-    public getBooksRead(): number {
-        return this.booksRead;
-    }
+    // public getBooksRead(): number {
+    //     return this.booksRead;
+    // }
 }
 
 export class APIClient {
     private readonly ipAddr: string;
     private readonly port: number;
-    
+
     constructor (ipAddr: string, port: number) {
         this.ipAddr = ipAddr;
         this.port = port;
     }
-
     public async addPerson(id: number): Promise<Result<null, Error>> {
         const url: string = this.getPersonUrlForId(id);
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.post(url, null);
         } catch(exception) {
-            return err(exception);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (exception && exception.stack && exception.message) {
+                return err(exception as Error);
+            }
+            return err(new Error("Performing a post request threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
         if (resp.status !== httpStatusCode.StatusCodes.OK) {
@@ -55,7 +61,13 @@ export class APIClient {
         try {
             resp = await axios.default.get(url);
         } catch(exception) {
-            return err(exception);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (exception && exception.stack && exception.message) {
+                return err(exception as Error);
+            }
+            return err(new Error("Performing a get request threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
         if (resp.status !== httpStatusCode.StatusCodes.OK) {
@@ -72,14 +84,26 @@ export class APIClient {
         try {
             bodyString = JSON.stringify(body);
         } catch(jsonErr) {
-            return err(jsonErr);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (jsonErr && jsonErr.stack && jsonErr.message) {
+                return err(jsonErr as Error);
+            }
+            return err(new Error("Stringify-ing response data threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
         let person: Person;
         try {
             person = JSON.parse(bodyString); 
         } catch(jsonErr) {
-            return err(jsonErr);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (jsonErr && jsonErr.stack && jsonErr.message) {
+                return err(jsonErr as Error);
+            }
+            return err(new Error("Parsing body string '" + bodyString + "' threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
         
         return ok(person);
@@ -109,11 +133,19 @@ export class APIClient {
         let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
         for (let i = 0 ; i < retries ; i++) {
-            respResult = await this.makeHttpGetRequest(url);
+            try {
+                respResult = await this.makeHttpGetRequest(url);
+            } catch(exception) {
+                return err(exception);
+            }
             if (respResult.isOk()) {
                 break;
             }
-            await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
+            try {
+                await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
+            } catch(exception) {
+                return err(exception);
+            }
         }
 
         if (respResult === null) {
@@ -125,15 +157,21 @@ export class APIClient {
 
         const resp: axios.AxiosResponse<any> = respResult.value;
 
-        let bodyString: string;
-        try {
-            bodyString = JSON.stringify(resp.data);
-        } catch(jsonErr) {
-            return err(jsonErr);
-        }
+        // let bodyString: string;
+        // try {
+        //     bodyString = JSON.stringify(resp.data).replace(/['"]+/g, '');
+        // } catch(jsonErr) {
+        //     // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+        //     // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+        //     if (jsonErr && jsonErr.stack && jsonErr.message) {
+        //         return err(jsonErr as Error);
+        //     }
+        //     return err(new Error("Stringify-ing response data threw an exception, but " +
+        //         "it's not an Error so we can't report any more information than this"));
+        // }
 
-        if (bodyString !== HEALTHY_VALUE) {
-            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + bodyString +  "' instead"));
+        if (resp.data !== HEALTHY_VALUE) {
+            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + resp.data +  "' instead"));
         }
 
         return ok(null);

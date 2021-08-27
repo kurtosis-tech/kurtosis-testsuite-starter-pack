@@ -68,8 +68,8 @@ export class AdvancedNetworkTest {
         const person: Person = getPersonResult.value;
         log.info("Retrieved test person");
 
-        if (person.getBooksRead() !== 1) {
-            return err(new Error("Expected number of books read to be incremented, but was '"+ person.getBooksRead() +"'"));
+        if (person.booksRead !== 1) {
+            return err(new Error("Expected number of books read to be incremented, but was '"+ person.booksRead +"'"));
         }
         return ok(null);
     }

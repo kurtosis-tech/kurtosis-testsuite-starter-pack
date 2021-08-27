@@ -78,7 +78,13 @@ export class DatastoreClient {
         try {
             bodyString = JSON.stringify(resp.data);
         } catch(jsonErr) {
-            return err(jsonErr);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (jsonErr && jsonErr.stack && jsonErr.message) {
+                return err(jsonErr as Error);
+            }
+            return err(new Error("Stringify-ing response data threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
         return ok(bodyString);
@@ -115,11 +121,20 @@ export class DatastoreClient {
         let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
         for (let i = 0 ; i < retries ; i++) {
+            try {
+                respResult = await this.makeHttpGetRequest(url);
+            } catch(exception) {
+                return err(exception);
+            }
             respResult = await this.makeHttpGetRequest(url);
             if (respResult.isOk()) {
                 break;
             }
-            await new Promise(f => setTimeout(f, retriesDelayMilliseconds));
+            try {
+                await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
+            } catch(exception) {
+                return err(exception);
+            }
         }
 
         if (respResult === null) {
@@ -130,15 +145,21 @@ export class DatastoreClient {
         }
 
         const resp: axios.AxiosResponse<any> = respResult.value;
-        let bodyString: string;
-        try {
-            bodyString = JSON.stringify(resp.data);
-        } catch(jsonErr) {
-            return err(jsonErr);
-        }
+        // let bodyString: string;
+        // try {
+        //     bodyString = JSON.stringify(resp.data).replace(/['"]+/g, '');
+        // } catch(jsonErr) {
+        //     // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+        //     // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+        //     if (jsonErr && jsonErr.stack && jsonErr.message) {
+        //         return err(jsonErr as Error);
+        //     }
+        //     return err(new Error("Stringify-ing response data threw an exception, but " +
+        //         "it's not an Error so we can't report any more information than this"));
+        // }
 
-        if (bodyString !== HEALTHY_VALUE) {
-            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + bodyString +  "' instead"));
+        if (resp.data !== HEALTHY_VALUE) {
+            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + resp.data +  "' instead"));
         }
 
         return ok(null);

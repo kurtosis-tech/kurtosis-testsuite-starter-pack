@@ -131,8 +131,8 @@ export class BasicDatastoreAndApiTest {
         const person: Person = getPersonResult.value;
         log.info("Retrieved test person");
 
-        if (person.getBooksRead() !== TEST_NUM_BOOKS_READ) {
-            return err(new Error("Expected number of book read '"+TEST_NUM_BOOKS_READ+"' !== actual number of books read '"+person.getBooksRead()+"'"));
+        if (person.booksRead !== TEST_NUM_BOOKS_READ) {
+            return err(new Error("Expected number of book read '"+TEST_NUM_BOOKS_READ+"' !== actual number of books read '"+person.booksRead+"'"));
         }
 
         return ok(null);
@@ -145,10 +145,11 @@ export class BasicDatastoreAndApiTest {
 
 //TODO TODO TODO (Ali) - review these helper methods after making final changes to network_impl
 function getDataStoreContainerCreationConfig(): ContainerCreationConfig {
+    const usedPortsSet: Set<string> = new Set();
     const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
         DATASTORE_IMAGE,
     ).withUsedPorts(
-        new Set(DATASTORE_PORT+"/tcp"),
+        usedPortsSet.add(DATASTORE_PORT+"/tcp"),
     ).build()
     return containerCreationConfig;
 }
@@ -169,7 +170,13 @@ function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): 
         try { 
             configBytes = JSON.stringify(configObj);
         } catch(jsonErr) {
-            return err(jsonErr);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (jsonErr && jsonErr.stack && jsonErr.message) {
+                return err(jsonErr as Error);
+            }
+            return err(new Error("Stringify-ing config object threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
         log.debug("API config JSON: " + String(configBytes));
@@ -195,10 +202,11 @@ function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): 
 }
 
 function getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
+    const usedPortsSet: Set<string> = new Set();
     const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
         API_SERVICE_IMAGE,
     ).withUsedPorts(
-        new Set(API_SERVICE_PORT+"/tcp")
+        usedPortsSet.add(API_SERVICE_PORT+"/tcp")
     ).withGeneratedFiles(new Map().set(
         CONFIG_FILE_KEY, configInitializingFunc
     )).build();

@@ -1,17 +1,18 @@
-export class ExampleTestsuiteArgs {
-    private readonly apiServiceImage: string;
-    private readonly datastoreServiceImage: string;
+export interface ExampleTestsuiteArgs {
+    readonly apiServiceImage: string;
+    readonly datastoreServiceImage: string;
     
-    constructor(apiServiceImage: string, datastoreServiceImage: string) {
-        this.apiServiceImage = apiServiceImage;
-        this.datastoreServiceImage = datastoreServiceImage;
-    }
+    //TODO - Remove if everything works
+    // constructor(apiServiceImage: string, datastoreServiceImage: string) {
+    //     this.apiServiceImage = apiServiceImage;
+    //     this.datastoreServiceImage = datastoreServiceImage;
+    // }
     
-    public getApiServiceImage(): string {
-        return this.apiServiceImage;
-    }
+    // public getApiServiceImage(): string {
+    //     return this.apiServiceImage;
+    // }
     
-    public getDatastoreServiceImage(): string {
-        return this.datastoreServiceImage;
-    }
+    // public getDatastoreServiceImage(): string {
+    //     return this.datastoreServiceImage;
+    // }
 }

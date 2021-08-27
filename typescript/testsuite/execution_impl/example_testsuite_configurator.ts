@@ -21,7 +21,14 @@ export class ExampleTestsuiteConfigurator {
         try {
             args = JSON.parse(paramsJsonStr);
         } catch (jsonErr) {
-            return err(jsonErr);
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (jsonErr && jsonErr.stack && jsonErr.message) {
+                return err(jsonErr as Error);
+            }
+            return err(new Error("Parsing paramsJson string '" + paramsJsonStr + "' threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
+
         }
         
         const validateArgsResult: Result<null, Error> = validateArgs(args);
@@ -29,16 +36,16 @@ export class ExampleTestsuiteConfigurator {
             return err(validateArgsResult.error);
         }
         
-        const suite: ExampleTestsuite = new ExampleTestsuite(args.getApiServiceImage(), args.getDatastoreServiceImage());
+        const suite: ExampleTestsuite = new ExampleTestsuite(args.apiServiceImage, args.datastoreServiceImage);
         return ok(suite);
     }
 }
 
 function validateArgs(args: ExampleTestsuiteArgs): Result<null, Error> {
-    if (args.getApiServiceImage().trim() === "") {
+    if (args.apiServiceImage.trim() === "") {
         return err(new Error("API service image is empty"));
     }
-    if (args.getDatastoreServiceImage().trim() === "") {
+    if (args.datastoreServiceImage.trim() === "") {
         return err(new Error("Datastore service image is empty"));
     }
     return ok(null);
