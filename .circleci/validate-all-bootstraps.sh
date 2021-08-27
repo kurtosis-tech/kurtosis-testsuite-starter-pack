@@ -15,6 +15,9 @@ BUILD_AND_RUN_ALL_CMD="all"
 GIT_USER_EMAIL_PROPERTY="user.email"
 GIT_USER_NAME_PROPERTY="user.name"
 
+# Special key indicating that there are no custom bootstrap flags for a language
+NO_CUSTOM_BOOSTRAP_FLAGS_KEY="NONE"
+
 # Bootstrapping normally requires input from STDIN, but we can set
 #  certain variables so this isn't required for CI
 # NOTE: This won't handle flag values that contain spaces, though it can handle multiple flags separated by a space
@@ -108,7 +111,14 @@ for lang in "${lang_dirs_needing_building[@]}"; do
     echo "Bootstrapping and running ${lang} testsuite..."
     output_dirpath="$(mktemp -d)"
     testsuite_image="bootstrap-test-${lang}-image"
-    lang_specific_vars_to_set="${CUSTOM_LANG_BOOTSTRAP_FLAGS[${lang}]}"
+    lang_specific_vars_to_set="${CUSTOM_LANG_BOOTSTRAP_FLAGS[${lang}]:-}"
+    if [ -z "${lang_specific_vars_to_set}" ]; then
+        echo "Error: Custom bootstrap flags must be defined for ${lang} in this script; to indicate there are no custom bootstrap flags, set the value to '${NO_CUSTOM_BOOSTRAP_FLAGS_KEY}'" >&2
+        exit 1
+    fi
+    if [ "${lang_specific_vars_to_set}" == "${NO_CUSTOM_BOOSTRAP_FLAGS_KEY}" ]; then
+        lang_specific_vars_to_set=""
+    fi
     command="${lang_specific_vars_to_set} ${bootstrap_script_filepath} ${lang} ${output_dirpath} ${testsuite_image}"
     if ! eval "${command}"; then
         echo "Error: Bootstrapping ${lang} testsuite failed" >&2
