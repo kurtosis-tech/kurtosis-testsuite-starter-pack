@@ -10,8 +10,7 @@ export class ExampleTestsuiteConfigurator {
     construcor () {}
     
     public setLogLevel(logLevelStr: string): Result<null, Error> {
-        const newLog: log.Logger = log.getLogger(logLevelStr);
-        log.setLevel(newLog.getLevel());
+        log.setLevel(<log.LogLevelDesc>logLevelStr);
 
         return ok(null);
     }
@@ -20,7 +19,7 @@ export class ExampleTestsuiteConfigurator {
         let args: ExampleTestsuiteArgs;
         try {
             args = JSON.parse(paramsJsonStr);
-        } catch (jsonErr) {
+        } catch (jsonErr: any) {
             // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
             // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
             if (jsonErr && jsonErr.stack && jsonErr.message) {

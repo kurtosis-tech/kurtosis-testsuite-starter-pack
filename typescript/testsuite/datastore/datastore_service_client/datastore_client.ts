@@ -44,17 +44,24 @@ export class DatastoreClient {
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.get(url);
-        } catch(exception) {
-            return err(exception);
+        } catch(exception: any) {
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (exception && exception.stack && exception.message) {
+                if (axios.default.isAxiosError(exception)) {
+                    const exceptionAxiosErr: axios.AxiosError = exception as axios.AxiosError;
+                    if (exceptionAxiosErr.response && exceptionAxiosErr.response.status === httpStatusCode.StatusCodes.NOT_FOUND) {
+                        return ok(false);
+                    }
+                }
+                return err(exception as Error);
+            }
+            return err(new Error("Performing a get request threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
         
-        if (resp.status === httpStatusCode.StatusCodes.OK) {
-            return ok(true);
-        } else if (resp.status === httpStatusCode.StatusCodes.NOT_FOUND) {
-            return ok(false);
-        } else {
-            return err(new Error("Got an unexpected HTTP status code: " + resp.status));
-        }
+        //NOTE: axios will throw an exception on a non-200 status code
+        return ok(true);
     }
     
     /*
@@ -65,27 +72,18 @@ export class DatastoreClient {
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.get(url);
-        } catch(exception) {
-            return err(exception);
-        }
-        
-        if (resp.status !== httpStatusCode.StatusCodes.OK) {
-            return err(new Error("A non-" + resp.status + " status code was returned"));
-        }
-        const body: any = resp.data;
-
-        let bodyString: string;
-        try {
-            bodyString = JSON.stringify(resp.data);
-        } catch(jsonErr) {
+        } catch(exception: any) {
             // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
             // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (jsonErr && jsonErr.stack && jsonErr.message) {
-                return err(jsonErr as Error);
+            if (exception && exception.stack && exception.message) {
+                return err(exception as Error);
             }
-            return err(new Error("Stringify-ing response data threw an exception, but " +
+            return err(new Error("Performing a get request threw an exception, but " +
                 "it's not an Error so we can't report any more information than this"));
         }
+        
+        const body: any = resp.data;
+        let bodyString: string = String(body);
 
         return ok(bodyString);
     }
@@ -98,17 +96,20 @@ export class DatastoreClient {
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.post(url, value);
-        } catch(exception) {
-            return err(exception);
+        } catch(exception: any) {
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (exception && exception.stack && exception.message) {
+                return err(exception as Error);
+            }
+            return err(new Error("Performing a post request threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
-        if (resp.status !== httpStatusCode.StatusCodes.OK) {
-            return err(new Error("A non-" + resp.status + " status code was returned"));
-        }
         return ok(null);
     }
 
-    public getUrlForKey(key: string): string { //TODO (Ali) - since async functions use it, I might need to make this async
+    public getUrlForKey(key: string): string {
         return "http://"+this.ipAddr+":"+this.port+"/"+KEY_ENDPOINT+"/"+key;
     }
 
@@ -123,17 +124,28 @@ export class DatastoreClient {
         for (let i = 0 ; i < retries ; i++) {
             try {
                 respResult = await this.makeHttpGetRequest(url);
-            } catch(exception) {
-                return err(exception);
+            } catch(exception: any) {
+                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+                if (exception && exception.stack && exception.message) {
+                    return err(exception as Error);
+                }
+                return err(new Error("Making a HTTP get request threw an exception, but " +
+                    "it's not an Error so we can't report any more information than this"));
             }
-            respResult = await this.makeHttpGetRequest(url);
             if (respResult.isOk()) {
                 break;
             }
             try {
                 await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
-            } catch(exception) {
-                return err(exception);
+            } catch(exception: any) {
+                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+                if (exception && exception.stack && exception.message) {
+                    return err(exception as Error);
+                }
+                return err(new Error("Creating a promise for the timeout threw an exception, but " +
+                    "it's not an Error so we can't report any more information than this"));
             }
         }
 
@@ -145,21 +157,10 @@ export class DatastoreClient {
         }
 
         const resp: axios.AxiosResponse<any> = respResult.value;
-        // let bodyString: string;
-        // try {
-        //     bodyString = JSON.stringify(resp.data).replace(/['"]+/g, '');
-        // } catch(jsonErr) {
-        //     // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-        //     // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-        //     if (jsonErr && jsonErr.stack && jsonErr.message) {
-        //         return err(jsonErr as Error);
-        //     }
-        //     return err(new Error("Stringify-ing response data threw an exception, but " +
-        //         "it's not an Error so we can't report any more information than this"));
-        // }
+        let bodyString: string = String(resp.data);
 
-        if (resp.data !== HEALTHY_VALUE) {
-            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + resp.data +  "' instead"));
+        if (bodyString !== HEALTHY_VALUE) {
+            return err(new Error("Expected response body text '" + HEALTHY_VALUE + "' from endpoint '" + url + "' but got '" + bodyString +  "' instead"));
         }
 
         return ok(null);
@@ -169,13 +170,16 @@ export class DatastoreClient {
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.get(url);
-        } catch(exception) {
-            return err(exception);
+        } catch(exception: any) {
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (exception && exception.stack && exception.message) {
+                return err(exception as Error);
+            }
+            return err(new Error("Performing a get request threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
 
-        if (resp.status !== httpStatusCode.StatusCodes.OK) {
-            return err(new Error("Received non-OK status code: '" + resp.status + "'"));
-        }
         return ok(resp);
     }
 
