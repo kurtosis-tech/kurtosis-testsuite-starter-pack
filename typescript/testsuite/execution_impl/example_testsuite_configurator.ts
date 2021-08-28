@@ -6,6 +6,8 @@ import { ExampleTestsuiteArgs } from "./example_testsuite_args";
 
 
 export class ExampleTestsuiteConfigurator {
+
+    private static safeJsonParse = Result.fromThrowable(JSON.parse, ExampleTestsuiteConfigurator.parseUnknownExceptionValueToError);
     
     construcor () {}
     
@@ -15,20 +17,12 @@ export class ExampleTestsuiteConfigurator {
         return ok(null);
     }
 
-    public parseParamsAndCreateSuite(paramsJsonStr: string): Result<TestSuite, Error> {
-        let args: ExampleTestsuiteArgs;
-        try {
-            args = JSON.parse(paramsJsonStr);
-        } catch (jsonErr: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (jsonErr && jsonErr.stack && jsonErr.message) {
-                return err(jsonErr as Error);
-            }
-            return err(new Error("Parsing paramsJson string '" + paramsJsonStr + "' threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-
+    public parseParamsAndCreateSuite(paramsJsonStr: string): Result<TestSuite, Error> {       
+        const argsResult: Result<ExampleTestsuiteArgs, Error> = ExampleTestsuiteConfigurator.safeJsonParse(paramsJsonStr);
+        if (argsResult.isErr()) {
+            return err(argsResult.error);
         }
+        const args: ExampleTestsuiteArgs = argsResult.value;
         
         const validateArgsResult: Result<null, Error> = validateArgs(args);
         if (!validateArgsResult.isOk()) {
@@ -37,6 +31,13 @@ export class ExampleTestsuiteConfigurator {
         
         const suite: ExampleTestsuite = new ExampleTestsuite(args.apiServiceImage, args.datastoreServiceImage);
         return ok(suite);
+    }
+
+    private static parseUnknownExceptionValueToError(value: unknown): Error {
+        if (value instanceof Error) {
+            return value;
+        }
+        return new Error("Received an unknown exception value that wasn't an error: " + value);
     }
 }
 

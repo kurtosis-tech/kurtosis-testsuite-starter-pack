@@ -18,6 +18,8 @@ export interface Person {
 export class APIClient {
     private readonly ipAddr: string;
     private readonly port: number;
+    private static safeJsonParse = Result.fromThrowable(JSON.parse, APIClient.parseUnknownExceptionValueToError);
+    private static safeJsonStringify = Result.fromThrowable(JSON.stringify, APIClient.parseUnknownExceptionValueToError);
 
     constructor (ipAddr: string, port: number) {
         this.ipAddr = ipAddr;
@@ -25,18 +27,7 @@ export class APIClient {
     }
     public async addPerson(id: number): Promise <Result<null, Error>> {
         const url: string = this.getPersonUrlForId(id);
-        let resp: axios.AxiosResponse<any>;
-        try {
-            resp = await axios.default.post(url, null);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Performing a post request threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const resp: axios.AxiosResponse<any> = await axios.default.post(url, null);
 
         return ok(null);
     }
@@ -58,49 +49,24 @@ export class APIClient {
 
         const body: any = resp.data;
         
-        let bodyString: string;
-        try {
-            bodyString = JSON.stringify(body);
-        } catch(jsonErr: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (jsonErr && jsonErr.stack && jsonErr.message) {
-                return err(jsonErr as Error);
-            }
-            return err(new Error("Stringify-ing response data threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
+        const bodyStringResult: Result<string, Error> = APIClient.safeJsonStringify(body);
+        if (bodyStringResult.isErr()) {
+            return err(bodyStringResult.error);
         }
+        const bodyString: string = bodyStringResult.value;
 
-        let person: Person;
-        try {
-            person = JSON.parse(bodyString); 
-        } catch(jsonErr: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (jsonErr && jsonErr.stack && jsonErr.message) {
-                return err(jsonErr as Error);
-            }
-            return err(new Error("Parsing body string '" + resp.data + "' threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
+        const personResult: Result<Person, Error> = APIClient.safeJsonParse(bodyString);
+        if (personResult.isErr()) {
+            return err(personResult.error);
         }
+        const person: Person = personResult.value;
         
         return ok(person);
     }
 
     public async incrementBooksRead(id: number): Promise<Result<null, Error>> {
         const url: string = "http://" + this.ipAddr + ":" + this.port + "/"+ INCREMENT_BOOKS_READ_ENDPOINT +"/" + id;
-        let resp: axios.AxiosResponse<any>;
-        try {
-            resp = await axios.default.post(url, null);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Performing a post request threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const resp: axios.AxiosResponse<any> = await axios.default.post(url, null);
 
         return ok(null);
     }
@@ -114,31 +80,11 @@ export class APIClient {
         let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
         for (let i = 0 ; i < retries ; i++) {
-            try {
-                respResult = await APIClient.makeHttpGetRequest(url);
-            } catch(exception: any) {
-                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-                if (exception && exception.stack && exception.message) {
-                    return err(exception as Error);
-                }
-                return err(new Error("Making a HTTP get request threw an exception, but " +
-                    "it's not an Error so we can't report any more information than this"));
-            }
+            respResult = await APIClient.makeHttpGetRequest(url);
             if (respResult.isOk()) {
                 break;
             }
-            try {
-                await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
-            } catch(exception: any) {
-                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-                if (exception && exception.stack && exception.message) {
-                    return err(exception as Error);
-                }
-                return err(new Error("Creating a promise for the timeout threw an exception, but " +
-                    "it's not an Error so we can't report any more information than this"));
-            }
+            await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
         }
 
         if (respResult === null) {
@@ -163,19 +109,15 @@ export class APIClient {
     }
 
     private static async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
-        let resp: axios.AxiosResponse<any>;
-        try {
-            resp = await axios.default.get(url);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Performing a get request threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const resp: axios.AxiosResponse<any> = await axios.default.get(url);
 
         return ok(resp);
+    }
+
+    private static parseUnknownExceptionValueToError(value: unknown): Error {
+        if (value instanceof Error) {
+            return value;
+        }
+        return new Error("Received an unknown exception value that wasn't an error: " + value);
     }
 }

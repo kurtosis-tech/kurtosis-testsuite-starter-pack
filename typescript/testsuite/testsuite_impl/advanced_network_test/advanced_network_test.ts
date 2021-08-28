@@ -24,18 +24,7 @@ export class AdvancedNetworkTest {
         const network: TestNetwork = new TestNetwork(networkCtx, this.datastoreServiceImage, this.apiServiceImage);
         // Note how setup logic has been pushed into a custom Network implementation, to make test-writing easy
         
-        let setupDatastoreAndTwoApisResult: Result<null, Error>;
-        try {
-            setupDatastoreAndTwoApisResult = await network.setupDatastoreAndTwoApis();
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling setupDatastoreAndTwoApis method on TestNetwork class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const setupDatastoreAndTwoApisResult: Result<null, Error> = await network.setupDatastoreAndTwoApis();
         if (!setupDatastoreAndTwoApisResult.isOk()) {
             return err(setupDatastoreAndTwoApisResult.error);
         }
@@ -58,54 +47,21 @@ export class AdvancedNetworkTest {
         const personRetrieverClient: APIClient = personRetrieverClientResult.value;
 
         log.info("Adding test person via person-modifying API client...");
-        let addPersonResult: Result<null, Error>;
-        try {
-            addPersonResult = await personModifierClient.addPerson(TEST_PERSON_ID);;
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling addPerson method on APIClient class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const addPersonResult: Result<null, Error> = await personModifierClient.addPerson(TEST_PERSON_ID);;
         if (!addPersonResult.isOk()) {
             return err(addPersonResult.error);
         }
         log.info("Test person added");
 
         log.info("Incrementing test person's number of books read through person-modifying API client...");
-        let incrementBooksReadResult: Result<null, Error>;
-        try {
-            incrementBooksReadResult = await personModifierClient.incrementBooksRead(TEST_PERSON_ID);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling incrementBooksRead method on APIClient class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const incrementBooksReadResult: Result<null, Error> = await personModifierClient.incrementBooksRead(TEST_PERSON_ID);
         if (!incrementBooksReadResult.isOk()) {
             return err(incrementBooksReadResult.error);
         }
         log.info("Incremented number of books read");
 
         log.info("Retrieving test person to verify number of books read by the person-retrieving API client...");
-        let getPersonResult: Result<Person, Error>;
-        try {
-            getPersonResult = await personRetrieverClient.getPerson(TEST_PERSON_ID);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling getPerson method on APIClient class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const getPersonResult: Result<Person, Error> = await personRetrieverClient.getPerson(TEST_PERSON_ID);
         if (!getPersonResult.isOk()) {
             return err(getPersonResult.error);
         }

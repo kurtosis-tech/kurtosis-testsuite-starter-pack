@@ -37,6 +37,7 @@ export class TestNetwork {
     private personModifyingApiClient: APIClient | null;
     private personRetrievingApiClient: APIClient | null;
     private nextApiServiceId: number;
+    private static safeJsonStringify = Result.fromThrowable(JSON.stringify, TestNetwork.parseUnknownExceptionValueToError);
 
     constructor (networkCtx: NetworkContext, datastoreServiceImage: string, apiServiceImage: string) {
         this.networkCtx = networkCtx;
@@ -63,18 +64,7 @@ export class TestNetwork {
         const datastoreContainerCreationConfig: ContainerCreationConfig = TestNetwork.getDataStoreContainerCreationConfig();
         const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = TestNetwork.getDataStoreRunConfigFunc();
 
-        let addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error>;
-        try {
-            addServiceResult = await this.networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling addService method on NetworkContext class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
         if (!addServiceResult.isOk()) {
             return err(addServiceResult.error);
         }
@@ -84,18 +74,7 @@ export class TestNetwork {
 
         const datastoreClient: DatastoreClient = new DatastoreClient(datastoreServiceContext.getIPAddress(), DATASTORE_PORT);
 
-        let dataStoreWaitForHealthyResult: Result<null, Error>;
-        try {
-            dataStoreWaitForHealthyResult = await datastoreClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling waitForHealthy method on DatastoreClient class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const dataStoreWaitForHealthyResult: Result<null, Error> = await datastoreClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
         if (!dataStoreWaitForHealthyResult.isOk()) {
             return err(dataStoreWaitForHealthyResult.error);
         }
@@ -104,35 +83,13 @@ export class TestNetwork {
 
         this.datastoreClient = datastoreClient;
 
-        let personModifyingApiClientResult: Result<APIClient, Error>;
-        try {
-            personModifyingApiClientResult = await this.addApiService();
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling addApiService method on our TestNetwork class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const personModifyingApiClientResult: Result<APIClient, Error> = await this.addApiService();
         if (!personModifyingApiClientResult.isOk()) {
             return err(personModifyingApiClientResult.error);
         }
         this.personModifyingApiClient = personModifyingApiClientResult.value;
 
-        let personRetrievingApiClientResult: Result<APIClient, Error>;
-        try {
-            personRetrievingApiClientResult = await this.addApiService();
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling addApiService method on our TestNetwork class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const personRetrievingApiClientResult: Result<APIClient, Error> = await this.addApiService();
         if (!personRetrievingApiClientResult.isOk()) {
             return err(personRetrievingApiClientResult.error);
         }
@@ -178,44 +135,11 @@ export class TestNetwork {
         this.nextApiServiceId = this.nextApiServiceId + 1;
         const serviceId: ServiceID = <ServiceID>(serviceIdStr);
     
-        let configInitializingFunc: (fp: number) => Promise<Result<null, Error>>;
-        try {
-            configInitializingFunc = TestNetwork.getApiServiceConfigInitializingFunc(this.datastoreClient);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling getDatastoreClient method on our TestNetwork class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = TestNetwork.getApiServiceConfigInitializingFunc(this.datastoreClient);
         const apiServiceContainerCreationConfig: ContainerCreationConfig = TestNetwork.getApiServiceContainerCreationConfig(configInitializingFunc);
-        let apiServiceGenerateRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error>;
-        try {
-            apiServiceGenerateRunConfigFunc = TestNetwork.getApiServiceRunConfigFunc();
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling getApiServiceRunConfigFunc method on our TestNetwork class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const apiServiceGenerateRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = TestNetwork.getApiServiceRunConfigFunc();
     
-        let addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error>;
-        try {
-            addServiceResult = await this.networkCtx.addService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling addService method on NetworkContext class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc);
         if (!addServiceResult.isOk()) {
             return err(addServiceResult.error);
         }
@@ -224,18 +148,7 @@ export class TestNetwork {
     
         const apiClient: APIClient = new APIClient(apiServiceContext.getIPAddress(), API_SERVICE_PORT);
     
-        let apiClientWaitForHealthyResult: Result<null, Error>;
-        try {
-            apiClientWaitForHealthyResult = await apiClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Calling waitForHealthy method on APIClient class threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const apiClientWaitForHealthyResult: Result<null, Error> = await apiClient.waitForHealthy(WAIT_FOR_STARTUP_MAX_NUM_POLLS, WAIT_FOR_STARTUP_DELAY_MILLISECONDS);
         if (!apiClientWaitForHealthyResult.isOk()) {
             return err(apiClientWaitForHealthyResult.error);
         }
@@ -266,18 +179,11 @@ export class TestNetwork {
         const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
             log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
             const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
-            let configBytes: string;
-            try { 
-                configBytes = JSON.stringify(configObj);
-            } catch(jsonErr: any) {
-                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-                if (jsonErr && jsonErr.stack && jsonErr.message) {
-                    return err(jsonErr as Error);
-                }
-                return err(new Error("Stringify-ing config object threw an exception, but " +
-                    "it's not an Error so we can't report any more information than this"));
+            const configBytesResult: Result<string, Error> = TestNetwork.safeJsonStringify(configObj);
+            if (configBytesResult.isErr()) {
+                return err(configBytesResult.error);
             }
+            const configBytes: string = configBytesResult.value;
 
             log.debug("API config JSON: " + String(configBytes));
 
@@ -291,18 +197,7 @@ export class TestNetwork {
                     }
                 })
             });
-            let writeFileResult: Result<null, Error>;
-            try {
-                writeFileResult = await writeFilePromise;
-            } catch(exception: any) {
-                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-                if (exception && exception.stack && exception.message) {
-                    return err(exception as Error);
-                }
-                return err(new Error("Calling fs.writeFile method from fs package wrapped inside promise threw an exception, but " +
-                    "it's not an Error so we can't report any more information than this"));
-            }
+            const writeFileResult: Result<null, Error> = await writeFilePromise;
             if (!writeFileResult.isOk()) {
                 return err(writeFileResult.error);
             }
@@ -341,5 +236,12 @@ export class TestNetwork {
             return ok(result);
         }
         return apiServiceRunConfigFunc;
+    }
+
+    private static parseUnknownExceptionValueToError(value: unknown): Error {
+        if (value instanceof Error) {
+            return value;
+        }
+        return new Error("Received an unknown exception value that wasn't an error: " + value);
     }
 }

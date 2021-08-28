@@ -64,18 +64,7 @@ export class DatastoreClient {
     */
     public async get(key: string): Promise<Result<string, Error>> {
         const url: string = this.getUrlForKey(key);
-        let resp: axios.AxiosResponse<any>;
-        try {
-            resp = await axios.default.get(url);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Performing a get request threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const resp: axios.AxiosResponse<any> = await axios.default.get(url);
         
         const body: any = resp.data;
         let bodyString: string = String(body);
@@ -88,18 +77,7 @@ export class DatastoreClient {
     */
     public async upsert(key: string, value: string): Promise<Result<null, Error>> {
         const url: string = this.getUrlForKey(key); 
-        let resp: axios.AxiosResponse<any>;
-        try {
-            resp = await axios.default.post(url, value);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Performing a post request threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const resp: axios.AxiosResponse<any> = await axios.default.post(url, value);
 
         return ok(null);
     }
@@ -113,31 +91,11 @@ export class DatastoreClient {
         let respResult: Result<axios.AxiosResponse<any>, Error> | null = null;
 
         for (let i = 0 ; i < retries ; i++) {
-            try {
-                respResult = await DatastoreClient.makeHttpGetRequest(url);
-            } catch(exception: any) {
-                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-                if (exception && exception.stack && exception.message) {
-                    return err(exception as Error);
-                }
-                return err(new Error("Making a HTTP get request threw an exception, but " +
-                    "it's not an Error so we can't report any more information than this"));
-            }
+            respResult = await DatastoreClient.makeHttpGetRequest(url);
             if (respResult.isOk()) {
                 break;
             }
-            try {
-                await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
-            } catch(exception: any) {
-                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-                if (exception && exception.stack && exception.message) {
-                    return err(exception as Error);
-                }
-                return err(new Error("Creating a promise for the timeout threw an exception, but " +
-                    "it's not an Error so we can't report any more information than this"));
-            }
+            await new Promise(resolve => setTimeout(resolve, retriesDelayMilliseconds));
         }
 
         if (respResult === null) {
@@ -162,18 +120,7 @@ export class DatastoreClient {
     }
 
     private static async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
-        let resp: axios.AxiosResponse<any>;
-        try {
-            resp = await axios.default.get(url);
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
-            }
-            return err(new Error("Performing a get request threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
-        }
+        const resp: axios.AxiosResponse<any> = await axios.default.get(url);
 
         return ok(resp);
     }
