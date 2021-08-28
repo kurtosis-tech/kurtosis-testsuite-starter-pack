@@ -10,8 +10,8 @@ const configurator: ExampleTestsuiteConfigurator = new ExampleTestsuiteConfigura
 // >>>>>>>>>>>>>>>>>>> REPLACE WITH YOUR OWN CONFIGURATOR <<<<<<<<<<<<<<<<<<<<<<<<
 
 const suiteExecutor: TestSuiteExecutor = new TestSuiteExecutor(configurator);
-let exitCode: number = SUCCESS_EXIT_CODE;
 suiteExecutor.run().then(suiteExecutorResult => {
+    let exitCode: number = SUCCESS_EXIT_CODE;
     if (!suiteExecutorResult.isOk()) {
         log.error("An error occurred running the test suite executor:");
         console.log(suiteExecutorResult.error);

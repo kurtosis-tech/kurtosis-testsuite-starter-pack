@@ -27,8 +27,8 @@ export class BasicDatastoreTest {
 
     public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
 
-        const containerCreationConfig: ContainerCreationConfig = getContainerCreationConfig();
-        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = getRunConfigFunc();
+        const containerCreationConfig: ContainerCreationConfig = BasicDatastoreTest.getContainerCreationConfig();
+        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = BasicDatastoreTest.getRunConfigFunc();
 
         let addServiceDatastoreResult: Result<[ServiceContext, Map<string, PortBinding>], Error>;
         try {
@@ -155,26 +155,26 @@ export class BasicDatastoreTest {
         log.info("Value verified");
         return ok(null);
     }
-}
 
-// ====================================================================================================
-//                                       Private helper functions
-// ====================================================================================================
+    // ====================================================================================================
+    //                                       Private helper functions
+    // ====================================================================================================
 
-function getContainerCreationConfig(): ContainerCreationConfig {
-    const usedPortsSet: Set<string> = new Set();
-    const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-        DATASTORE_IMAGE,
-    ).withUsedPorts(
-        usedPortsSet.add(DATASTORE_PORT+"/tcp")
-    ).build()
-    return containerCreationConfig;
-}
-
-function getRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
-    const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-    (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-        return ok(new ContainerRunConfigBuilder().build());
+    private static getContainerCreationConfig(): ContainerCreationConfig {
+        const usedPortsSet: Set<string> = new Set();
+        const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
+            DATASTORE_IMAGE,
+        ).withUsedPorts(
+            usedPortsSet.add(DATASTORE_PORT+"/tcp")
+        ).build()
+        return containerCreationConfig;
     }
-    return runConfigFunc;
+
+    private static getRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
+        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
+        (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
+            return ok(new ContainerRunConfigBuilder().build());
+        }
+        return runConfigFunc;
+    }
 }

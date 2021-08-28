@@ -115,7 +115,7 @@ export class APIClient {
 
         for (let i = 0 ; i < retries ; i++) {
             try {
-                respResult = await this.makeHttpGetRequest(url);
+                respResult = await APIClient.makeHttpGetRequest(url);
             } catch(exception: any) {
                 // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
                 // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
@@ -158,11 +158,11 @@ export class APIClient {
         return ok(null);
     }
 
-    public getPersonUrlForId(id: number): string {
+    private getPersonUrlForId(id: number): string {
         return "http://" + this.ipAddr + ":" + this.port + "/" + PERSON_ENDPOINT + "/" + id;
     }
 
-    public async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
+    private static async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.get(url);

@@ -1,7 +1,7 @@
 import { APIClient } from "../api/api_service_client/api_client";
 import { DatastoreClient } from "../datastore/datastore_service_client/datastore_client";
 import { ServiceID, NetworkContext, ContainerCreationConfig, StaticFileID, ContainerRunConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib";
-import { Result, ok, err, ResultAsync, okAsync, errAsync } from "neverthrow";
+import { Result, ok, err } from "neverthrow";
 import * as log from "loglevel";
 import * as fs from 'fs';
 
@@ -180,7 +180,7 @@ export class TestNetwork {
     
         let configInitializingFunc: (fp: number) => Promise<Result<null, Error>>;
         try {
-            configInitializingFunc = await TestNetwork.getApiServiceConfigInitializingFunc(this.getDatastoreClient());
+            configInitializingFunc = TestNetwork.getApiServiceConfigInitializingFunc(this.datastoreClient);
         } catch(exception: any) {
             // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
             // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
@@ -244,7 +244,7 @@ export class TestNetwork {
         return ok(apiClient);
     }
 
-    static getDataStoreContainerCreationConfig(): ContainerCreationConfig {
+    private static getDataStoreContainerCreationConfig(): ContainerCreationConfig {
         const usedPortsSet: Set<string> = new Set();
         const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
             DATASTORE_IMAGE,
@@ -254,7 +254,7 @@ export class TestNetwork {
         return containerCreationConfig;
     }
 
-    static getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
+    private static getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
         const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
         (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
             return ok(new ContainerRunConfigBuilder().build());
@@ -262,13 +262,8 @@ export class TestNetwork {
         return runConfigFunc;
     }
 
-    static async getApiServiceConfigInitializingFunc(datastoreClientResult: Result<DatastoreClient, Error>): Promise<(fp: number) => Promise<Result<null, Error>>> { //Making simplification that file descriptor is just number
-        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => { //TOOD (Ali) - might require changes in ConfigRunFactory in kurt-client
-            if (!datastoreClientResult.isOk()) {
-                return err(datastoreClientResult.error);
-            }
-            const datastoreClient: DatastoreClient = datastoreClientResult.value;
-
+    private static getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): (fp: number) => Promise<Result<null, Error>> { //Note: Making simplification that file descriptor is just number
+        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
             log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
             const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
             let configBytes: string;
@@ -287,12 +282,12 @@ export class TestNetwork {
             log.debug("API config JSON: " + String(configBytes));
 
 
-            const writeFilePromise: Promise<ResultAsync<null, Error>> = new Promise((resolve, _unusedReject) => {
+            const writeFilePromise: Promise<Result<null, Error>> = new Promise((resolve, _unusedReject) => {
                 fs.write(fp, configBytes, (error: Error | null) => {
                     if (error === null) {
-                        resolve(okAsync(null));
+                        resolve(ok(null));
                     } else {
-                        resolve(errAsync(error));
+                        resolve(err(error));
                     }
                 })
             });
@@ -317,7 +312,7 @@ export class TestNetwork {
         return configInitializingFunc;
     }
 
-    static getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
+    private static getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
         const usedPortsSet: Set<string> = new Set();
         const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
             API_SERVICE_IMAGE,
@@ -329,7 +324,7 @@ export class TestNetwork {
         return apiServiceContainerCreationConfig;
     }
 
-    static getApiServiceRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
+    private static getApiServiceRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
         const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
         (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
             if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {

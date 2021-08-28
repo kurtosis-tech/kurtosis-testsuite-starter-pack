@@ -104,10 +104,6 @@ export class DatastoreClient {
         return ok(null);
     }
 
-    public getUrlForKey(key: string): string {
-        return "http://"+this.ipAddr+":"+this.port+"/"+KEY_ENDPOINT+"/"+key;
-    }
-
     /*
     Wait for healthy response
     */
@@ -118,7 +114,7 @@ export class DatastoreClient {
 
         for (let i = 0 ; i < retries ; i++) {
             try {
-                respResult = await this.makeHttpGetRequest(url);
+                respResult = await DatastoreClient.makeHttpGetRequest(url);
             } catch(exception: any) {
                 // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
                 // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
@@ -161,7 +157,11 @@ export class DatastoreClient {
         return ok(null);
     }
 
-    public async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
+    private getUrlForKey(key: string): string {
+        return "http://"+this.ipAddr+":"+this.port+"/"+KEY_ENDPOINT+"/"+key;
+    }
+
+    private static async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.get(url);

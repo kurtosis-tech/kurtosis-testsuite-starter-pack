@@ -1,6 +1,6 @@
 import { ServiceID, NetworkContext, Network, ServiceContext, PortBinding, ContainerRunConfig, StaticFileID, ContainerCreationConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder } from "kurtosis-core-api-lib";
 import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
-import { Result, err, ok, ResultAsync, errAsync, okAsync } from "neverthrow";
+import { Result, err, ok } from "neverthrow";
 import * as log from "loglevel";
 import { DatastoreClient } from "../../datastore/datastore_service_client/datastore_client";
 import * as fs from 'fs';
@@ -49,8 +49,8 @@ export class BasicDatastoreAndApiTest {
 
     public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
         
-        const datastoreContainerCreationConfig: ContainerCreationConfig = getDataStoreContainerCreationConfig();
-        const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = getDataStoreRunConfigFunc();
+        const datastoreContainerCreationConfig: ContainerCreationConfig = BasicDatastoreAndApiTest.getDataStoreContainerCreationConfig();
+        const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = BasicDatastoreAndApiTest.getDataStoreRunConfigFunc();
 
         let addDatastoreServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error>;
         try {
@@ -89,9 +89,9 @@ export class BasicDatastoreAndApiTest {
 
         log.info("Added datastore service with host port bindings: ", datastoreSvcHostPortBindings);
 
-        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = getApiServiceConfigInitializingFunc(datastoreClient);
-        const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
-        const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = await getApiServiceRunConfigFunc();
+        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = BasicDatastoreAndApiTest.getApiServiceConfigInitializingFunc(datastoreClient);
+        const apiServiceContainerCreationConfig: ContainerCreationConfig = BasicDatastoreAndApiTest.getApiServiceContainerCreationConfig(configInitializingFunc);
+        const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = BasicDatastoreAndApiTest.getApiServiceRunConfigFunc();
 
         let addAPIServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error>;
         try {
@@ -225,107 +225,108 @@ export class BasicDatastoreAndApiTest {
 
         return ok(null);
     }
-}
 
-// ====================================================================================================
-//                                       Private helper functions
-// ====================================================================================================
+    // ====================================================================================================
+    //                                       Private helper functions
+    // ====================================================================================================
 
-function getDataStoreContainerCreationConfig(): ContainerCreationConfig {
-    const usedPortsSet: Set<string> = new Set();
-    const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-        DATASTORE_IMAGE,
-    ).withUsedPorts(
-        usedPortsSet.add(DATASTORE_PORT+"/tcp"),
-    ).build()
-    return containerCreationConfig;
-}
-
-function getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
-    const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-    (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-        return ok(new ContainerRunConfigBuilder().build());
+    private static getDataStoreContainerCreationConfig(): ContainerCreationConfig {
+        const usedPortsSet: Set<string> = new Set();
+        const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
+            DATASTORE_IMAGE,
+        ).withUsedPorts(
+            usedPortsSet.add(DATASTORE_PORT+"/tcp"),
+        ).build()
+        return containerCreationConfig;
     }
-    return runConfigFunc;
-}
 
-function getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): (fp: number) => Promise<Result<null, Error>> { //Note: Making simplification that file descriptor is just number
-    const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
-        log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
-        const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
-        let configBytes: string;
-        try { 
-            configBytes = JSON.stringify(configObj);
-        } catch(jsonErr: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (jsonErr && jsonErr.stack && jsonErr.message) {
-                return err(jsonErr as Error);
-            }
-            return err(new Error("Stringify-ing config object threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
+    private static getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
+        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
+        (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
+            return ok(new ContainerRunConfigBuilder().build());
         }
+        return runConfigFunc;
+    }
 
-        log.debug("API config JSON: " + String(configBytes));
-
-
-        const writeFilePromise: Promise<ResultAsync<null, Error>> = new Promise((resolve, _unusedReject) => {
-            fs.writeFile(fp, configBytes, (error: Error | null) => {
-                if (error === null) {
-                    resolve(okAsync(null));
-                } else {
-                    resolve(errAsync(error));
+    private static getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): (fp: number) => Promise<Result<null, Error>> { //Note: Making simplification that file descriptor is just number
+        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
+            log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
+            const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
+            let configBytes: string;
+            try { 
+                configBytes = JSON.stringify(configObj);
+            } catch(jsonErr: any) {
+                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+                if (jsonErr && jsonErr.stack && jsonErr.message) {
+                    return err(jsonErr as Error);
                 }
-            })
-        });
-        let writeFileResult: Result<null, Error>;
-        try {
-            writeFileResult = await writeFilePromise;
-        } catch(exception: any) {
-            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
-            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
-            if (exception && exception.stack && exception.message) {
-                return err(exception as Error);
+                return err(new Error("Stringify-ing config object threw an exception, but " +
+                    "it's not an Error so we can't report any more information than this"));
             }
-            return err(new Error("Calling fs.writeFile method from fs package wrapped inside promise threw an exception, but " +
-                "it's not an Error so we can't report any more information than this"));
+
+            log.debug("API config JSON: " + String(configBytes));
+
+
+            const writeFilePromise: Promise<Result<null, Error>> = new Promise((resolve, _unusedReject) => {
+                fs.writeFile(fp, configBytes, (error: Error | null) => {
+                    if (error === null) {
+                        resolve(ok(null));
+                    } else {
+                        resolve(err(error));
+                    }
+                })
+            });
+            let writeFileResult: Result<null, Error>;
+            try {
+                writeFileResult = await writeFilePromise;
+            } catch(exception: any) {
+                // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+                // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+                if (exception && exception.stack && exception.message) {
+                    return err(exception as Error);
+                }
+                return err(new Error("Calling fs.writeFile method from fs package wrapped inside promise threw an exception, but " +
+                    "it's not an Error so we can't report any more information than this"));
+            }
+            if (!writeFileResult.isOk()) {
+                return err(writeFileResult.error);
+            }
+        
+            return ok(null);
         }
-        if (!writeFileResult.isOk()) {
-            return err(writeFileResult.error);
-        }
-    
-        return ok(null);
+        return configInitializingFunc;
     }
-    return configInitializingFunc;
-}
 
-function getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
-    const usedPortsSet: Set<string> = new Set();
-    const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-        API_SERVICE_IMAGE,
-    ).withUsedPorts(
-        usedPortsSet.add(API_SERVICE_PORT+"/tcp")
-    ).withGeneratedFiles(new Map().set(
-        CONFIG_FILE_KEY, configInitializingFunc
-    )).build();
-    return apiServiceContainerCreationConfig;
-}
-
-function getApiServiceRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
-    const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-    (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-        if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
-            return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
-        }
-        const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
-        const startCmd: string[] = [
-            "./api.bin",
-            "--config",
-            configFilepath
-        ]
-
-        const result: ContainerRunConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
-        return ok(result);
+    private static getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
+        const usedPortsSet: Set<string> = new Set();
+        const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
+            API_SERVICE_IMAGE,
+        ).withUsedPorts(
+            usedPortsSet.add(API_SERVICE_PORT+"/tcp")
+        ).withGeneratedFiles(new Map().set(
+            CONFIG_FILE_KEY, configInitializingFunc
+        )).build();
+        return apiServiceContainerCreationConfig;
     }
-    return apiServiceRunConfigFunc;
+
+    private static getApiServiceRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
+        const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
+        (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
+            if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
+                return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
+            }
+            const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
+            const startCmd: string[] = [
+                "./api.bin",
+                "--config",
+                configFilepath
+            ]
+
+            const result: ContainerRunConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
+            return ok(result);
+        }
+        return apiServiceRunConfigFunc;
+    }
+
 }
