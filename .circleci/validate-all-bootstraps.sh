@@ -23,7 +23,7 @@ NO_CUSTOM_BOOSTRAP_FLAGS_KEY="NONE"
 # NOTE: This won't handle flag values that contain spaces, though it can handle multiple flags separated by a space
 declare -A CUSTOM_LANG_BOOTSTRAP_FLAGS 
 CUSTOM_LANG_BOOTSTRAP_FLAGS[golang]="GO_NEW_MODULE_NAME=github.com/test/test-module"
-
+CUSTOM_LANG_BOOTSTRAP_FLAGS[typescript]="${NO_CUSTOM_BOOSTRAP_FLAGS_KEY}"
 
 
 # ==========================================================================================
