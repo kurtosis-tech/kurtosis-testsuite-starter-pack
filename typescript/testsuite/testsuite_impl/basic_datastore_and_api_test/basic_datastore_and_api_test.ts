@@ -231,7 +231,6 @@ export class BasicDatastoreAndApiTest {
 //                                       Private helper functions
 // ====================================================================================================
 
-//TODO TODO TODO (Ali) - review these helper methods after making final changes to network_impl
 function getDataStoreContainerCreationConfig(): ContainerCreationConfig {
     const usedPortsSet: Set<string> = new Set();
     const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(

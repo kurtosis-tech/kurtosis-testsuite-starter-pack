@@ -4,12 +4,7 @@ import { Result, err, ok } from "neverthrow";
 import * as axios from "axios";
 import * as httpStatusCode from "http-status-codes";
 
-const TEXT_CONTENT_TYPE: string = "text/plain"; //TODO (Ali) - not used
-
 const KEY_ENDPOINT: string = "key";
-
-// Use low timeout, so that tests that need timeouts (like network partition tests) will complete quickly
-const TIMEOUT_SECONDS: number = 2; //TODO (Ali) - not used
 
 const HEALTHCHECK_URL_SLUG: string = "health";
 const HEALTHY_VALUE: string = "healthy";
@@ -26,7 +21,7 @@ export class DatastoreClient {
     /*
     Get client's IP address value
     */
-    public getIpAddr(): string { //TODO (Ali) - changed method name, this is okay right?
+    public getIpAddr(): string { //Note: changed method name from golang
         return this.ipAddr;
     }
 

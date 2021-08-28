@@ -5,9 +5,7 @@ import * as httpStatusCode from "http-status-codes";
 import * as axios from "axios";
 
 const PERSON_ENDPOINT: string = "person";
-const TEXT_CONTEXT_TYPE: string = "text/plain"; //TODO (Ali) - not being used
 
-const TIMEOUT_SECONDS: number = 2; //TODO (Ali) - not being used
 const INCREMENT_BOOKS_READ_ENDPOINT: string = "incrementBooksRead";
 
 const HEALTHCHECK_URL_SLUG: string = "health";
@@ -15,15 +13,6 @@ const HEALTHY_VALUE: string = "healthy";
 
 export interface Person {
     readonly booksRead: number;
-
-    //TODO remove - if everything works
-    // constructor(booksRead: number) {
-    //     this.booksRead = booksRead;
-    // }
-
-    // public getBooksRead(): number {
-    //     return this.booksRead;
-    // }
 }
 
 export class APIClient {
@@ -169,7 +158,7 @@ export class APIClient {
         return ok(null);
     }
 
-    public getPersonUrlForId(id: number): string { //TODO (Ali) - since async functions use it, I might need to make this async
+    public getPersonUrlForId(id: number): string {
         return "http://" + this.ipAddr + ":" + this.port + "/" + PERSON_ENDPOINT + "/" + id;
     }
 
