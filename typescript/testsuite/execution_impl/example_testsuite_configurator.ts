@@ -9,7 +9,7 @@ export class ExampleTestsuiteConfigurator {
 
     private static safeJsonParse = Result.fromThrowable(JSON.parse, ExampleTestsuiteConfigurator.parseUnknownExceptionValueToError);
     
-    construcor () {}
+    constructor () {}
     
     public setLogLevel(logLevelStr: string): Result<null, Error> {
         log.setLevel(<log.LogLevelDesc>logLevelStr);
