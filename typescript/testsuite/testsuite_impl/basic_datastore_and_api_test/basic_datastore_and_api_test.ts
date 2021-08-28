@@ -87,7 +87,7 @@ export class BasicDatastoreAndApiTest {
             return err(datastoreWaitForHealthyResult.error);
         }
 
-        log.info("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings);
+        log.info("Added datastore service with host port bindings: ", datastoreSvcHostPortBindings);
 
         const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = getApiServiceConfigInitializingFunc(datastoreClient);
         const apiServiceContainerCreationConfig: ContainerCreationConfig = getApiServiceContainerCreationConfig(configInitializingFunc);
@@ -128,7 +128,7 @@ export class BasicDatastoreAndApiTest {
             return err(apiWaitForHealthyResult.error);
         }
 
-        log.info("Added API service with host port bindings: " + apiSvcHostPortBindings);
+        log.info("Added API service with host port bindings: ", apiSvcHostPortBindings);
         return ok(networkCtx);
     }
 

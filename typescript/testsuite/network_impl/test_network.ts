@@ -100,7 +100,7 @@ export class TestNetwork {
             return err(dataStoreWaitForHealthyResult.error);
         }
 
-        log.info("Added datastore service with host port bindings: " + hostPortBindings);
+        log.info("Added datastore service with host port bindings: ",  hostPortBindings);
 
         this.datastoreClient = datastoreClient;
 
@@ -240,7 +240,7 @@ export class TestNetwork {
             return err(apiClientWaitForHealthyResult.error);
         }
     
-        log.info("Added API service with host port bindings:" + hostPortBindings)
+        log.info("Added API service with host port bindings:", hostPortBindings)
         return ok(apiClient);
     }
 
@@ -269,7 +269,7 @@ export class TestNetwork {
             }
             const datastoreClient: DatastoreClient = datastoreClientResult.value;
 
-            log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort+"");
+            log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
             const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
             let configBytes: string;
             try { 

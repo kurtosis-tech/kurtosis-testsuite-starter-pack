@@ -65,7 +65,7 @@ export class BasicDatastoreTest {
             return err(datastoreWaitForHealthyResult.error);
         }
 
-        log. info("Added datastore service with host port bindings: " + hostPortBindings)
+        log. info("Added datastore service with host port bindings: ", hostPortBindings)
         return ok(networkCtx);
     }
 
