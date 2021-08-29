@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2020 - present Kurtosis Technologies LLC.
- * All Rights Reserved.
- */
-
 package basic_datastore_and_api_test
 
 import (
@@ -56,7 +51,8 @@ func (b BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfiguration
 
 func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 
-	datastoreContainerCreationConfig, datastoreRunConfigFunc := getDatastoreServiceConfigurations()
+	datastoreContainerCreationConfig := getDataStoreContainerCreationConfig()
+	datastoreRunConfigFunc := getDataStoreRunConfigFunc()
 
 	datastoreServiceContext, datastoreSvcHostPortBindings, err := networkCtx.AddService(datastoreServiceId, datastoreContainerCreationConfig, datastoreRunConfigFunc)
 	if err != nil {
@@ -72,7 +68,9 @@ func (b BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (ne
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", datastoreSvcHostPortBindings)
 
-	apiServiceContainerCreationConfig, apiServiceRunConfigFunc := getApiServiceConfigurations(datastoreClient)
+	configInitializingFunc := getApiServiceConfigInitializingFunc(datastoreClient)
+	apiServiceContainerCreationConfig := getApiServiceContainerCreationConfig(configInitializingFunc)
+	apiServiceRunConfigFunc := getApiServiceRunConfigFunc()
 
 	apiServiceContext, apiSvcHostPortBindings, err := networkCtx.AddService(apiServiceId, apiServiceContainerCreationConfig, apiServiceRunConfigFunc)
 	if err != nil {
@@ -143,13 +141,6 @@ func (b BasicDatastoreAndApiTest) Run(network networks.Network) error {
 //                                       Private helper functions
 // ====================================================================================================
 
-func getDatastoreServiceConfigurations() (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
-	datastoreContainerCreationConfig := getDataStoreContainerCreationConfig()
-
-	datastoreRunConfigFunc := getDataStoreRunConfigFunc()
-	return datastoreContainerCreationConfig, datastoreRunConfigFunc
-}
-
 func getDataStoreContainerCreationConfig() *services.ContainerCreationConfig {
 	containerCreationConfig := services.NewContainerCreationConfigBuilder(
 		datastoreImage,
@@ -164,15 +155,6 @@ func getDataStoreRunConfigFunc() func(ipAddr string, generatedFileFilepaths map[
 		return services.NewContainerRunConfigBuilder().Build(), nil
 	}
 	return runConfigFunc
-}
-
-func getApiServiceConfigurations(datastoreClient *datastore_service_client.DatastoreClient) (*services.ContainerCreationConfig, func(ipAddr string, generatedFileFilepaths map[string]string, staticFileFilepaths map[services.StaticFileID]string) (*services.ContainerRunConfig, error)) {
-	configInitializingFunc := getApiServiceConfigInitializingFunc(datastoreClient)
-
-	apiServiceContainerCreationConfig := getApiServiceContainerCreationConfig(configInitializingFunc)
-
-	apiServiceRunConfigFunc := getApiServiceRunConfigFunc()
-	return apiServiceContainerCreationConfig, apiServiceRunConfigFunc
 }
 
 func getApiServiceConfigInitializingFunc(datastoreClient *datastore_service_client.DatastoreClient) func(fp *os.File) error {

@@ -1,13 +1,8 @@
-/*
- * Copyright (c) 2020 - present Kurtosis Technologies LLC.
- * All Rights Reserved.
- */
-
 package main
 
 import (
 	"fmt"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/execution_impl"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/execution_impl"
 	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/execution"
 	"github.com/sirupsen/logrus"
 	"os"

@@ -1,5 +1,28 @@
 # TBD
 
+# 1.32.2
+### Changes
+* Switch to using the docs-checker productized orb
+
+### Features
+* Upgraded to Kurtosis 1.18, which allows for multiple instances of Kurtosis to be run at the same time
+* Upgraded testsuite API lib 0.2.0 -> 0.4.0
+* Made bootstrap validation happen upon every PR, rather than upon merge-to-master
+* Added example-microservices datastore and api typescript files 
+* Added build script for typescript files
+* Added network_impl typescript files 
+* Added testsuite_impl typescript files
+* Added execution_impl typescript files
+
+### Fixes
+* Correct all old references to `kurtosis-libs` -> `kurtosis-testsuite-starter-pack`
+* Add error-checking in `validate-all-bootstraps` in case custom bootstrap flags weren't defined for a language
+
+### Removals
+* Removed Apache-2 license, dedicating everything inside this example to the public domain
+* Now-unused testsuite API `.proto` file
+* Removed now-unnecessary building and pushing of Docker images
+
 # 1.32.1
 ### Changes
 * Upgrade to testsuite lib 0.2.0, which reads its inputs directly from the environment (rather than needing the user to pass them through the Dockerfile)

@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  kurtosis-docs-checker: kurtosis-tech/docs-checker@0.2.0
+
 executors:
   ubuntu_vm:
     machine:
@@ -17,54 +20,30 @@ jobs:
     executor: ubuntu_vm
     steps:
       - checkout
-      - run: bash .circleci/validate-all-testsuites.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${KURTOSIS_INTERNAL_CLIENT_ID}" "${KURTOSIS_INTERNAL_CLIENT_SECRET}"
-
-  check_docs:
-    docker:
-      # Needed for `npm install` down below
-      - image: cimg/node:15.3.0
-    resource_class: small
-    steps:
-      - checkout
-
-      # Gotchas I discovered when writing this:
-      # - Without the '--no-pager' flag, Git will print "WARNING: Terminal is not fully functional" and not display any output
-      # - Circle has no way of getting the PR base branch, so we have to hardcode develop :( See: https://ideas.circleci.com/cloud-feature-requests/p/provide-env-variable-for-branch-name-targeted-by-pull-request
-      # - The --exit-code flag to git-diff returns 0 on no changes, 1 on changes
-      # - We have to use 'origin/develop' rather than 'develop' because Circle does a shallow checkout, and 'develop' gets set to something weird and wrong that makes the check buggy
-      - run: "! git --no-pager diff --exit-code origin/develop...HEAD docs/changelog.md"
-      - run:
-          name: Check links in Markdown docs
-          command: |
-            sudo npm install -g markdown-link-check
-            bash .circleci/check-markdown-links.sh
-
-  validate_bootstraps:
-    executor: ubuntu_vm
-    steps:
-      - checkout
       - run: bash .circleci/validate-all-bootstraps.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${SIMULATED_TRIAL_USER_CLIENT_ID}" "${SIMULATED_TRIAL_USER_CLIENT_SECRET}"
-
-  push_docker_image:
-    executor: ubuntu_vm
-    steps:
-      - checkout
-      - run: bash .circleci/build-and-push-example-images.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "<<pipeline.git.tag>>"
 
 workflows:
   build:
     jobs:
       # ============ Jobs that run upon PR submission ===============
+      - kurtosis-docs-checker/check-docs:
+          markdown-link-check-config-json: |
+            {
+                "replacementPatterns": [
+                    {
+                        "pattern": "^../kurtosis-core",
+                        "replacement": "https://docs.kurtosistech.com/kurtosis-core"
+                    },
+                    {
+                        "pattern": "^../kurtosis-client",
+                        "replacement": "https://docs.kurtosistech.com/kurtosis-client"
+                    }
+                ]
+            }
       - check_code:
           context:
             - docker-user
-            - kurtosis-user
-          filters:
-            branches:
-              ignore:
-                - develop
-                - master
-      - check_docs:
+            - simulated-trial-user
           filters:
             branches:
               ignore:
@@ -72,27 +51,4 @@ workflows:
                 - master
 
       # ============== Jobs that run upon release ==================
-      # Bootstrap validation needs to happen upon release because bootstrapping
-      # pulls down the latest version of the library from the library store (e.g.
-      # the Rust bootstrapping process pulls down the Kurtosis Core library from
-      # crates.io)
-      - validate_bootstraps:
-          context:
-            - docker-user
-            - simulated-trial-user
-          requires:
-            - push_docker_image
-          filters:
-            branches:
-              ignore: /.*/
-            tags: 
-              only: /^[0-9]+\.[0-9]+\.[0-9]+$/
-      - push_docker_image:
-          context:
-            - docker-user
-            - kurtosis-user
-          filters:
-            branches:
-              ignore: /.*/
-            tags: 
-              only: /^[0-9]+\.[0-9]+\.[0-9]+$/
+      # None for now

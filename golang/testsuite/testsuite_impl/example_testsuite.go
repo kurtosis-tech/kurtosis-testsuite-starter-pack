@@ -1,15 +1,9 @@
-/*
- * Copyright (c) 2020 - present Kurtosis Technologies LLC.
- * All Rights Reserved.
- */
-
 package testsuite_impl
 
 import (
-	"github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/advanced_network_test"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
-	"github.com/kurtosis-tech/kurtosis-libs/golang/testsuite/testsuite_impl/basic_datastore_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/testsuite_impl/advanced_network_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/testsuite_impl/basic_datastore_and_api_test"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/testsuite_impl/basic_datastore_test"
 	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/testsuite"
 )
 
@@ -36,14 +30,3 @@ func (suite ExampleTestsuite) GetTests() map[string]testsuite.Test {
 	}
 	return tests
 }
-
-func (suite ExampleTestsuite) GetNetworkWidthBits() uint32 {
-	return 8
-}
-
-func (suite ExampleTestsuite) GetStaticFiles() map[services.StaticFileID]string {
-	return map[services.StaticFileID]string{}
-}
-
-
-
