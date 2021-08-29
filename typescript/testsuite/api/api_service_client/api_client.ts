@@ -101,8 +101,8 @@ export class APIClient {
         let resp: axios.AxiosResponse<any>;
         try {
             resp = await axios.default.get(url);
-        } catch (err: any) {
-            return err(err as Error);
+        } catch (e: any) {
+            return err(e as Error);
         }
         return ok(resp);
     }
