@@ -1,5 +1,9 @@
 # TBD
 
+# 1.32.3
+### Fixes
+* Added `try/catch` around the `makeHttpGetRequest` in Datastore & API clients
+
 # 1.32.2
 ### Changes
 * Switch to using the docs-checker productized orb

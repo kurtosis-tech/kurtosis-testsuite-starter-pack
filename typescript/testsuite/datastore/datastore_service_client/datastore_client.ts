@@ -120,8 +120,12 @@ export class DatastoreClient {
     }
 
     private static async makeHttpGetRequest(url: string): Promise<Result<axios.AxiosResponse<any>, Error>>{
-        const resp: axios.AxiosResponse<any> = await axios.default.get(url);
-
+        let resp: axios.AxiosResponse<any>;
+        try {
+            resp = await axios.default.get(url);
+        } catch (e: any) {
+            return err(e as Error);
+        }
         return ok(resp);
     }
 
