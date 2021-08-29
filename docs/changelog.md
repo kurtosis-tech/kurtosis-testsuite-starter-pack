@@ -1,4 +1,6 @@
 # TBD
+### Fixes
+* Added `try/catch` around the `makeHttpGetRequest` in Datastore & API clients
 
 # 1.32.2
 ### Changes
