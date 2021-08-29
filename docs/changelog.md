@@ -6,6 +6,11 @@
 * Upgraded to Kurtosis 1.18, which allows for multiple instances of Kurtosis to be run at the same time
 * Upgraded testsuite API lib 0.2.0 -> 0.4.0
 * Made bootstrap validation happen upon every PR, rather than upon merge-to-master
+* Added example-microservices datastore and api typescript files 
+* Added build script for typescript files
+* Added network_impl typescript files 
+* Added testsuite_impl typescript files
+* Added execution_impl typescript files
 
 ### Fixes
 * Correct all old references to `kurtosis-libs` -> `kurtosis-testsuite-starter-pack`
