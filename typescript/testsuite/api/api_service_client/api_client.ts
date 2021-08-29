@@ -47,19 +47,8 @@ export class APIClient {
                 "it's not an Error so we can't report any more information than this"));
         }
 
-        const body: any = resp.data;
-        
-        const bodyStringResult: Result<string, Error> = APIClient.safeJsonStringify(body);
-        if (bodyStringResult.isErr()) {
-            return err(bodyStringResult.error);
-        }
-        const bodyString: string = bodyStringResult.value;
-
-        const personResult: Result<Person, Error> = APIClient.safeJsonParse(bodyString);
-        if (personResult.isErr()) {
-            return err(personResult.error);
-        }
-        const person: Person = personResult.value;
+        //Note: axios automatically parses the JSON response
+        const person: Person = resp.data;
         
         return ok(person);
     }
