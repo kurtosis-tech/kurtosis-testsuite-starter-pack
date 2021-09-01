@@ -1,4 +1,6 @@
 # TBD
+### Fixes
+* Don't check docs on develop
 
 # 1.32.3
 ### Fixes

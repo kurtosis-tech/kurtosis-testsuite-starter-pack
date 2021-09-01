@@ -40,6 +40,11 @@ workflows:
                     }
                 ]
             }
+          filters:
+            branches:
+              ignore:
+                - develop
+                - master
       - check_code:
           context:
             - docker-user
