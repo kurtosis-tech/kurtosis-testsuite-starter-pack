@@ -1,4 +1,7 @@
 # TBD
+### Features
+* Bootstrapping automatically copies over Git & Docker ignore files to the output repo
+
 ### Fixes
 * Don't check docs on develop
 
