@@ -4,6 +4,10 @@
 
 ### Fixes
 * Don't check docs on develop
+* Upgrade to Kurt Client 0.15.0, which fixes a typo with a method name in ContainerRunConfigBuilder
+
+### Breaking Changes
+* Upgrade to Kurt Client 0.15.0 (see break remediation [here](https://github.com/kurtosis-tech/kurtosis-client/blob/develop/docs/changelog.md))
 
 # 1.32.3
 ### Fixes
