@@ -25,6 +25,9 @@ OUTPUT_KURTOSIS_CORE_DIRNAME=".kurtosis"
 OUTPUT_SCRIPTS_DIRNAME="scripts"
 BUILD_AND_RUN_FILENAME="build-and-run.sh"
 
+GITIGNORE_FILENAME=".gitignore"
+DOCKERIGNORE_FILENAME=".dockerignore"
+
 # =============================================================================
 #                             Pre-Arg Parsing
 # =============================================================================
@@ -106,6 +109,29 @@ if ! mkdir -p "${output_dirpath}"; then
     exit 1
 fi
 lang_dirpath="${repo_root_dirpath}/${lang}"
+
+# Copy .gitignore file
+gitignore_filepath="${lang_dirpath}/${GITIGNORE_FILENAME}"
+if ! [ -f "${gitignore_filepath}" ]; then
+    echo "Error: No ${GITIGNORE_FILENAME} file exists at '${gitignore_filepath}'; this is a bug in this repo" >&2
+    exit 1
+fi
+if ! cp "${gitignore_filepath}" "${output_dirpath}/"; then
+    echo "Error: Couldn't copy ${GITIGNORE_FILENAME} file from '${gitignore_filepath}' to output directory '${output_dirpath}'" >&2
+    exit 1
+fi
+
+# Copy .dockerignore file
+dockerignore_filepath="${lang_dirpath}/${DOCKERIGNORE_FILENAME}"
+if ! [ -f "${dockerignore_filepath}" ]; then
+    echo "Error: No ${DOCKERIGNORE_FILENAME} file exists at '${dockerignore_filepath}'; this is a bug in this repo" >&2
+    exit 1
+fi
+if ! cp "${dockerignore_filepath}" "${output_dirpath}/"; then
+    echo "Error: Couldn't copy ${DOCKERIGNORE_FILENAME} file from '${dockerignore_filepath}' to output directory '${output_dirpath}'" >&2
+    exit 1
+fi
+
 lang_bootstrap_dirpath="${script_dirpath}/${lang}"
 prep_new_repo_script_filepath="${lang_bootstrap_dirpath}/${PREP_NEW_REPO_FILENAME}"
 if ! bash "${prep_new_repo_script_filepath}" "${lang_dirpath}" "${output_dirpath}"; then
@@ -227,5 +253,5 @@ fi
 
 echo "Bootstrap successful!"
 # NOTE: We use parallelism=1 so that users get live-streaming log feedback, and are reassured that the testsuite is running
-echo " - Your new testsuite can be run with 'bash \"${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME}\" all --parallelism 1'"
+echo " - Your new testsuite can be run with: bash \"${output_scripts_dirpath}/${BUILD_AND_RUN_FILENAME}\" all --parallelism 1"
 echo " - To continue with the quickstart, head back to the quickstart steps: https://github.com/kurtosis-tech/kurtosis-libs/tree/master#testsuite-quickstart"
