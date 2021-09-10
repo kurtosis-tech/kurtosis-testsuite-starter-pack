@@ -1,4 +1,6 @@
 # TBD
+
+# 1.33.0
 ### Features
 * Bootstrapping automatically copies over Git & Docker ignore files to the output repo
 
