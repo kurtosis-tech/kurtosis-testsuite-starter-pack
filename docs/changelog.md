@@ -1,4 +1,6 @@
 # TBD
+### Changes
+* Use `testsuite-api-lib` 0.7.0, which returns log output strings rather than bytes for `ServiceContext.execCommand`
 
 # 1.33.0
 ### Features
