@@ -301,7 +301,7 @@ isarray@~1.0.0:
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
   integrity sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=
 
-kurtosis-core-api-lib@0.15.0, kurtosis-core-api-lib@^0.15.0:
+kurtosis-core-api-lib@0.15.0:
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/kurtosis-core-api-lib/-/kurtosis-core-api-lib-0.15.0.tgz#7f82e93c0138604e75faaf44617f66596277623e"
   integrity sha512-YgXy/mdBJ4AsLMvwa6A9ckYtOpEvdelwIcfJTXODJEMGVJ44tDWkhQl/yxx+Xcsmsws8xbTua23hdHNxKDqCDg==
@@ -311,16 +311,26 @@ kurtosis-core-api-lib@0.15.0, kurtosis-core-api-lib@^0.15.0:
     loglevel "^1.7.1"
     neverthrow "^4.2.2"
 
-kurtosis-testsuite-api-lib@0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/kurtosis-testsuite-api-lib/-/kurtosis-testsuite-api-lib-0.6.0.tgz#001c49abdfc2beffbe34337e25d49d6936b0e561"
-  integrity sha512-H/wnrckueCG1H2bNfP6OUEo07Vm/nStWVlJq7qsiEFpV6YKwqElVsnf665Yghu+w0r7pCqP8SlncVdKWFoftyw==
+kurtosis-core-api-lib@0.16.0:
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/kurtosis-core-api-lib/-/kurtosis-core-api-lib-0.16.0.tgz#8fd37fe26c157ee7ed71bcec437c1bfaeb9da9d7"
+  integrity sha512-mn0CC0k/fmcy4IsqABRNVIdKTjM8ljgaAvH+TfrpucfPntfCwGc67tvNYPiHjUajyLXxdnGlGeBYfqeaDSQPNg==
+  dependencies:
+    google-protobuf "^3.17.3"
+    grpc "^1.24.11"
+    loglevel "^1.7.1"
+    neverthrow "^4.2.2"
+
+kurtosis-testsuite-api-lib@0.7.0:
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/kurtosis-testsuite-api-lib/-/kurtosis-testsuite-api-lib-0.7.0.tgz#f4b4d2cc6fe429bbbbf611d326a5142e31aef78c"
+  integrity sha512-pYa3XqiEqrCHCoN0xzZ144zbK8wyFPDpl3bgIWfZ3c5hKDCAp01uzYR0ecMT8QYxmQnNRkX2BlpCtNwE/75asw==
   dependencies:
     async-mutex "^0.3.1"
     dotenv "^10.0.0"
     google-protobuf "^3.17.3"
     grpc "^1.24.11"
-    kurtosis-core-api-lib "^0.15.0"
+    kurtosis-core-api-lib "0.16.0"
     loglevel "^1.7.1"
     minimal-grpc-server "^0.3.6"
     neverthrow "^4.2.2"
