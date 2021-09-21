@@ -1,5 +1,12 @@
 # TBD
 
+# 1.33.1
+### Changes
+* Use `testsuite-api-lib` 0.7.0, which returns log output strings rather than bytes for `ServiceContext.execCommand`
+
+### Fixes
+* Use Kurt Core 1.20, which is required for working with `testsuite-api-lib` 0.7.0
+
 # 1.33.0
 ### Features
 * Bootstrapping automatically copies over Git & Docker ignore files to the output repo
