@@ -1,4 +1,6 @@
 # TBD
+
+# 1.33.2
 ### Fixes
 * Upgraded to testsuite-api-lib 0.7.1 to fix two issues (see changelog [here](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md))
 
