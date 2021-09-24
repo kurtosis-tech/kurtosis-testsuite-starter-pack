@@ -1,4 +1,6 @@
 # TBD
+### Fixes
+* Fix bug where Typescript testsuite wouldn't copy in static files
 
 # 1.33.2
 ### Fixes
