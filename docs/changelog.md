@@ -1,5 +1,10 @@
 # TBD
 
+# 1.33.4
+### Features
+* Upgraded to [Kurt Client API 0.17.0](https://github.com/kurtosis-tech/kurtosis-client/blob/develop/docs/changelog.md#0170)
+* Upgraded to [Kurtosis Testsuite API Lib 0.8.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#081)
+
 # 1.33.3
 ### Fixes
 * Fix bug where Typescript testsuite wouldn't copy in static files

@@ -301,26 +301,26 @@ isarray@~1.0.0:
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-1.0.0.tgz#bb935d48582cba168c06834957a54a3e07124f11"
   integrity sha1-u5NdSFgsuhaMBoNJV6VKPgcSTxE=
 
-kurtosis-core-api-lib@0.16.0:
-  version "0.16.0"
-  resolved "https://registry.yarnpkg.com/kurtosis-core-api-lib/-/kurtosis-core-api-lib-0.16.0.tgz#8fd37fe26c157ee7ed71bcec437c1bfaeb9da9d7"
-  integrity sha512-mn0CC0k/fmcy4IsqABRNVIdKTjM8ljgaAvH+TfrpucfPntfCwGc67tvNYPiHjUajyLXxdnGlGeBYfqeaDSQPNg==
+kurtosis-core-api-lib@0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/kurtosis-core-api-lib/-/kurtosis-core-api-lib-0.17.0.tgz#51b1f36492867dc13a66136b07e5f26ccbff7d1b"
+  integrity sha512-bTdPqQ+KYmk0cvBq9AHM2XNBzGfh6LykxYPu0IzFNgpVNhE8WSOaDpeirbUBSOgP2L5iW7nwl+NJHUEPF3Z+/A==
   dependencies:
     google-protobuf "^3.17.3"
     grpc "^1.24.11"
     loglevel "^1.7.1"
     neverthrow "^4.2.2"
 
-kurtosis-testsuite-api-lib@0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/kurtosis-testsuite-api-lib/-/kurtosis-testsuite-api-lib-0.7.1.tgz#e2a2004d80d2f0a409d9f3e59e085493f5f88e46"
-  integrity sha512-QTut7HcMl3M3nkR4rBiYfhgCWP4HzHBqrMpxncposI3vIpYDEnAd48EhjMf5W9rdG+P8Jk+xgOjtBeI5JD5tXw==
+kurtosis-testsuite-api-lib@0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/kurtosis-testsuite-api-lib/-/kurtosis-testsuite-api-lib-0.8.1.tgz#8b4bcaafbf3fd46d008ece323c82e22ca5edfe8e"
+  integrity sha512-kkHq/IT/W6C67r7UODKEIqC4d7chlSiVBAU5H85/2dH050KXWWNdug/jXu7Kt62DHAlhQdXt+uJyNcv4g5GI2w==
   dependencies:
     async-mutex "^0.3.1"
     dotenv "^10.0.0"
     google-protobuf "^3.17.3"
     grpc "^1.24.11"
-    kurtosis-core-api-lib "0.16.0"
+    kurtosis-core-api-lib "0.17.0"
     loglevel "^1.7.1"
     minimal-grpc-server "^0.3.6"
     neverthrow "^4.2.2"

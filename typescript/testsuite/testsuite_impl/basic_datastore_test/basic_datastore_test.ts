@@ -1,4 +1,4 @@
-import { Network, NetworkContext, ServiceID, ContainerCreationConfig, ContainerCreationConfigBuilder, ContainerRunConfig, StaticFileID, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib";
+import { Network, NetworkContext, ServiceID, ContainerConfig, ContainerConfigBuilder, ServiceContext, PortBinding, SharedPath } from "kurtosis-core-api-lib";
 import { TestConfigurationBuilder } from "kurtosis-testsuite-api-lib";
 import * as log from "loglevel";
 import { Result, ok, err } from "neverthrow";
@@ -27,10 +27,9 @@ export class BasicDatastoreTest {
 
     public async setup(networkCtx: NetworkContext): Promise<Result<Network, Error>> {
 
-        const containerCreationConfig: ContainerCreationConfig = BasicDatastoreTest.getContainerCreationConfig();
-        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = BasicDatastoreTest.getRunConfigFunc();
+        const containerConfigSupplier: (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> =  BasicDatastoreTest.getContainerConfigSupplier();
 
-        const addServiceDatastoreResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(DATASTORE_SERVICE_ID, containerCreationConfig, runConfigFunc);
+        const addServiceDatastoreResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await networkCtx.addService(DATASTORE_SERVICE_ID, containerConfigSupplier);
         if (!addServiceDatastoreResult.isOk()) {
             return err(addServiceDatastoreResult.error);
         }
@@ -94,21 +93,17 @@ export class BasicDatastoreTest {
     //                                       Private helper functions
     // ====================================================================================================
 
-    private static getContainerCreationConfig(): ContainerCreationConfig {
-        const usedPortsSet: Set<string> = new Set();
-        const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-            DATASTORE_IMAGE,
-        ).withUsedPorts(
-            usedPortsSet.add(DATASTORE_PORT+"/tcp")
-        ).build()
-        return containerCreationConfig;
-    }
-
-    private static getRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
-        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-        (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-            return ok(new ContainerRunConfigBuilder().build());
-        }
-        return runConfigFunc;
+    private static getContainerConfigSupplier(): (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> {
+        const containerConfigSupplier: (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> =
+            (ipAddr: string, sharedDirectory: SharedPath) => {
+                const usedPortsSet: Set<string> = new Set();
+                const containerConfig: ContainerConfig = new ContainerConfigBuilder(
+                    DATASTORE_IMAGE
+                ).withUsedPorts(
+                    usedPortsSet.add(DATASTORE_PORT + "/tcp")
+                ).build()
+                return ok(containerConfig)
+            }
+        return containerConfigSupplier
     }
 }

@@ -1,9 +1,17 @@
 import { APIClient } from "../api/api_service_client/api_client";
 import { DatastoreClient } from "../datastore/datastore_service_client/datastore_client";
-import { ServiceID, NetworkContext, ContainerCreationConfig, StaticFileID, ContainerRunConfig, ContainerCreationConfigBuilder, ContainerRunConfigBuilder, ServiceContext, PortBinding } from "kurtosis-core-api-lib";
+import {
+    ServiceID,
+    NetworkContext,
+    ServiceContext,
+    PortBinding,
+    SharedPath,
+    ContainerConfig,
+    ContainerConfigBuilder
+} from "kurtosis-core-api-lib";
 import { Result, ok, err } from "neverthrow";
 import * as log from "loglevel";
-import * as fs from 'fs';
+import {writeFileSync} from "fs";
 
 const DATASTORE_IMAGE: string = "kurtosistech/example-microservices_datastore";
 const DATASTORE_SERVICE_ID: ServiceID = "datastore";
@@ -61,10 +69,9 @@ export class TestNetwork {
             return err(new Error("Cannot add API services to network; one or more API services already exists"));
         }
 
-        const datastoreContainerCreationConfig: ContainerCreationConfig = TestNetwork.getDataStoreContainerCreationConfig();
-        const datastoreRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = TestNetwork.getDataStoreRunConfigFunc();
+        const datastoreContainerConfigSupplier: (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> = TestNetwork.getDatastoreContainerConfigSupplier()
 
-        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerCreationConfig, datastoreRunConfigFunc);
+        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(DATASTORE_SERVICE_ID, datastoreContainerConfigSupplier);
         if (!addServiceResult.isOk()) {
             return err(addServiceResult.error);
         }
@@ -134,12 +141,10 @@ export class TestNetwork {
         const serviceIdStr: string = API_SERVICE_ID_PREFIX + this.nextApiServiceId.toString();
         this.nextApiServiceId = this.nextApiServiceId + 1;
         const serviceId: ServiceID = <ServiceID>(serviceIdStr);
+
+        const apiServiceContainerConfigSupplier: (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> = TestNetwork.getApiServiceContainerConfigSupplier(this.datastoreClient)
     
-        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = TestNetwork.getApiServiceConfigInitializingFunc(this.datastoreClient);
-        const apiServiceContainerCreationConfig: ContainerCreationConfig = TestNetwork.getApiServiceContainerCreationConfig(configInitializingFunc);
-        const apiServiceGenerateRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = TestNetwork.getApiServiceRunConfigFunc();
-    
-        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(serviceId, apiServiceContainerCreationConfig, apiServiceGenerateRunConfigFunc);
+        const addServiceResult: Result<[ServiceContext, Map<string, PortBinding>], Error> = await this.networkCtx.addService(serviceId, apiServiceContainerConfigSupplier);
         if (!addServiceResult.isOk()) {
             return err(addServiceResult.error);
         }
@@ -157,86 +162,87 @@ export class TestNetwork {
         return ok(apiClient);
     }
 
-    private static getDataStoreContainerCreationConfig(): ContainerCreationConfig {
-        const usedPortsSet: Set<string> = new Set();
-        const containerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-            DATASTORE_IMAGE,
-        ).withUsedPorts(
-            usedPortsSet.add(DATASTORE_PORT+"/tcp")
-        ).build()
-        return containerCreationConfig;
-    }
 
-    private static getDataStoreRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
-        const runConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-        (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-            return ok(new ContainerRunConfigBuilder().build());
-        }
-        return runConfigFunc;
-    }
-
-    private static getApiServiceConfigInitializingFunc(datastoreClient: DatastoreClient): (fp: number) => Promise<Result<null, Error>> { //Note: Making simplification that file descriptor is just number
-        const configInitializingFunc: (fp: number) => Promise<Result<null, Error>> = async (fp: number) => {
-            log.debug("Datastore IP: "+datastoreClient.getIpAddr+" , port: "+datastoreClient.getPort);
-            const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort());
-            const configBytesResult: Result<string, Error> = TestNetwork.safeJsonStringify(configObj);
-            if (configBytesResult.isErr()) {
-                return err(configBytesResult.error);
+    private static getDatastoreContainerConfigSupplier(): (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> {
+        const containerConfigSupplier: (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> =
+            (ipAddr: string, sharedDirectory: SharedPath) => {
+                const usedPortsSet: Set<string> = new Set();
+                const containerConfig: ContainerConfig = new ContainerConfigBuilder(
+                    DATASTORE_IMAGE
+                ).withUsedPorts(
+                    usedPortsSet.add(DATASTORE_PORT + "/tcp")
+                ).build()
+                return ok(containerConfig)
             }
-            const configBytes: string = configBytesResult.value;
+        return containerConfigSupplier
+    }
 
-            log.debug("API config JSON: " + String(configBytes));
+    private static getApiServiceContainerConfigSupplier(datastoreClient: DatastoreClient): (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> {
+        const containerConfigSupplier: (ipAddr: string, sharedDirectory: SharedPath) => Result<ContainerConfig, Error> =
+            (ipAddr: string, sharedDirectory: SharedPath) => {
+                const usedPortsSet: Set<string> = new Set();
 
+                const datastoreConfigFileFilePathResult: Result<SharedPath, Error> = this.createDatastoreConfigFileInServiceDirectory(datastoreClient, sharedDirectory);
+                if (!datastoreConfigFileFilePathResult.isOk()) {
+                    return err(datastoreConfigFileFilePathResult.error);
+                }
 
-            const writeFilePromise: Promise<Result<null, Error>> = new Promise((resolve, _unusedReject) => {
-                fs.write(fp, configBytes, (error: Error | null) => {
-                    if (error === null) {
-                        resolve(ok(null));
-                    } else {
-                        resolve(err(error));
-                    }
-                })
-            });
-            const writeFileResult: Result<null, Error> = await writeFilePromise;
-            if (!writeFileResult.isOk()) {
-                return err(writeFileResult.error);
+                const datastoreConfigFileFilePath: SharedPath = datastoreConfigFileFilePathResult.value
+
+                const startCmd: string[] = [
+                    "./api.bin",
+                    "--config",
+                    datastoreConfigFileFilePath.getAbsPathOnServiceContainer()
+                ]
+
+                const containerConfig: ContainerConfig = new ContainerConfigBuilder(
+                    API_SERVICE_IMAGE
+                ).withUsedPorts(
+                    usedPortsSet.add(API_SERVICE_PORT + "/tcp")
+                ).withCmdOverride(
+                    startCmd
+                ).build()
+                return ok(containerConfig)
             }
-        
-            return ok(null);
-        }
-        return configInitializingFunc;
+        return containerConfigSupplier
     }
 
-    private static getApiServiceContainerCreationConfig(configInitializingFunc: (fp: number) => Promise<Result<null, Error>>): ContainerCreationConfig {
-        const usedPortsSet: Set<string> = new Set();
-        const apiServiceContainerCreationConfig: ContainerCreationConfig = new ContainerCreationConfigBuilder(
-            API_SERVICE_IMAGE,
-        ).withUsedPorts(
-            usedPortsSet.add(API_SERVICE_PORT+"/tcp")
-        ).withGeneratedFiles(new Map().set(
-            CONFIG_FILE_KEY, configInitializingFunc
-        )).build();
-        return apiServiceContainerCreationConfig;
-    }
+    private static createDatastoreConfigFileInServiceDirectory(datastoreClient: DatastoreClient, sharedDirectory: SharedPath): Result<SharedPath, Error> {
+        const configFileFilePath: SharedPath = sharedDirectory.GetChildPath(CONFIG_FILE_KEY)
 
-    private static getApiServiceRunConfigFunc(): (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> {
-        const apiServiceRunConfigFunc: (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => Result<ContainerRunConfig, Error> = 
-        (ipAddr: string, generatedFileFilepaths: Map<string, string>, staticFileFilepaths: Map<StaticFileID, string>) => {
-            if (!generatedFileFilepaths.has(CONFIG_FILE_KEY)) {
-                return err(new Error("No filepath found for config file key '"+ CONFIG_FILE_KEY +"'"));
+        log.info("Config file absolute path on this container: " + configFileFilePath.getAbsPathOnThisContainer() + " , on service container: " + configFileFilePath.getAbsPathOnServiceContainer());
+
+        log.debug("Datastore IP: " + datastoreClient.getIpAddr() + " , port: " + datastoreClient.getPort());
+
+        const configObj: DatastoreConfig = new DatastoreConfig(datastoreClient.getIpAddr(), datastoreClient.getPort())
+
+        let configBytes: string;
+        try {
+            configBytes = JSON.stringify(configObj);
+        } catch (jsonErr) {
+            // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
+            // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
+            if (jsonErr && jsonErr.stack && jsonErr.message) {
+                return err(jsonErr as Error);
             }
-            const configFilepath: string = generatedFileFilepaths.get(CONFIG_FILE_KEY)!;
-            const startCmd: string[] = [
-                "./api.bin",
-                "--config",
-                configFilepath
-            ]
-
-            const result: ContainerRunConfig = new ContainerRunConfigBuilder().withCmdOverride(startCmd).build();
-            return ok(result);
+            return err(new Error("Stringify-ing DatastoreConfig object threw an exception, but " +
+                "it's not an Error so we can't report any more information than this"));
         }
-        return apiServiceRunConfigFunc;
+
+        log.debug("API config JSON: " + configBytes)
+
+        try {
+            writeFileSync(configFileFilePath.getAbsPathOnThisContainer(), configBytes)
+        } catch (exception) {
+            if (exception instanceof Error) {
+                return err(new Error("An error occurred writing the serialized config JSON to file with error: " + exception));
+            } else {
+                return err(new Error("An unknown exception value was thrown during writing the serialized config JSON to file with error: " + exception))
+            }
+        }
+        return ok(configFileFilePath);
     }
+
 
     private static parseUnknownExceptionValueToError(value: unknown): Error {
         if (value instanceof Error) {
