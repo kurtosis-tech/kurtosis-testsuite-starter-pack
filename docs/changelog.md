@@ -1,4 +1,6 @@
 # TBD
+
+# 1.33.5
 ### Features
 * Upgraded to [Kurtosis Testsuite API Lib 0.9.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#090)
 
