@@ -1,4 +1,6 @@
 # TBD
+
+# 1.34.0
 ### Features
 * Upgraded Kurt client dependency to the latest version [Kurt Client API 0.17.3](https://github.com/kurtosis-tech/kurtosis-client/blob/develop/docs/changelog.md#0173)
 * Upgraded Kurt Testsuite API Lib to the latest version [Kurt Client API 0.9.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#090)
