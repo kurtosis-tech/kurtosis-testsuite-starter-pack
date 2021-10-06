@@ -14,6 +14,13 @@
 ### Fixes
 * Fixed an issue where the Docker image would get rebuilt even if just a Vim swapfile changed
 
+# 1.33.5
+### Features
+* Upgraded to [Kurtosis Testsuite API Lib 0.9.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#090)
+
+### Fixes
+* Fixed an issue where the Docker image would get rebuilt even if just a Vim swapfile changed
+
 # 1.33.4
 ### Features
 * Upgraded to [Kurt Client API 0.17.0](https://github.com/kurtosis-tech/kurtosis-client/blob/develop/docs/changelog.md#0170)
