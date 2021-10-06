@@ -1,5 +1,21 @@
 # TBD
 
+# 1.34.0
+### Features
+* Upgraded Kurt client dependency to the latest version [Kurt Client API 0.17.3](https://github.com/kurtosis-tech/kurtosis-client/blob/develop/docs/changelog.md#0173)
+* Upgraded Kurt Testsuite API Lib to the latest version [Kurt Client API 0.9.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#090)
+
+### Breaking Changes
+* Kurt Client's `GetChildPath` method only has one return value, rather than two
+    * Users should remove the error type
+
+# 1.33.5
+### Features
+* Upgraded to [Kurtosis Testsuite API Lib 0.9.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#090)
+
+### Fixes
+* Fixed an issue where the Docker image would get rebuilt even if just a Vim swapfile changed
+
 # 1.33.5
 ### Features
 * Upgraded to [Kurtosis Testsuite API Lib 0.9.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#090)
