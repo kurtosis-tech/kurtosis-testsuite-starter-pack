@@ -12,7 +12,6 @@ ALLOWED_IMAGE_NAME_CHARS='a-z0-9._/-'
 
 SUPPORTED_LANGS_FILENAME="supported-languages.txt"
 INPUT_KURTOSIS_CORE_DIRNAME=".kurtosis"
-WRAPPER_SCRIPT_FILENAME="kurtosis.sh"
 BUILD_AND_RUN_CORE_FILENAME="build-and-run-core.sh"
 
 # Script for prepping a new testsuite repo
@@ -146,10 +145,6 @@ if ! mkdir -p "${output_kurtosis_core_dirpath}"; then
     echo "Error: Could not create Kurtosis Core directory '${output_kurtosis_core_dirpath}'" >&2
     exit 1
 fi
-if ! cp "${input_kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" "${output_kurtosis_core_dirpath}/"; then
-    echo "Error: Could not copy ${WRAPPER_SCRIPT_FILENAME} to ${output_kurtosis_core_dirpath}" >&2
-    exit 1
-fi
 if ! cp "${input_kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" "${output_kurtosis_core_dirpath}/"; then
     echo "Error: Could not copy ${BUILD_AND_RUN_CORE_FILENAME} to ${output_kurtosis_core_dirpath}" >&2 
     exit 1
@@ -176,12 +171,12 @@ kurtosis_core_dirpath="\${root_dirpath}/${OUTPUT_KURTOSIS_CORE_DIRNAME}"
 
 show_help_and_exit() {
     echo ""
-    echo "Usage: \$(basename "\${0}") action [kurtosis.sh_arg1] [kurtosis.sh_arg2]..."
+    echo "Usage: \$(basename "\${0}") action [kurtosis_cli_arg1] [kurtosis_cli_arg2]..."
     echo ""
     echo "  action              The action that should be passed to the underlying ${BUILD_AND_RUN_CORE_FILENAME} script to tell it which action should be taken (call"
     echo "                          'bash \${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME} help' directly for all available actions)"
-    echo "  kurtosis.sh_args    Optional, supplemental args that should be passed to the ${WRAPPER_SCRIPT_FILENAME} script to modify testsuite execution behaviour (call"
-    echo "                          'bash \${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME} --help' directly for all available args)"
+    echo "  kurtosis_cli_arg    Optional, supplemental args that should be passed to the Kurtosis CLI to modify testsuite execution behaviour (call"
+    echo "                          'kurtosis test --help' directly for all available args)"
     echo ""
     exit 1  # Exit with error so CI will fail if it accidentally calls this
 }
@@ -204,7 +199,6 @@ bash "\${kurtosis_core_dirpath}/${BUILD_AND_RUN_CORE_FILENAME}" \\
     "${testsuite_image}" \\
     "\${root_dirpath}" \\
     "\${root_dirpath}/testsuite/Dockerfile" \\
-    "\${kurtosis_core_dirpath}/${WRAPPER_SCRIPT_FILENAME}" \\
     --custom-params "\${custom_params_json}" \\
     \${1+"\${@}"}
 EOF
