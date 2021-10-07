@@ -1,4 +1,6 @@
 # TBD
+### Changes
+* Upgraded to [testsuite API lib 0.10.0](https://github.com/kurtosis-tech/kurtosis-testsuite-api-lib/blob/develop/docs/changelog.md#0100) which fixes the Typescript `SharedPath.getChildPath` capitalization
 
 # 1.34.0
 ### Features
