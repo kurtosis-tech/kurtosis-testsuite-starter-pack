@@ -208,7 +208,7 @@ export class TestNetwork {
     }
 
     private static createDatastoreConfigFileInServiceDirectory(datastoreClient: DatastoreClient, sharedDirectory: SharedPath): Result<SharedPath, Error> {
-        const configFileFilePath: SharedPath = sharedDirectory.GetChildPath(CONFIG_FILE_KEY)
+        const configFileFilePath: SharedPath = sharedDirectory.getChildPath(CONFIG_FILE_KEY)
 
         log.info("Config file absolute path on this container: " + configFileFilePath.getAbsPathOnThisContainer() + " , on service container: " + configFileFilePath.getAbsPathOnServiceContainer());
 
@@ -219,7 +219,7 @@ export class TestNetwork {
         let configBytes: string;
         try {
             configBytes = JSON.stringify(configObj);
-        } catch (jsonErr) {
+        } catch (jsonErr: any) {
             // Sadly, we have to do this because there's no great way to enforce the caught thing being an error
             // See: https://stackoverflow.com/questions/30469261/checking-for-typeof-error-in-js
             if (jsonErr && jsonErr.stack && jsonErr.message) {
