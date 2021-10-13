@@ -8,7 +8,7 @@ This repo contains:
 Testsuite Quickstart
 --------------------
 Prerequisites:
-* A [Kurtosis user account](https://www.kurtosistech.com/sign-up)
+* The [Kurtosis CLI installed on your machine](https://docs.kurtosistech.com/installation.html)
 * `git` installed on your machine
 * `docker` installed on your machine
 
