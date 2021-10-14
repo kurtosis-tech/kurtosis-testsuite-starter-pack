@@ -21,7 +21,7 @@ jobs:
     steps:
       - checkout
       - run: |
-          echo "deb [trusted=yes] https://1rRcWo-cTcNiKak7X5tkD7slaIg4GDXrdU@apt.fury.io/kurtosis-tech/ /" | sudo tee /etc/apt/sources.list.d/kurtosis.list
+          echo "deb [trusted=yes] https://apt.fury.io/kurtosis-tech/ /" | sudo tee /etc/apt/sources.list.d/kurtosis.list
           sudo apt update
           sudo apt install kurtosis-cli
       - run: bash .circleci/validate-all-bootstraps.sh "${DOCKER_USERNAME}" "${DOCKER_PASSWORD}" "${SIMULATED_TRIAL_USER_CLIENT_ID}" "${SIMULATED_TRIAL_USER_CLIENT_SECRET}"
