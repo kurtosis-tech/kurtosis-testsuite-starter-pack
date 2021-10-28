@@ -1,4 +1,7 @@
 # TBD
+### Changes
+* Replaced `kurtosistech/example-microservices_datastore` Docker image with `kurtosistech/example-datastore-server` in `golang/testsuite`
+* Replaced `kurtosistech/example-microservices_api` Docker image with `kurtosistech/example-api-server` in `golang/testsuite`
 
 # 1.34.0
 ### Features
