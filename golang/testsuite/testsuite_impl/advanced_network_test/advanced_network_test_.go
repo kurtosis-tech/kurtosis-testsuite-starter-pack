@@ -8,9 +8,9 @@ package advanced_network_test
 import (
 	"context"
 	"github.com/kurtosis-tech/example-api-server/api/golang/example_api_server_rpc_api_bindings"
-	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/networks_impl"
 	"github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/testsuite"
+	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
 	"strconv"
@@ -30,7 +30,7 @@ func NewAdvancedNetworkTest(datastoreServiceImage string, apiServiceImage string
 }
 
 func (test *AdvancedNetworkTest) Configure(builder *testsuite.TestConfigurationBuilder) {
-	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
+	builder.WithSetupTimeoutSeconds(120).WithRunTimeoutSeconds(60)
 }
 
 func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {

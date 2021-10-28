@@ -60,7 +60,7 @@ func NewBasicDatastoreAndApiTest(datastoreImage string, apiImage string) *BasicD
 }
 
 func (test BasicDatastoreAndApiTest) Configure(builder *testsuite.TestConfigurationBuilder) {
-	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
+	builder.WithSetupTimeoutSeconds(120).WithRunTimeoutSeconds(60)
 }
 
 func (test BasicDatastoreAndApiTest) Setup(networkCtx *networks.NetworkContext) (network networks.Network, returnErr error) {
