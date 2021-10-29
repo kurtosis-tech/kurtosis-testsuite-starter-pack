@@ -3,6 +3,7 @@
 * Replaced `kurtosistech/example-microservices_datastore` Docker image with `kurtosistech/example-datastore-server` in `golang/testsuite`
 * Replaced `kurtosistech/example-microservices_api` Docker image with `kurtosistech/example-api-server` in `golang/testsuite`
 * Upgraded Kurt Core version to 1.27.1 in `build-and-run-core` script
+* Deleted `release` script because there is no release artifact that needs tagging and there is no API
 
 # 1.34.0
 ### Features
