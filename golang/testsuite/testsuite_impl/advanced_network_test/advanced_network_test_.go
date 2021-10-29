@@ -30,7 +30,7 @@ func NewAdvancedNetworkTest(datastoreServiceImage string, apiServiceImage string
 }
 
 func (test *AdvancedNetworkTest) Configure(builder *testsuite.TestConfigurationBuilder) {
-	builder.WithSetupTimeoutSeconds(120).WithRunTimeoutSeconds(60)
+	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
 }
 
 func (test *AdvancedNetworkTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
