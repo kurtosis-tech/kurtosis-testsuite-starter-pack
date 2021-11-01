@@ -13,8 +13,8 @@ action="${1:-}"
 shift 1
 
 custom_params_json='{
-    "apiServiceImage" :"'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_api",
-    "datastoreServiceImage": "'${KURTOSIS_DOCKERHUB_ORG}'/example-microservices_datastore"
+    "apiServiceImage" :"'${KURTOSIS_DOCKERHUB_ORG}'/example-api-server",
+    "datastoreServiceImage": "'${KURTOSIS_DOCKERHUB_ORG}'/example-datastore-server"
 }'
 
 bash "${repo_root_dirpath}/.kurtosis/build-and-run-core.sh" \

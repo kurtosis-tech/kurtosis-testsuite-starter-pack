@@ -1,4 +1,4 @@
 {
-    "apiServiceImage" :"kurtosistech/example-microservices_api",
-    "datastoreServiceImage": "kurtosistech/example-microservices_datastore"
+    "apiServiceImage" :"kurtosistech/example-api-server",
+    "datastoreServiceImage": "kurtosistech/example-datastore-server"
 }
