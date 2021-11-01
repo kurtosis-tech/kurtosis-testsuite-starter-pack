@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/kurtosis-tech/example-datastore-server/api/golang/datastore_rpc_api_bindings"
+	"github.com/kurtosis-tech/example-datastore-server/api/golang/datastore_rpc_api_consts"
 	"github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
 	"github.com/kurtosis-tech/kurtosis-testsuite-api-lib/golang/lib/testsuite"
@@ -21,7 +22,7 @@ import (
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
-	datastorePort                         = 1323
+	datastorePort                         = datastore_rpc_api_consts.ListenPort
 	testKey                               = "test-key"
 	testValue                             = "test-value"
 
@@ -41,7 +42,7 @@ func (test BasicDatastoreTest) Configure(builder *testsuite.TestConfigurationBui
 	builder.WithSetupTimeoutSeconds(60).WithRunTimeoutSeconds(60)
 }
 
-func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (network networks.Network, returnErr error) {
+func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (networks.Network, error) {
 	ctx := context.Background()
 
 	datastoreContainerConfigSupplier := test.getDatastoreContainerConfigSupplier()
@@ -56,8 +57,9 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 		return nil, stacktrace.Propagate(err, "An error occurred creating a new datastore client for service with ID '%v' and IP address '%v'", datastoreServiceId, serviceContext.GetIPAddress())
 	}
 	defer func() {
-		err = datastoreClientConnCloseFunc()
-		returnErr = stacktrace.Propagate(err, "An error occurred closing GRPC client")
+		if err := datastoreClientConnCloseFunc(); err != nil {
+			logrus.Warnf("We tried to close the datastore client, but doing so threw an error:\n%v", err)
+		}
 	}()
 
 	err = waitDatastoreServiceForHealthy(ctx, datastoreClient, waitForStartupMaxPolls, waitForStartupDelayMilliseconds)
@@ -66,10 +68,10 @@ func (test BasicDatastoreTest) Setup(networkCtx *networks.NetworkContext) (netwo
 	}
 
 	logrus.Infof("Added datastore service with host port bindings: %+v", hostPortBindings)
-	return networkCtx, returnErr
+	return networkCtx, nil
 }
 
-func (test BasicDatastoreTest) Run(network networks.Network) (returnErr error)  {
+func (test BasicDatastoreTest) Run(network networks.Network) error  {
 	ctx := context.Background()
 
 	// Necessary because Go doesn't have generics
@@ -85,8 +87,9 @@ func (test BasicDatastoreTest) Run(network networks.Network) (returnErr error)  
 		return stacktrace.Propagate(err, "An error occurred creating a new datastore client for service with ID '%v' and IP address '%v'", datastoreServiceId, serviceContext.GetIPAddress())
 	}
 	defer func() {
-		err = datastoreClientConnCloseFunc()
-		returnErr = stacktrace.Propagate(err, "An error occurred closing GRPC client")
+		if err := datastoreClientConnCloseFunc(); err != nil {
+			logrus.Warnf("We tried to close the datastore client, but doing so threw an error:\n%v", err)
+		}
 	}()
 
 	logrus.Infof("Verifying that key '%v' doesn't already exist...", testKey)
@@ -124,7 +127,7 @@ func (test BasicDatastoreTest) Run(network networks.Network) (returnErr error)  
 		return stacktrace.NewError("Returned value '%v' != test value '%v'", getResponse.GetValue(), testValue)
 	}
 	logrus.Info("Value verified")
-	return returnErr
+	return nil
 }
 
 // ====================================================================================================
@@ -169,7 +172,7 @@ func waitDatastoreServiceForHealthy(ctx context.Context, client datastore_rpc_ap
 	for i := uint32(0); i < retries; i++ {
 		_, err = client.IsAvailable(ctx, emptyArgs)
 		if err == nil  {
-			break
+			return nil
 		}
 		time.Sleep(time.Duration(retriesDelayMilliseconds) * time.Millisecond)
 	}

@@ -13,7 +13,6 @@ import (
 	"github.com/kurtosis-tech/kurtosis-testsuite-starter-pack/golang/testsuite/networks_impl"
 	"github.com/palantir/stacktrace"
 	"github.com/sirupsen/logrus"
-	"strconv"
 )
 
 const (
@@ -46,14 +45,25 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	ctx := context.Background()
 
 	castedNetwork := network.(*networks_impl.TestNetwork)
-	personModifierClient, err := castedNetwork.GetPersonModifyingApiClient()
+	personModifierClient, personModifyingApiClientCloseFunc, err := castedNetwork.GetPersonModifyingApiClient()
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the person-modifying API client")
 	}
-	personRetrieverClient, err := castedNetwork.GetPersonRetrievingApiClient()
+	defer func() {
+		if err := personModifyingApiClientCloseFunc(); err != nil {
+			logrus.Warnf("We tried to close the person modifying API client, but doing so threw an error:\n%v", err)
+		}
+	}()
+
+	personRetrieverClient, personRetrieverApiClientCloseFunc, err := castedNetwork.GetPersonRetrievingApiClient()
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred getting the person-retrieving API client")
 	}
+	defer func() {
+		if err := personRetrieverApiClientCloseFunc(); err != nil {
+			logrus.Warnf("We tried to close the person modifying API client, but doing so threw an error:\n%v", err)
+		}
+	}()
 
 	logrus.Infof("Adding test person via person-modifying API client...")
 	addPersonArgs := &example_api_server_rpc_api_bindings.AddPersonArgs{
@@ -83,13 +93,7 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 	}
 	logrus.Info("Retrieved test person")
 
-	personBooksReadBase := 10
-	personBooksReadBitSize := 32
-
-	personBooksRead, err := strconv.ParseInt(getPersonResponse.GetBooksRead(), personBooksReadBase, personBooksReadBitSize)
-	if err != nil {
-		return stacktrace.Propagate(err, "An error occurred parsing person books read string '%v' to int", personBooksRead)
-	}
+	personBooksRead := getPersonResponse.GetBooksRead()
 
 	if personBooksRead != 1 {
 		return stacktrace.NewError(
@@ -97,5 +101,6 @@ func (test *AdvancedNetworkTest) Run(network networks.Network) error {
 			personBooksRead,
 		)
 	}
+
 	return nil
 }

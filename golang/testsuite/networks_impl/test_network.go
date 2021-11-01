@@ -11,7 +11,9 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/kurtosis-tech/example-api-server/api/golang/example_api_server_rpc_api_bindings"
+	"github.com/kurtosis-tech/example-api-server/api/golang/example_api_server_rpc_api_consts"
 	"github.com/kurtosis-tech/example-datastore-server/api/golang/datastore_rpc_api_bindings"
+	"github.com/kurtosis-tech/example-datastore-server/api/golang/datastore_rpc_api_consts"
 	"github.com/kurtosis-tech/kurtosis-client/golang/lib/networks"
 	"github.com/kurtosis-tech/kurtosis-client/golang/lib/services"
 	"github.com/palantir/stacktrace"
@@ -26,10 +28,10 @@ import (
 
 const (
 	datastoreServiceId services.ServiceID = "datastore"
-	datastorePort                         = 1323
+	datastorePort                         = datastore_rpc_api_consts.ListenPort
 
 	apiServiceIdPrefix = "api-"
-	apiServicePort     = 2434
+	apiServicePort     = example_api_server_rpc_api_consts.ListenPort
 
 	waitForStartupDelayMilliseconds       = 1000
 	waitForStartupMaxNumPolls             = 15
@@ -42,7 +44,7 @@ type GRPCAvailabilityChecker interface {
 
 type datastoreConfig struct {
 	DatastoreIp   string `json:"datastoreIp"`
-	DatastorePort int    `json:"datastorePort"`
+	DatastorePort uint16    `json:"datastorePort"`
 }
 
 //  A custom Network implementation is intended to make test-writing easier by wrapping low-level
@@ -54,6 +56,8 @@ type TestNetwork struct {
 	datastoreClient           datastore_rpc_api_bindings.DatastoreServiceClient
 	personModifyingApiClient  example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient
 	personRetrievingApiClient example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient
+	personModifyingApiClientCloseFunc  func() error
+	personRetrievingApiClientCloseFunc func() error
 	nextApiServiceId          int
 }
 
@@ -65,6 +69,8 @@ func NewTestNetwork(networkCtx *networks.NetworkContext, datastoreServiceImage s
 		datastoreClient:           nil,
 		personModifyingApiClient:  nil,
 		personRetrievingApiClient: nil,
+		personModifyingApiClientCloseFunc: nil,
+		personRetrievingApiClientCloseFunc: nil,
 		nextApiServiceId:          0,
 	}
 }
@@ -94,8 +100,9 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() (returnErr error) {
 		return stacktrace.Propagate(err, "An error occurred creating a new datastore client for service with ID '%v' and IP address '%v'", datastoreServiceId, datastoreServiceContext.GetIPAddress())
 	}
 	defer func() {
-		err = datastoreClientConnCloseFunc()
-		returnErr = stacktrace.Propagate(err, "An error occurred closing GRPC client")
+		if err := datastoreClientConnCloseFunc(); err != nil {
+			logrus.Warnf("We tried to close the datastore client, but doing so threw an error:\n%v", err)
+		}
 	}()
 
 	err = waitForHealthy(ctx, datastoreClient, waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
@@ -107,43 +114,45 @@ func (network *TestNetwork) SetupDatastoreAndTwoApis() (returnErr error) {
 
 	network.datastoreClient = datastoreClient
 
-	personModifyingApiClient, err := network.addApiService(ctx, datastoreServiceContext.GetIPAddress())
+	personModifyingApiClient, personModifyingApiClientCloseFunc, err := network.addApiService(ctx, datastoreServiceContext.GetIPAddress())
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the person-modifying API client")
 	}
 	network.personModifyingApiClient = personModifyingApiClient
+	network.personModifyingApiClientCloseFunc = personModifyingApiClientCloseFunc
 
-	personRetrievingApiClient, err := network.addApiService(ctx, datastoreServiceContext.GetIPAddress())
+	personRetrievingApiClient, personRetrievingApiClientCloseFunc, err := network.addApiService(ctx, datastoreServiceContext.GetIPAddress())
 	if err != nil {
 		return stacktrace.Propagate(err, "An error occurred adding the person-retrieving API client")
 	}
 	network.personRetrievingApiClient = personRetrievingApiClient
+	network.personRetrievingApiClientCloseFunc = personRetrievingApiClientCloseFunc
 
 	return returnErr
 }
 
 //  Custom network implementations will also usually have getters, to retrieve information about the
 //   services created during setup
-func (network *TestNetwork) GetPersonModifyingApiClient() (example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient, error) {
+func (network *TestNetwork) GetPersonModifyingApiClient() (example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient, func() error, error) {
 	if network.personModifyingApiClient == nil {
-		return nil, stacktrace.NewError("No person-modifying API client exists")
+		return nil, nil, stacktrace.NewError("No person-modifying API client exists")
 	}
-	return network.personModifyingApiClient, nil
+	return network.personModifyingApiClient, network.personModifyingApiClientCloseFunc,  nil
 }
-func (network *TestNetwork) GetPersonRetrievingApiClient() (example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient, error) {
+func (network *TestNetwork) GetPersonRetrievingApiClient() (example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient, func() error, error) {
 	if network.personRetrievingApiClient == nil {
-		return nil, stacktrace.NewError("No person-retrieving API client exists")
+		return nil, nil, stacktrace.NewError("No person-retrieving API client exists")
 	}
-	return network.personRetrievingApiClient, nil
+	return network.personRetrievingApiClient, network.personRetrievingApiClientCloseFunc, nil
 }
 
 // ====================================================================================================
 //                                       Private helper functions
 // ====================================================================================================
-func (network *TestNetwork) addApiService(ctx context.Context, datastoreIp string) (example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient, error) {
+func (network *TestNetwork) addApiService(ctx context.Context, datastoreIp string) (example_api_server_rpc_api_bindings.ExampleAPIServerServiceClient, func() error, error) {
 
 	if network.datastoreClient == nil {
-		return nil, stacktrace.NewError("Cannot add API service to network; no datastore client exists")
+		return nil, nil, stacktrace.NewError("Cannot add API service to network; no datastore client exists")
 	}
 
 	serviceIdStr := apiServiceIdPrefix + strconv.Itoa(network.nextApiServiceId)
@@ -154,21 +163,21 @@ func (network *TestNetwork) addApiService(ctx context.Context, datastoreIp strin
 
 	apiServiceContext, hostPortBindings, err := network.networkCtx.AddService(serviceId, apiServiceContainerConfigSupplier)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred adding the API service")
+		return nil, nil, stacktrace.Propagate(err, "An error occurred adding the API service")
 	}
 
-	apiClient, _, err := newExampleAPIServerClient(apiServiceContext.GetIPAddress())
+	apiClient, apiClientCloseFunc, err := newExampleAPIServerClient(apiServiceContext.GetIPAddress())
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred creating a new example API server client for service with ID '%v' and IP address '%v'", serviceId, apiServiceContext.GetIPAddress())
+		return nil, nil,  stacktrace.Propagate(err, "An error occurred creating a new example API server client for service with ID '%v' and IP address '%v'", serviceId, apiServiceContext.GetIPAddress())
 	}
 
 	err = waitForHealthy(ctx, apiClient, waitForStartupMaxNumPolls, waitForStartupDelayMilliseconds)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "An error occurred waiting for the example API server service to become available")
+		return nil, nil,  stacktrace.Propagate(err, "An error occurred waiting for the example API server service to become available")
 	}
 
 	logrus.Infof("Added API service with host port bindings: %+v", hostPortBindings)
-	return apiClient, nil
+	return apiClient, apiClientCloseFunc, nil
 }
 
 func (network *TestNetwork) getDatastoreContainerConfigSupplier() func(ipAddr string, sharedDirectory *services.SharedPath) (*services.ContainerConfig, error) {
@@ -279,7 +288,7 @@ func waitForHealthy(ctx context.Context, client GRPCAvailabilityChecker, retries
 	for i := uint32(0); i < retries; i++ {
 		_, err = client.IsAvailable(ctx, emptyArgs)
 		if err == nil {
-			break
+			return nil
 		}
 		time.Sleep(time.Duration(retriesDelayMilliseconds) * time.Millisecond)
 	}
