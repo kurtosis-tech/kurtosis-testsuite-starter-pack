@@ -1,3 +1,5 @@
+# DEPRECATION NOTICE: This repo is now deprecated because Kurtosis no longer has a custom testing framework, and can instead use any preexisting testing framework (e.g. Jest, Mocha, etc.)
+
 Kurtosis Testsuite Starter Pack
 ===============================
 This repo contains:
